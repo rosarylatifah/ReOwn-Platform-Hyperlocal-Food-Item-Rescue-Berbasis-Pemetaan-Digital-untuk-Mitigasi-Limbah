@@ -1,0 +1,513 @@
+/* =====================================================================
+   Panel Admin ReOwn. Semua selector diawali .adm- dan dibatasi .adm-root
+   supaya tidak bentrok dengan globals.css.
+   ===================================================================== */
+.adm-root {
+  --adm-display: var(--font-display, "Playfair Display"), Georgia, "Times New Roman", serif;
+  --adm-body: var(--font-body, "DM Sans"), system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Latar & Fondasi Visual */
+  --bg: #fff7e9;
+  --surface: #ffffff;
+  --ink: #231d18;
+  --muted: #726559;
+  --line: #ebdcc8;
+  --field: #faf5ed;
+
+  /* Sidebar Warna Warm Dark Espresso */
+  --side: #241e19;
+  --side-ink: #ebdcd0;
+
+  /* Aksen Brand ReOwn */
+  --hot: #d34824;
+  --brand: #c8481f;
+  --brand-hover: #b23a15;
+  --peach: #fde8dd;
+  --lime: #8ee06b;
+
+  /* Grafik & Seri Data */
+  --series-1: #d34824;
+  --series-2: #e88d67;
+
+  /* Status Chips & Badges */
+  --ok: #1b6329;    --ok-bg: #e2f4df;
+  --warn: #805200;  --warn-bg: #fdf1d6;
+  --info: #175287;  --info-bg: #e3effa;
+  --bad: #962118;   --bad-bg: #fce5e2;
+  --muted-bg: #f2e8da;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--adm-body);
+}
+
+.adm-root *, .adm-root *::before, .adm-root *::after { box-sizing: border-box; }
+.adm-root button { font: inherit; color: inherit; cursor: pointer; }
+.adm-root a { color: inherit; }
+.adm-root :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.adm-root h1, .adm-root h2, .adm-root h3 { margin: 0; }
+.adm-boot { display: grid; place-items: center; color: var(--muted); }
+.adm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.adm-muted { color: var(--muted); }
+.adm-gap { margin: 0 0 16px; }
+.adm-nowrap { white-space: nowrap; }
+.adm-link { color: var(--brand); font-weight: 700; }
+.adm-sub { display: block; color: var(--muted); font-size: 13px; font-weight: 400; }
+.adm-mark { background: linear-gradient(transparent 62%, var(--lime) 62% 92%, transparent 92%); padding: 0 2px; }
+
+/* ---------- Kerangka ---------- */
+.adm-app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+.adm-side { background: var(--side); color: var(--side-ink); padding: 22px 16px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+.adm-logo { font-family: var(--adm-display); font-weight: 900; font-size: 30px; color: var(--lime); margin: 0 8px; letter-spacing: -.02em; }
+.adm-clock { margin: 18px 8px 0; padding-bottom: 18px; border-bottom: 1px solid #ffffff1e; }
+.adm-clock b { display: block; font-size: 26px; color: #fff; font-weight: 700; font-variant-numeric: tabular-nums; }
+.adm-clock span { font-size: 13px; opacity: .8; }
+.adm-who { display: flex; align-items: center; gap: 10px; margin: 16px 8px; }
+.adm-who small { display: block; opacity: .7; }
+.adm-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--peach); color: var(--brand); display: grid; place-items: center; font-weight: 700; }
+.adm-nav { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.adm-nav a { display: flex; justify-content: space-between; align-items: center; text-decoration: none; padding: 10px 14px; border-radius: 14px; color: var(--side-ink); transition: background 0.15s ease, color 0.15s ease; }
+.adm-nav a:hover { background: #ffffff14; color: #fff; }
+.adm-nav a[aria-current="page"] { background: var(--hot); color: #fff; font-weight: 700; }
+.adm-badge { background: var(--lime); color: #1d1712; border-radius: 999px; font-size: 12px; font-weight: 700; padding: 0 8px; line-height: 20px; }
+.adm-logout { margin-top: auto; border: 1px solid #ffffff2a; background: none; color: var(--side-ink); border-radius: 14px; padding: 10px; transition: background 0.15s ease; }
+.adm-logout:hover { background: #ffffff14; color: #fff; }
+.adm-main { min-width: 0; padding: 0 32px 36px; }
+.adm-top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0 18px; margin-bottom: 22px; }
+.adm-title { font-family: var(--adm-display); font-weight: 900; text-transform: uppercase; letter-spacing: -.01em; font-size: 30px; line-height: 1.15; }
+
+/* ---------- Lonceng ---------- */
+.adm-bell-wrap { position: relative; }
+.adm-bell { position: relative; border: 1px solid var(--line); background: var(--surface); border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; transition: border-color 0.15s ease, transform 0.15s ease; }
+.adm-bell:hover { border-color: var(--brand); transform: translateY(-1px); }
+.adm-bell-dot { position: absolute; top: -4px; right: -4px; background: var(--hot); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 0 6px; line-height: 18px; }
+.adm-notif { position: absolute; right: 0; top: 54px; width: 330px; max-width: calc(100vw - 32px); background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 14px 32px rgba(35, 29, 24, 0.12); z-index: 20; overflow: hidden; }
+.adm-notif h2 { padding: 14px 16px; font-size: 15px; border-bottom: 1px solid var(--line); }
+.adm-notif-item { display: block; padding: 12px 16px; text-decoration: none; border-bottom: 1px solid var(--line); font-size: 14px; }
+.adm-notif-item:last-child { border-bottom: 0; }
+.adm-notif-item:hover { background: var(--bg); }
+.adm-notif-item small { color: var(--muted); display: block; }
+.adm-notif-empty { margin: 0; padding: 16px; color: var(--muted); }
+
+/* ---------- Tombol & chip ---------- */
+.adm-btn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.adm-btn:hover:not(:disabled) {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: #fff8f5;
+  transform: translateY(-1px);
+}
+.adm-btn:disabled { opacity: .5; cursor: not-allowed; }
+.adm-btn--sm { padding: 6px 14px; font-size: 13px; border-radius: 10px; }
+
+/* Tombol Utama / Tinjau / Action */
+.adm-btn--primary,
+.adm-queue li .adm-btn,
+.adm-prow-actions .adm-btn {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(200, 72, 31, 0.15);
+}
+.adm-btn--primary:hover:not(:disabled),
+.adm-queue li .adm-btn:hover:not(:disabled),
+.adm-prow-actions .adm-btn:hover:not(:disabled) {
+  background: var(--brand-hover);
+  border-color: var(--brand-hover);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(200, 72, 31, 0.25);
+}
+
+.adm-btn--danger { background: #ff5b41; border-color: #b3261e; color: #fff; }
+.adm-btn--danger:hover:not(:disabled) { background: #921e18; border-color: #921e18; color: #fff; }
+
+.adm-chip { display: inline-block; border-radius: 999px; padding: 2px 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.adm-chip--ok { background: var(--ok-bg); color: var(--ok); }
+.adm-chip--warn { background: var(--warn-bg); color: var(--warn); }
+.adm-chip--info { background: var(--info-bg); color: var(--info); }
+.adm-chip--bad { background: var(--bad-bg); color: var(--bad); }
+.adm-chip--muted { background: var(--muted-bg); color: var(--muted); }
+
+/* ---------- Dashboard & Stat Cards ---------- */
+.adm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.adm-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 16px rgba(35, 29, 24, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.adm-stat:hover {
+  border-color: #f19f86;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(200, 72, 31, 0.08);
+}
+.adm-stat-label { color: var(--muted); font-weight: 500; }
+.adm-stat-num { font-family: var(--adm-display); font-weight: 900; font-size: 60px; line-height: 1.05; margin: 8px 0 2px; letter-spacing: -.02em; color: var(--ink); }
+.adm-stat-note { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+
+/* Perbaikan CTA ("Kelola pengguna", "Kelola produk", "Tinjau laporan") + Hover */
+.adm-stat-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  background: var(--peach);
+  color: var(--brand);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(200, 72, 31, 0.06);
+}
+
+.adm-stat:hover .adm-stat-cta {
+  background: var(--brand);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(200, 72, 31, 0.22);
+}
+
+/* Card HOT Highlight (Aksen Oranye Warm Tint) */
+.adm-stat--hot { background: #fff0e7; border: 1.5px solid #f19f86; }
+.adm-stat--hot .adm-stat-label { color: #9e361b; font-weight: 600; }
+.adm-stat--hot .adm-stat-num { color: var(--hot); }
+.adm-stat--hot .adm-stat-note { color: #835345; }
+.adm-stat--hot .adm-stat-cta { background: var(--brand); color: #fff; }
+.adm-stat--hot:hover .adm-stat-cta { background: var(--brand-hover); }
+
+/* ---------- Panel & tabel ---------- */
+.adm-panel { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; box-shadow: 0 4px 20px rgba(35, 29, 24, 0.04); }
+.adm-tabs + .adm-panel, .adm-toolbar + .adm-panel { margin-top: 0; }
+.adm-panel-h { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid var(--line); }
+.adm-panel-h h2 { font-family: var(--adm-display); font-weight: 800; font-size: 19px; }
+.adm-scroll { overflow-x: auto; }
+.adm-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+.adm-table th, .adm-table td { text-align: left; padding: 14px 24px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.adm-table th { background: #f7edd8; color: #524436; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-bottom: 2px solid var(--line); }
+.adm-table td { border-bottom: 1px solid #f1e5d4; }
+.adm-table tbody tr:nth-child(even) td { background: #fffcf7; }
+.adm-table tbody tr:hover td { background: #fdf3e5; }
+.adm-table td small { color: var(--muted); display: block; }
+.adm-clamp { max-width: 360px; }
+.adm-empty { padding: 56px 24px; text-align: center; color: var(--muted); }
+.adm-empty b { color: var(--ink); font-size: 16px; }
+.adm-empty p { margin: 6px 0 0; }
+.adm-intro { margin: 0 0 14px; color: var(--muted); }
+.adm-intro b { color: var(--ink); }
+
+/* ---------- Tab, filter, pager ---------- */
+.adm-tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--muted-bg); border-radius: 999px; margin-bottom: 18px; flex-wrap: wrap; }
+.adm-tab { border: 0; background: none; padding: 8px 18px; border-radius: 999px; font-weight: 600; color: var(--muted); transition: all 0.15s ease; }
+.adm-tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.adm-tab-n { margin-left: 8px; background: var(--peach); color: var(--brand); border-radius: 999px; font-size: 12px; padding: 0 8px; line-height: 20px; display: inline-block; }
+.adm-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; align-items: flex-end; }
+.adm-input, .adm-select { height: 42px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; transition: border-color 0.15s ease; }
+.adm-toolbar .adm-input[type="search"] { min-width: 260px; flex: 1; max-width: 380px; }
+.adm-datef { display: flex; flex-direction: column; font-size: 12px; color: var(--muted); gap: 2px; }
+.adm-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 24px; }
+.adm-pager div { display: flex; align-items: center; gap: 10px; }
+.adm-pager-n { font-size: 14px; color: var(--muted); }
+.adm-plist + .adm-pager, .adm-panel .adm-pager { border-top: 1px solid var(--line); }
+.adm-plist + .adm-pager { padding-left: 4px; padding-right: 4px; border-top: 0; }
+
+/* ---------- Daftar produk ---------- */
+.adm-plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.adm-prow { display: flex; align-items: center; gap: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 14px 18px; }
+.adm-prow-main { flex: 1; min-width: 0; }
+.adm-prow-name { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 16px; }
+.adm-prow-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.adm-reason { margin-top: 4px; font-size: 14px; color: var(--ink); }
+.adm-thumb { flex: none; width: 84px; height: 72px; border-radius: 16px; background: var(--peach); display: grid; place-items: center; font-size: 34px; overflow: hidden; }
+.adm-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- Bukti ---------- */
+.adm-evidence { width: 52px; height: 44px; border: 1px solid var(--line); border-radius: 12px; background: var(--field); display: grid; place-items: center; overflow: hidden; padding: 0; transition: border-color 0.15s ease; }
+.adm-evidence:hover { border-color: var(--brand); }
+.adm-evidence img { width: 100%; height: 100%; object-fit: cover; }
+.adm-evidence-big { min-height: 200px; display: grid; place-items: center; }
+.adm-evidence-big img { max-width: 100%; max-height: 70vh; border-radius: 16px; }
+
+/* ---------- Modal ---------- */
+.adm-overlay { position: fixed; inset: 0; background: rgba(29, 23, 18, 0.6); display: grid; place-items: center; padding: 16px; z-index: 50; backdrop-filter: blur(2px); }
+.adm-modal { background: var(--surface); border-radius: 28px; width: 100%; max-width: 460px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; outline: none; box-shadow: 0 20px 40px rgba(0,0,0,0.18); }
+.adm-modal--wide { max-width: 760px; }
+.adm-modal-h { display: flex; justify-content: space-between; align-items: center; padding: 22px 26px 8px; }
+.adm-modal-h h2 { font-family: var(--adm-display); font-weight: 800; font-size: 20px; }
+.adm-x { border: 0; background: none; font-size: 28px; line-height: 1; color: var(--muted); padding: 0 6px; }
+.adm-modal-b { padding: 8px 26px 8px; overflow-y: auto; }
+.adm-modal-f { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding: 16px 26px 22px; }
+.adm-field { margin-bottom: 14px; }
+.adm-field label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+.adm-field select, .adm-field textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--field); color: var(--ink); font: inherit; }
+.adm-field textarea[aria-invalid="true"] { border-color: #b3261e; }
+.adm-err { color: #b3261e; font-size: 13px; margin-top: 6px; }
+.adm-detail { display: flex; gap: 18px; align-items: flex-start; }
+.adm-detail .adm-thumb { width: 120px; height: 120px; font-size: 52px; }
+.adm-dl { display: grid; grid-template-columns: 170px 1fr; gap: 10px 16px; margin: 0 0 16px; flex: 1; }
+.adm-dl dt { color: var(--muted); font-size: 14px; }
+.adm-dl dd { margin: 0; }
+.adm-note { background: var(--info-bg); color: var(--ink); border-radius: 18px; padding: 14px 18px; margin: 4px 0 16px; font-size: 14px; }
+.adm-note--warn { background: var(--warn-bg); }
+.adm-note ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* ---------- Toast ---------- */
+.adm-toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--side); color: #fff; padding: 12px 22px; border-radius: 999px; z-index: 60; font-weight: 600; box-shadow: 0 10px 28px rgba(0,0,0,0.2); max-width: calc(100vw - 32px); }
+
+/* ---------- Grid Layout Dashboard & Antrean ---------- */
+.adm-top-actions { display: flex; align-items: center; gap: 10px; }
+.adm-help { font-weight: 700; font-size: 18px; }
+.adm-h3 { font-size: 15px; margin: 18px 0 8px; }
+.adm-steps { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 6px; }
+
+.adm-dash-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; margin-top: 24px; }
+.adm-dash-grid .adm-panel { margin-top: 0; }
+
+.adm-queue { list-style: none; margin: 0; padding: 0; }
+.adm-queue li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; padding: 12px 22px; border-bottom: 1px solid var(--line); }
+.adm-queue li:last-child { border-bottom: 0; }
+.adm-queue-main { flex: 1 1 200px; min-width: 0; }
+.adm-queue-main b { display: block; }
+.adm-queue-main span { color: var(--muted); font-size: 14px; }
+
+/* ---------- Chart / Grafik Interaktif ---------- */
+.adm-chart { padding: 16px 22px 20px; }
+.adm-chart svg { width: 100%; height: auto; display: block; }
+.adm-chart-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.adm-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+
+.adm-seg { display: inline-flex; background: var(--muted-bg); border-radius: 999px; padding: 3px; }
+.adm-seg button { border: 0; background: none; padding: 5px 14px; border-radius: 999px; font-weight: 600; font-size: 13px; color: var(--muted); transition: all 0.15s ease; }
+.adm-seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.adm-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.adm-kpis > div { background: var(--bg); border-radius: 18px; padding: 12px 16px; }
+.adm-kpis b { display: block; font-family: var(--adm-display); font-weight: 900; font-size: 28px; line-height: 1.1; }
+.adm-kpis span { font-size: 13px; color: var(--muted); }
+.adm-chart-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px; }
+.adm-chart-wrap { position: relative; }
+.adm-legend { border: 0; background: none; padding: 2px 6px; border-radius: 8px; font-size: 13px; color: var(--ink); }
+.adm-legend[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+
+/* Interaksi Batang Grafik */
+.adm-bar { cursor: pointer; outline: none; }
+.adm-bar-bg { fill: transparent; transition: fill 0.15s ease; }
+.adm-bar:hover .adm-bar-bg { fill: #f7e9d7; }
+.adm-bar.is-sel .adm-bar-bg, .adm-bar:focus-visible .adm-bar-bg { fill: #fcdbc9; }
+
+.adm-tip { position: absolute; top: 0; transform: translate(-50%, -8px); background: var(--side); color: #fff; border-radius: 12px; padding: 8px 14px; font-size: 12px; pointer-events: none; white-space: nowrap; z-index: 10; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+.adm-tip b, .adm-tip span { display: block; }
+.adm-day h3, .adm-cats h3 { font-size: 15px; margin: 0 0 8px; }
+.adm-day ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.adm-day li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; background: var(--bg); border-radius: 14px; }
+.adm-day li > div { flex: 1 1 140px; min-width: 0; }
+.adm-day .sub { display: block; color: var(--muted); font-size: 13px; }
+.adm-cats { margin-top: 18px; }
+.adm-cat { display: grid; grid-template-columns: minmax(0, 1fr) 90px 24px; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 6px; }
+.adm-cat-bar { height: 8px; background: var(--muted-bg); border-radius: 999px; overflow: hidden; }
+.adm-cat-bar i { display: block; height: 100%; background: var(--hot); border-radius: 999px; }
+.adm-cat b { text-align: right; }
+
+/* ---------- Jejak Kasus / Timeline ---------- */
+.adm-tl { margin-top: 8px; }
+.adm-tl h3 { font-size: 15px; margin-bottom: 10px; }
+.adm-tl ol { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--line); }
+.adm-tl li { position: relative; display: grid; padding: 0 0 12px 16px; }
+.adm-tl li::before { content: ""; position: absolute; left: -20px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.adm-tl time { font-size: 12px; color: var(--muted); }
+.adm-tl-ok::before { background: var(--ok); }
+.adm-tl-warn::before { background: #d49a1f; }
+.adm-tl-info::before { background: var(--info); }
+.adm-tl-bad::before { background: #b3261e; }
+
+/* ---------- Bukti dan Detail ---------- */
+.adm-evgal { display: flex; gap: 8px; flex-wrap: wrap; }
+.adm-sec { margin: 0 0 16px; padding: 14px 18px; background: var(--bg); border-radius: 20px; }
+.adm-sec h3 { font-size: 12px; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.adm-sec .adm-dl { margin: 0; }
+
+.adm-user { display: flex; align-items: center; gap: 12px; }
+.adm-av { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--peach); color: var(--brand); display: grid; place-items: center; font-weight: 700; }
+.adm-user b { display: block; font-weight: 600; }
+.adm-user small { display: block; color: var(--muted); font-size: 13px; }
+.adm-rowactions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Pager & Penanda Banding ---------- */
+.adm-pager-ctrl { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.adm-pg { min-width: 34px; padding-left: 8px; padding-right: 8px; }
+.adm-pg[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.adm-pager-gap { padding: 0 4px; color: var(--muted); }
+
+.adm-table td.adm-reasoncell { min-width: 240px; }
+.adm-appeal { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; padding: 3px 12px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; border: 1px solid transparent; transition: all 0.15s ease; }
+.adm-appeal b { color: var(--ink); font-weight: 700; }
+.adm-appeal:hover { border-color: var(--warn); transform: translateY(-1px); }
+
+/* ---------- Filter Tanggal & Profil Akun ---------- */
+.adm-panel-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.adm-custom { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; margin-bottom: 16px; }
+.adm-custom .adm-err { margin: 0; align-self: center; }
+.adm-hint { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.adm-linkbtn { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: var(--brand); text-decoration: underline; cursor: pointer; }
+
+.adm-profile { display: block; background: none; border: 0; padding: 4px 8px; margin: -4px -8px; border-radius: 12px; text-align: left; cursor: pointer; color: inherit; transition: background 0.15s ease; }
+.adm-profile:hover { background: var(--muted-bg); }
+.adm-profile:hover b { text-decoration: underline; }
+
+.adm-mini { width: 100%; border-collapse: collapse; }
+.adm-mini th, .adm-mini td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 14px; }
+.adm-mini th { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.adm-mini tr:last-child td { border-bottom: 0; }
+
+/* ---------- Dropdown Select Custom Arrow ---------- */
+.adm-select,
+.adm-field select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 48px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.5 6 6l4.5-4.5' fill='none' stroke='%23726559' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 20px center;
+  background-size: 12px 8px;
+}
+.adm-select:hover,
+.adm-field select:hover {
+  border-color: var(--muted);
+}
+
+/* ---------- Pesan Masuk ---------- */
+.adm-msgbody { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.adm-clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted); font-size: 14px; margin-top: 2px; }
+.adm-field textarea { resize: vertical; }
+
+/* ---------- Responsif ---------- */
+@media (max-width: 860px) {
+  .adm-app { grid-template-columns: 1fr; }
+  .adm-side { position: static; height: auto; }
+  .adm-nav { flex-direction: row; flex-wrap: wrap; }
+  .adm-logout { margin-top: 12px; }
+  .adm-main { padding: 0 16px 24px; }
+  .adm-stats { grid-template-columns: 1fr; }
+  .adm-prow { flex-wrap: wrap; }
+  .adm-prow-actions { width: 100%; justify-content: flex-start; }
+  .adm-dl { grid-template-columns: 1fr; gap: 2px; }
+  .adm-dl dd { margin-bottom: 10px; }
+  .adm-detail { flex-direction: column; }
+  .adm-toolbar .adm-input[type="search"] { min-width: 0; max-width: none; width: 100%; }
+  .adm-dash-grid { grid-template-columns: 1fr; }
+  .adm-chart-body { grid-template-columns: 1fr; }
+  .adm-kpis { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .adm-btn, .adm-stat, .adm-nav a, .adm-stat-cta { transition: border-color .15s, background .15s, transform .15s, box-shadow .15s; }
+}
+
+
+/* ---------- Styling Penyelaras Queue Table (Minimalis & Tenang) ---------- */
+.adm-queue-table td {
+  vertical-align: middle !important;
+}
+.adm-q-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.adm-q-rep {
+  background: #e3effa;
+  color: #175287;
+}
+.adm-q-app {
+  background: #f2e8da;
+  color: #726559;
+}
+
+/* Mengubah chip warning/kuning "Belum ditindak" menjadi merah urgen */
+.adm-chip--warn, 
+span[class*="warn"] {
+  background: var(--bad-bg) !important;
+  color: var(--bad) !important;
+}
+
+/* ---------- Tombol aksi: satu warna untuk semua ---------- */
+.adm-root {
+  --btn: #ff5b41;
+  --btn-hover: #e84a30;
+}
+.adm-root .adm-btn--primary,
+.adm-root .adm-btn--danger {
+  background: var(--btn);
+  border-color: var(--btn);
+  color: #fff;
+}
+.adm-root .adm-btn--primary:hover:not(:disabled),
+.adm-root .adm-btn--danger:hover:not(:disabled) {
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: #fff;
+}
+
+/* ---------- Tombol aksi baris: menyamping (default semua halaman) ---------- */
+.adm-root .adm-rowactions,
+.adm-root .adm-prow-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+.adm-root .adm-rowactions .adm-btn,
+.adm-root .adm-prow-actions .adm-btn {
+  white-space: nowrap;
+}
+.adm-root .adm-table td:has(> .adm-rowactions),
+.adm-root .adm-table td:has(> .adm-prow-actions) {
+  white-space: nowrap;
+}
+
+/* ---------- Halaman Dihapus: kembali bertumpuk ---------- */
+.adm-root:has(.adm-nav a[aria-current="page"][href="/admin/dihapus"]) .adm-rowactions,
+.adm-root:has(.adm-nav a[aria-current="page"][href="/admin/dihapus"]) .adm-prow-actions {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* ---------- Judul kolom "Aksi" tampil di semua tabel ---------- */
+.adm-root .adm-table th .adm-sr,
+.adm-root .adm-mini th .adm-sr {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: nowrap;
+}
+.adm-root .adm-table thead th:last-child:empty::after,
+.adm-root .adm-mini thead th:last-child:empty::after {
+  content: "Aksi";
+}
