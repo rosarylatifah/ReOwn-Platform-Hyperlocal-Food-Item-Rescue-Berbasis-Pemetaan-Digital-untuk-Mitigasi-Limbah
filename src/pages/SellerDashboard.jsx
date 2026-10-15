@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Package, ShieldCheck, RefreshCw, Clock, ArrowUpRight, ChevronRight, X, DollarSign } from 'lucide-react';
 

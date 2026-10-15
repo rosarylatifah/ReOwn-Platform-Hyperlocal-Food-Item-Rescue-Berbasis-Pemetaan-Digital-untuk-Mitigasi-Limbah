@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { X, Send, Trash2, MapPin, Truck, MessageCircle } from 'lucide-react';
 

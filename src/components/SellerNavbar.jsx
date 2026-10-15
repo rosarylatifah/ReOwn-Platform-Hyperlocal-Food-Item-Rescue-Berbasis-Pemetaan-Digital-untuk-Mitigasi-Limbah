@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { Home, Package, CheckSquare, Inbox, History, MessageSquare, Bell, User } from 'lucide-react';
 

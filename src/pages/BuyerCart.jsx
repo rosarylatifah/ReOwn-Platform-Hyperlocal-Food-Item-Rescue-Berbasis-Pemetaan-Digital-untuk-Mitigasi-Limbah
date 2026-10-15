@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { ShoppingCart, Eye, Send, MapPin, Truck } from 'lucide-react';
 import CartDetailModal from '../components/CartDetailModal';

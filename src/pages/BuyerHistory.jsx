@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { History, Eye, CheckCircle2, XCircle, ShoppingBag, Layers } from 'lucide-react';
 import OrderDetailModal from '../components/OrderDetailModal';

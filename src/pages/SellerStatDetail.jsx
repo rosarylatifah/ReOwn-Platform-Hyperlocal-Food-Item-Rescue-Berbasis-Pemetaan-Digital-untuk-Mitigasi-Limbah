@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { ArrowLeft, Package, ShieldCheck, RefreshCw, TrendingUp } from 'lucide-react';
 

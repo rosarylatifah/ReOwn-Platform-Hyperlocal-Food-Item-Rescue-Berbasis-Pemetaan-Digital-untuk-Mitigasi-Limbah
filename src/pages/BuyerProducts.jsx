@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { Plus, MapPin, Search, Navigation, X, Minus, ShoppingCart } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';

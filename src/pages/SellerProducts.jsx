@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { Plus, MapPin, Edit2, Trash2 } from 'lucide-react';
 

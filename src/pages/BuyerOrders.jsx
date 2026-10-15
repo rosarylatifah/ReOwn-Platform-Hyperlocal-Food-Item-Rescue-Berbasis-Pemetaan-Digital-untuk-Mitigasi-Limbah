@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { Clock, RefreshCw, Eye, Package, Layers } from 'lucide-react';
 import OrderDetailModal from '../components/OrderDetailModal';
