@@ -1,0 +1,4 @@
+/* Tambahkan di bagian bawah src/app/globals.css */
+.font-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}

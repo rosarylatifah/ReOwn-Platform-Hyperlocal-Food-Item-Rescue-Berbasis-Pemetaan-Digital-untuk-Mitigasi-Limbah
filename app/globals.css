@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fff7e9;
+  --foreground: #1c1917;
+}
+
+html {
+  background-color: #fff7e9;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* ============ Reveal on scroll ============ */
+.rv {
+  opacity: 0;
+  transition:
+    opacity 700ms ease,
+    transform 1000ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--rv-delay, 0ms);
+  will-change: opacity, transform;
+}
+.rv-left  { transform: translateX(-120px); }
+.rv-right { transform: translateX(120px); }
+.rv-up    { transform: translateY(24px); }
+
+@media (max-width: 767px) {
+  .rv-left  { transform: translateX(-48px); }
+  .rv-right { transform: translateX(48px); }
+}
+
+/* Aktif: elemen Reveal sendiri + semua .rv di dalamnya */
+.rv[data-in="true"],
+[data-in="true"] .rv {
+  opacity: 1;
+  transform: none;
+}
+
+/* Kartu: tambahkan transisi hover (lift + shadow) */
+.rv-card {
+  transition:
+    opacity 700ms ease,
+    transform 1000ms cubic-bezier(0.22, 1, 0.36, 1),
+    translate 300ms ease,
+    box-shadow 300ms ease;
+  transition-delay: var(--rv-delay, 0ms);
+}
+
+/* Foto melayang pelan */
+@keyframes float-y {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -10px; }
+}
+.float-slow {
+  animation: float-y 6s ease-in-out infinite;
+}
+
+/* Parallax tipis saat scroll (browser yang belum support: efek dilewati) */
+@keyframes parallax-y {
+  from { translate: 0 28px; }
+  to   { translate: 0 -28px; }
+}
+@supports (animation-timeline: view()) {
+  .parallax {
+    animation: parallax-y linear both;
+    animation-timeline: view();
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 60s linear infinite;
+}
+
+/* Hormati pengguna yang mematikan animasi di OS */
+@media (prefers-reduced-motion: reduce) {
+  .rv,
+  .rv-card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .float-slow,
+  .parallax,
+  .animate-marquee {
+    animation: none;
+  }
+}
