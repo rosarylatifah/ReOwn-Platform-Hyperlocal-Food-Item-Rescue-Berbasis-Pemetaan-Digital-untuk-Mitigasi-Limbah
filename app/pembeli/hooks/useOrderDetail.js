@@ -1,3 +1,6 @@
+// app/pembeli/hooks/useOrderDetail.js
+"use client";
+
 import { useChat } from '@/app/pembeli/context/chat';
 
 export function useOrderDetail(order, onClose, onCancelOrder) {
@@ -9,15 +12,15 @@ export function useOrderDetail(order, onClose, onCancelOrder) {
   const currentStatus = order.status || 'Menunggu Konfirmasi';
   const isCancelable = currentStatus === 'Menunggu Konfirmasi';
 
-  // Format Fallback Data
-  const buyerName = order.buyerName || "Zara (Pembeli)";
-  const sellerName = order.sellerName || order.storeName || order.store || "Toko Rescue Batam";
-  const sellerAddress = order.sellerAddress || order.location || "Jl. Ahmad Yani, Batam Center, Batam";
-  const productName = order.productName || order.name || "Produk Rescue";
+  // Data Asli dari Pesanan (Tanpa teks hardcode/statis)
+  const buyerName = order.buyerName || "";
+  const sellerName = order.sellerName || order.storeName || order.store || "";
+  const sellerAddress = order.sellerAddress || order.location || "";
+  const productName = order.productName || order.name || "";
   const totalPrice = order.totalPrice || order.price || "Rp 0";
-  const deliveryOption = order.deliveryOption || "Ambil di Tempat";
+  const deliveryOption = order.deliveryOption || "";
   const productImage = order.image || order.img || "";
-  const description = order.description || `${productName} berkualitas segar siap diselamatkan dari ${sellerName}.`;
+  const description = order.description || "";
 
   // LOGIKA FORMAT TANGGAL AMAN
   const formatDate = (dateInput) => {

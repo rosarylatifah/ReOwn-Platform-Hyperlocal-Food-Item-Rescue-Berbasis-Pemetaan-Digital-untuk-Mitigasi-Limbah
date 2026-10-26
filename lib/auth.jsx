@@ -75,20 +75,35 @@ export function AuthProvider({ children }) {
       telepon: telepon.trim(),
       email: mail,
       passwordHash,
+      storeName: `${nama.trim()}'s Store`, // Default nama toko untuk penjual
+      role: 'pembeli', // Default role awal
     };
     localStorage.setItem(USERS_KEY, JSON.stringify([...users, created]));
-    startSession({ nama: created.nama, email: created.email, telepon: created.telepon });
+    startSession({ 
+      nama: created.nama, 
+      email: created.email, 
+      telepon: created.telepon, 
+      storeName: created.storeName, 
+      role: created.role 
+    });
     return { ok: true };
   }, []);
 
   const login = useCallback(async ({ email, password }) => {
     const mail = email.trim().toLowerCase();
-    const found = readUsers().find((u) => u.email === mail);
+    const users = readUsers();
+    const found = users.find((u) => u.email === mail);
     const passwordHash = await hash(password);
     if (!found || found.passwordHash !== passwordHash) {
       return { ok: false, error: "Email atau kata sandi salah." };
     }
-    startSession({ nama: found.nama, email: found.email, telepon: found.telepon });
+    startSession({ 
+      nama: found.nama, 
+      email: found.email, 
+      telepon: found.telepon,
+      storeName: found.storeName || `${found.nama}'s Store`,
+      role: found.role || 'pembeli'
+    });
     return { ok: true };
   }, []);
 
@@ -97,9 +112,35 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  // TAMBAHAN: Fungsi untuk Mengedit Profil (Nama, Telepon, Nama Toko, dll)
+  const updateProfile = useCallback(async (updatedData) => {
+    if (!user) return { ok: false, error: "Belum login" };
+
+    const users = readUsers();
+    const updatedUsers = users.map((u) => {
+      if (u.email === user.email) {
+        return { ...u, ...updatedData };
+      }
+      return u;
+    });
+
+    localStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
+    
+    const newSession = { ...user, ...updatedData };
+    startSession(newSession);
+    return { ok: true };
+  }, [user]);
+
+  // TAMBAHAN: Fungsi untuk Switch Peran / Update Sesi
+  const switchRole = useCallback((newRoleData) => {
+    if (!user) return;
+    const updated = { ...user, ...newRoleData };
+    startSession(updated);
+  }, [user]);
+
   const value = useMemo(
-    () => ({ user, hydrated, register, login, logout }),
-    [user, hydrated, register, login, logout]
+    () => ({ user, hydrated, register, login, logout, updateProfile, switchRole }),
+    [user, hydrated, register, login, logout, updateProfile, switchRole]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,11 +1,16 @@
+// components/pembeli/BuyerCart.jsx (atau app/pembeli/keranjang/page.jsx)
 "use client";
 
-import React from 'react';
-import { ShoppingCart, Eye, Send, MapPin, Truck, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation'; // 👈 Import router untuk navigasi
+import { ShoppingCart, Eye, Send, MapPin, Truck, Trash2, ArrowRight } from 'lucide-react';
 import { useBuyerCart } from '@/app/pembeli/hooks/useBuyerCart';
 import CartDetail from '@/components/pembeli/CartDetail';
 
 export default function BuyerCart({ onSendRequest }) {
+  const router = useRouter(); // 👈 Inisialisasi router
+  const [isShopBtnHovered, setIsShopBtnHovered] = useState(false); // 👈 State hover tombol mulai belanja
+
   const {
     cart,
     hoveredCard,
@@ -61,7 +66,7 @@ export default function BuyerCart({ onSendRequest }) {
                   borderRadius: '16px',
                   padding: '20px 24px',
                   display: 'flex',
-                  justify: 'space-between',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
                   border: isCardHovered ? '1.5px solid #D95A36' : '1px solid rgba(0,0,0,0.06)',
                   boxShadow: isCardHovered ? '0 10px 25px rgba(217, 90, 54, 0.12)' : '0 4px 14px rgba(0,0,0,0.03)',
@@ -250,8 +255,65 @@ export default function BuyerCart({ onSendRequest }) {
             );
           })
         ) : (
-          <div style={{ textAlign: 'center', padding: '50px', backgroundColor: '#FFF', borderRadius: '16px', color: '#888' }}>
-            Keranjang kamu masih kosong. Yuk cari produk rescue di Halaman Produk!
+          /* TAMPILAN KETIKA KERANJANG KOSONG */
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '70px 20px', 
+            backgroundColor: '#FFF', 
+            borderRadius: '20px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+            border: '1px solid rgba(0,0,0,0.05)'
+          }}>
+            {/* Lingkaran Ikon Keranjang di Tengah */}
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: '#FFF3ED',
+              color: '#D95A36',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '16px'
+            }}>
+              <ShoppingCart size={32} />
+            </div>
+
+            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '20px', color: '#1A1A1A', margin: '0 0 6px 0' }}>
+              Keranjang Kamu Masih Kosong
+            </h3>
+            <p style={{ fontSize: '13px', color: '#666', maxWidth: '360px', margin: '0 0 24px 0', lineHeight: '1.5' }}>
+              Belum ada makanan atau barang rescue yang kamu pilih. Yuk mulai cari dan selamatkan barang di sekitarmu!
+            </p>
+
+            {/* Tombol Mulai Belanja */}
+            <button
+              onClick={() => router.push('/pembeli/produk')}
+              onMouseEnter={() => setIsShopBtnHovered(true)}
+              onMouseLeave={() => setIsShopBtnHovered(false)}
+              style={{
+                backgroundColor: isShopBtnHovered ? '#C54E2D' : '#D95A36',
+                color: '#FFF',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '25px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: isShopBtnHovered ? '0 8px 20px rgba(217, 90, 54, 0.35)' : '0 4px 12px rgba(217, 90, 54, 0.2)',
+                transform: isShopBtnHovered ? 'translateY(-2px) scale(1.03)' : 'translateY(0)',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+            >
+              Mulai Belanja <ArrowRight size={16} />
+            </button>
           </div>
         )}
       </div>

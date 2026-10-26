@@ -6,10 +6,11 @@ import { Home, Package, CheckSquare, History, MessageSquare, Bell, User, Shoppin
 import Link from 'next/link';
 import { useCart } from '@/app/pembeli/context/cart';
 import { useChat } from '@/app/pembeli/context/chat';
+import { useNotification } from '@/app/pembeli/context/notification'; // 👈 Tambahkan import notification
 
 import NotificationPopover from '@/components/pembeli/NotificationPopover';
 import ChatPopover from '@/components/pembeli/ChatPopover';
-import ProfilePopover from '@/components/pembeli/ProfilePopover';
+import ProfilePopover from '@/components/profil/ProfilePopover';
 
 export default function BuyerNavbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function BuyerNavbar() {
 
   const { totalCartItems } = useCart();
   const { unreadChatCount } = useChat();
+  const { unreadCount } = useNotification(); // 👈 Ambil data unreadCount notifikasi
   const pathname = usePathname();
 
   const navItems = [
@@ -248,7 +250,7 @@ export default function BuyerNavbar() {
             )}
           </div>
 
-          {/* TOMBOL NOTIFIKASI (DENGAN BADGE ANGKA) */}
+          {/* TOMBOL NOTIFIKASI (DINAMIS SESUAI unreadCount) */}
           <div style={{ position: 'relative' }}>
             <button 
               onClick={() => togglePopover('notif')}
@@ -267,15 +269,17 @@ export default function BuyerNavbar() {
               <Bell size={18} color="#FFF" />
             </button>
 
-            {/* BADGE ANGKA NOTIFIKASI */}
-            <span style={{
-              position: 'absolute', top: '-4px', right: '-4px',
-              backgroundColor: '#FFF', color: '#D95A36', fontSize: '10px', fontWeight: 'bold',
-              borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-            }}>
-              2
-            </span>
+            {/* BADGE NOTIFIKASI HANYA MUNCUL JIKA unreadCount > 0 */}
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute', top: '-4px', right: '-4px',
+                backgroundColor: '#FFF', color: '#D95A36', fontSize: '10px', fontWeight: 'bold',
+                borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+              }}>
+                {unreadCount}
+              </span>
+            )}
           </div>
 
           {/* TOMBOL KERANJANG */}

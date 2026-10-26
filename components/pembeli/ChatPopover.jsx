@@ -1,15 +1,18 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { MessageSquare, X, Search, ArrowLeft, Send, Image as ImageIcon, MapPin, Paperclip } from 'lucide-react';
+import { X, Search, ArrowLeft, Send, Image as ImageIcon, MapPin, Paperclip, MessageSquare } from 'lucide-react';
 import { useChat } from '@/app/pembeli/context/chat';
 
-export default function ChatPopover({ isOpen, onClose }) {
+export default function ChatPopover({ isOpen, onClose, externalActiveChatId, onClearActiveChat }) {
   const { chats, allMessages, sendMessage, unreadChatCount } = useChat();
-  const [activeChatId, setActiveChatId] = useState(null);
+  const [internalActiveChatId, setInternalActiveChatId] = useState(null);
+  
+  // Sinkronisasi jika ada chat aktif yang dipicu dari luar (misal tombol Hubungi Penjual)
+  const activeChatId = externalActiveChatId || internalActiveChatId;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [inputMessage, setInputMessage] = useState('');
-  
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -40,7 +43,7 @@ export default function ChatPopover({ isOpen, onClose }) {
   };
 
   const handleSendLocation = () => {
-    handleSend(null, 'buyer', '📍 [Berbagi Lokasi Penjemputan: Nagoya Hill, Batam]');
+    handleSend(null, 'buyer', '📍 [Berbagi Lokasi Penjemputan: Batam Centre]');
   };
 
   return (
@@ -90,40 +93,70 @@ export default function ChatPopover({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* DAFTAR CHAT */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
-              {filteredChats.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => setActiveChatId(chat.id)}
-                  style={{
-                    padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer',
-                    backgroundColor: chat.unread ? '#FFF8F6' : '#FFF', borderBottom: '1px solid #F8F8F8'
-                  }}
-                >
-                  <img src={chat.avatar} alt={chat.storeName} style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }} />
-                  <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                      <h4 style={{ margin: 0, fontSize: '13px', fontWeight: chat.unread ? '700' : '600', color: '#1A1A1A' }}>{chat.storeName}</h4>
-                      <span style={{ fontSize: '10px', color: '#999' }}>{chat.time}</span>
-                    </div>
-                    <p style={{ margin: 0, fontSize: '12px', color: chat.unread ? '#1A1A1A' : '#666', fontWeight: chat.unread ? '600' : 'normal', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {chat.lastMessage}
-                    </p>
-                  </div>
-                  {chat.unread && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#D95A36' }} />}
+            {/* DAFTAR CHAT (KOSONG JIKA BELUM ADA PESAN MASUK) */}
+            <div style={{ 
+              flex: 1, 
+              overflowY: 'auto', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'center', 
+              alignItems: 'center', // 👈 Biar konten tepat di tengah secara horizontal
+              padding: '20px', 
+              textAlign: 'center' 
+            }}>
+              {filteredChats.length === 0 ? (
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', // 👈 Biar ikon & teks sejajar di tengah
+                  justifyContent: 'center' 
+                }}>
+                  <MessageSquare size={42} color="#E5E7EB" style={{ marginBottom: '12px' }} />
+                  <p style={{ fontSize: '14px', fontWeight: '700', color: '#1A1A1A', margin: '0 0 4px 0' }}>
+                    Belum ada pesan
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#666', margin: 0, maxWidth: '240px', lineHeight: '1.4' }}>
+                    Pesan dari penjual atau riwayat chat kamu akan muncul di sini.
+                  </p>
                 </div>
-              ))}
+              ) : (
+                filteredChats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    onClick={() => setInternalActiveChatId(chat.id)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 20px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px', 
+                      cursor: 'pointer',
+                      backgroundColor: chat.unread ? '#FFF8F6' : '#FFF', 
+                      borderBottom: '1px solid #F8F8F8'
+                    }}
+                  >
+                    <img src={chat.avatar} alt={chat.storeName} style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }} />
+                    <div style={{ flex: 1, overflow: 'hidden', textAlign: 'left' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                        <h4 style={{ margin: 0, fontSize: '13px', fontWeight: chat.unread ? '700' : '600', color: '#1A1A1A' }}>{chat.storeName}</h4>
+                        <span style={{ fontSize: '10px', color: '#999' }}>{chat.time}</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '12px', color: chat.unread ? '#1A1A1A' : '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {chat.lastMessage}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
+
           </>
         ) : (
-          /* ROOM CHAT TAMPILAN DALAM POPOVER (BERSIH & RAPI) */
+          /* ROOM CHAT */
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
-            
-            {/* HEADER ROOM CHAT (TOMBOL BALAS PENJUAL DIHAPUS, JADI LEBIH BERSIH) */}
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF3ED' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <button onClick={() => setActiveChatId(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#D95A36', padding: 0, display: 'flex' }}>
+                <button onClick={() => { setInternalActiveChatId(null); if(onClearActiveChat) onClearActiveChat(); }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#D95A36', padding: 0, display: 'flex' }}>
                   <ArrowLeft size={18} />
                 </button>
                 <img src={currentChat?.avatar} alt="Toko" style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }} />
@@ -132,7 +165,6 @@ export default function ChatPopover({ isOpen, onClose }) {
                   <span style={{ fontSize: '10px', color: '#16A34A', fontWeight: '600' }}>● Online</span>
                 </div>
               </div>
-
               <button onClick={onClose} style={{ border: 'none', backgroundColor: '#F5F5F5', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#666' }}>
                 <X size={14} />
               </button>
@@ -161,54 +193,19 @@ export default function ChatPopover({ isOpen, onClose }) {
               })}
             </div>
 
-            {/* MENU LAMPIRAN */}
-            {showAttachmentMenu && (
-              <div style={{
-                position: 'absolute', bottom: '65px', left: '12px',
-                backgroundColor: '#FFF', borderRadius: '14px', boxShadow: '0 5px 20px rgba(0,0,0,0.15)',
-                padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 10, border: '1px solid #EEE'
-              }}>
-                <button 
-                  onClick={() => fileInputRef.current.click()}
-                  style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', fontSize: '12px', cursor: 'pointer', borderRadius: '8px', color: '#333', width: '100%', textAlign: 'left' }}
-                >
-                  <ImageIcon size={16} color="#D95A36" /> Kirim Gambar / Foto
-                </button>
-                <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
-
-                <button 
-                  onClick={handleSendLocation}
-                  style={{ border: 'none', background: 'none', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', fontSize: '12px', cursor: 'pointer', borderRadius: '8px', color: '#333', width: '100%', textAlign: 'left' }}
-                >
-                  <MapPin size={16} color="#2563EB" /> Berbagi Lokasi (Pick-up)
-                </button>
-              </div>
-            )}
-
-            {/* INPUT PESAN */}
+            {/* INPUT */}
             <form onSubmit={(e) => handleSend(e, 'buyer')} style={{ padding: '10px 14px', borderTop: '1px solid #F0F0F0', backgroundColor: '#FFF', display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button 
-                type="button" 
-                onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-                style={{ 
-                  border: 'none', backgroundColor: showAttachmentMenu ? '#FFF3ED' : '#F5F5F5', 
-                  borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                  cursor: 'pointer', color: '#D95A36', flexShrink: 0 
-                }}
-              >
+              <button type="button" onClick={() => setShowAttachmentMenu(!showAttachmentMenu)} style={{ border: 'none', backgroundColor: '#F5F5F5', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#D95A36' }}>
                 <Paperclip size={16} />
               </button>
-
               <input 
-                type="text" placeholder="Tulis pesan..." value={inputMessage} onChange={(e) => setSearchQuery ? setInputMessage(e.target.value) : null}
+                type="text" placeholder="Tulis pesan..." value={inputMessage} onChange={(e) => setInputMessage(e.target.value)}
                 style={{ flex: 1, padding: '8px 14px', borderRadius: '20px', border: '1px solid #E5E5E5', outline: 'none', fontSize: '12px' }}
               />
-
-              <button type="submit" style={{ backgroundColor: '#D95A36', border: 'none', borderRadius: '50%', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#FFF', flexShrink: '0' }}>
+              <button type="submit" style={{ backgroundColor: '#D95A36', border: 'none', borderRadius: '50%', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#FFF' }}>
                 <Send size={14} />
               </button>
             </form>
-
           </div>
         )}
       </div>

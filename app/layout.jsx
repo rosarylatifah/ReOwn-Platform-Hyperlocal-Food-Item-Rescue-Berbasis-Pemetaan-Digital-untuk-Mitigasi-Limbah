@@ -1,6 +1,7 @@
 import { DM_Sans } from "next/font/google";
 import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart";
+import { ProfileProvider } from "@/lib/ProfileContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import "./globals.css";
 
@@ -21,8 +22,10 @@ export default function RootLayout({ children }) {
       >
         <AuthProvider>
           <CartProvider>
-            {children}
-            <CartDrawer />
+            <ProfileProvider>
+              {children}
+              <CartDrawer />
+            </ProfileProvider>
           </CartProvider>
         </AuthProvider>
       </body>

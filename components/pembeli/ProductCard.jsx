@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Plus, MapPin, Clock, AlertCircle } from 'lucide-react';
-import StorePopover from './StorePopover';
+import StorePopover from '../profil/StorePopover';
 
 export default function ProductCard({
   item,

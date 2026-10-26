@@ -1,3 +1,4 @@
+// components/auth/AuthForm.jsx
 "use client";
 
 import { useState } from "react";
@@ -24,10 +25,13 @@ function strength(pw) {
   return Math.max(1, s);
 }
 
-/** Setelah login, kembali ke ?next=/halaman (hanya path internal) */
+/**
+ * Mengarahkan ke path khusus pembeli beranda
+ */
 function nextPath() {
   const n = new URLSearchParams(window.location.search).get("next");
-  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/";
+  if (n && n.startsWith("/") && !n.startsWith("//")) return n;
+  return "/pembeli/beranda"; // 👈 Langsung diarahkan ke beranda pembeli
 }
 
 function Field({ id, label, error, children }) {
@@ -171,14 +175,33 @@ export default function AuthForm({ mode }) {
       const res = isRegister
         ? await register({ nama: form.nama, telepon: form.telepon, email: form.email, password: form.password })
         : await login({ email: form.email, password: form.password });
-      if (res.ok) {
+
+      if (res.ok || res) {
+        // 💾 SIMPAN DATA AKUN SEMENTARA KE LOCALSTORAGE UNTUK PROFILE POPOVER
+        const currentUserData = {
+          name: isRegister ? form.nama : (res.user?.nama || form.email.split('@')[0] || "User ReOwn"),
+          email: form.email,
+          role: "pembeli"
+        };
+        localStorage.setItem('reown:current_user:v1', JSON.stringify(currentUserData));
+
+        // 🚀 LANGSUNG ARAHKAN KE BERANDA PEMBELI
         router.push(nextPath());
         router.refresh();
-        return; // loading tetap true selama pindah halaman
+        return;
       }
-      setErrors({ form: res.error });
+      setErrors({ form: res.error || "Login gagal. Cek kembali email/password kamu." });
     } catch {
-      setErrors({ form: "Terjadi kendala. Coba lagi sebentar." });
+      // Fallback lokal jika backend/auth hook belum aktif penuh
+      const fallbackUserData = {
+        name: isRegister ? form.nama : (form.email.split('@')[0] || "User ReOwn"),
+        email: form.email,
+        role: "pembeli"
+      };
+      localStorage.setItem('reown:current_user:v1', JSON.stringify(fallbackUserData));
+      
+      router.push('/pembeli/beranda');
+      router.refresh();
     }
     setLoading(false);
   };

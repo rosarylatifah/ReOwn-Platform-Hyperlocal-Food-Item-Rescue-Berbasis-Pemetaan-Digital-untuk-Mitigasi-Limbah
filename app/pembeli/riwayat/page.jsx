@@ -1,20 +1,31 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { History, ShoppingBag, Layers, XCircle } from 'lucide-react';
-import { historyOrders } from '@/lib/pembeli/historyData';
 
 import OrderDetailModal from '@/components/pembeli/OrderDetailModal';
 import ReportModal from '@/components/pembeli/ReportModal';
-// NARIK KODE KARTU YANG SAMA
 import OrderItemCard from '@/components/pembeli/OrderItemCard';
 
 export default function BuyerHistory() {
+  const [historyOrders, setHistoryOrders] = useState([]);
   const [activeFilter, setActiveFilter] = useState('Semua');
   const [hoveredFilter, setHoveredFilter] = useState(null);
   
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedReportOrder, setSelectedReportOrder] = useState(null);
+
+  // Ambil data riwayat dari localStorage saat halaman dimuat
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('reown_order_history');
+    if (savedHistory) {
+      try {
+        setHistoryOrders(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error("Gagal parsing riwayat pesanan:", e);
+      }
+    }
+  }, []);
 
   const totalCount = historyOrders.length;
   const completedCount = historyOrders.filter(o => o.status === 'Selesai').length;

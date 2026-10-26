@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { X, MessageCircle, Ban, MapPin, Calendar, Clock, ShoppingBag } from 'lucide-react';
+import { X, MessageCircle, Ban, MapPin, Calendar, Clock, ShoppingBag, Package } from 'lucide-react';
 import { useOrderDetail } from '@/app/pembeli/hooks/useOrderDetail';
 
 export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
@@ -83,7 +83,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
           backgroundColor: '#FFF',
           borderRadius: '24px',
           width: '100%',
-          maxWidth: '700px',
+          maxWidth: '720px',
           maxHeight: '90vh',
           overflowY: 'auto',
           padding: '28px',
@@ -95,9 +95,14 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
         {/* Header Title & Close Button */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #F0F0F0', paddingBottom: '12px' }}>
           <div>
-            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#D95A36', textTransform: 'uppercase' }}>
-              ID: {order.id || 'REQ-000'}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#D95A36', textTransform: 'uppercase' }}>
+                ID: {order.id || 'REQ-000'}
+              </span>
+              <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', backgroundColor: '#FFF3ED', color: '#D95A36' }}>
+                {currentStatus}
+              </span>
+            </div>
             <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '21px', color: '#1A1A1A', margin: '2px 0 0 0', fontWeight: 'bold' }}>
               Rincian Detail Pesanan
             </h3>
@@ -129,6 +134,16 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
           
           {/* SISI KIRI: Detail Info Utama */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
+                Nama Produk
+              </label>
+              <div style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid #E5E7EB', backgroundColor: '#FAFAFA', fontSize: '13px', fontWeight: 'bold', color: '#1A1A1A', boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Package size={14} color="#D95A36" />
+                <span>{productName}</span>
+              </div>
+            </div>
+
             <div>
               <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
                 Nama Pembeli
@@ -197,7 +212,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
             {/* Gambar Produk Utuh */}
             <div style={{
               width: '100%',
-              height: '140px',
+              height: '130px',
               borderRadius: '12px',
               border: '1px solid #E5E7EB',
               overflow: 'hidden',
@@ -258,7 +273,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'center',
+                  justifyContent: 'center', // Benerin properti flexbox dari justify ke justifyContent
                   gap: '8px',
                   transition: 'all 0.2s ease'
                 }}
@@ -266,7 +281,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
                 <MessageCircle size={16} /> Hubungi Penjual
               </button>
 
-              {/* HANYA MUNCUL JIKA STATUS 'Menunggu Konfirmasi' */}
+              {/* HANYA MUNCUL JIKA STATUS 'Menunggu Konfirmasi' / BISA DICANCEL */}
               {isCancelable && (
                 <button 
                   onClick={handleCancel}
@@ -283,7 +298,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    justify: 'center',
+                    justifyContent: 'center', // Benerin properti flexbox dari justify ke justifyContent
                     gap: '8px',
                     transition: 'all 0.2s ease'
                   }}

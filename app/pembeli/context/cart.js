@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
@@ -44,22 +44,21 @@ export function CartProvider({ children }) {
     localStorage.setItem('reown_product_stocks', JSON.stringify(newStocks));
   };
 
-  // Mendapatkan sisa stok terkini suatu produk (default ke stok awal jika belum tercatat)
+  // Mendapatkan sisa stok terkini suatu produk
   const getProductStock = (product) => {
     const productId = String(product.id);
     if (productStocks[productId] !== undefined) {
       return productStocks[productId];
     }
-    return product.stock || 5; // Default stok awal misal 5 porsi
+    return product.stock || 5; 
   };
 
-  // Fungsi Tambah Produk ke Keranjang (Membatasi agar tidak melebihi sisa stok riil toko)
+  // Fungsi Tambah Produk ke Keranjang
   const addToCart = (product, quantity = 1) => {
     const currentStock = getProductStock(product);
     const cartItem = cart.find((i) => String(i.id) === String(product.id));
     const currentQtyInCart = cartItem ? cartItem.quantity : 0;
 
-    // Validasi standar profesional: total di keranjang + qty baru tidak boleh > sisa stok toko
     if (currentQtyInCart + quantity > currentStock) {
       alert(`Maaf, sisa stok toko ini tidak mencukupi! Stok tersedia: ${currentStock}`);
       return false;
@@ -89,13 +88,11 @@ export function CartProvider({ children }) {
     return true;
   };
 
-  // Cek jumlah produk di keranjang
   const getItemQuantityInCart = (productId) => {
     const item = cart.find((i) => String(i.id) === String(productId));
     return item ? item.quantity : 0;
   };
 
-  // Fungsi Ubah Opsi Pengantaran
   const updateDeliveryOption = (id, option) => {
     const updated = cart.map(item => 
       String(item.id) === String(id) ? { ...item, deliveryOption: option } : item
@@ -103,17 +100,15 @@ export function CartProvider({ children }) {
     saveCartToStorage(updated);
   };
 
-  // Fungsi Hapus Item dari Keranjang
   const removeFromCart = (id) => {
     const updated = cart.filter(item => String(item.id) !== String(id));
     saveCartToStorage(updated);
   };
 
-  // FUNGSI CHECKOUT / KIRIM PERMINTAAN (STOK TOKO RESMI TERPOTONG DI SINI)
+  // FUNGSI CHECKOUT / KIRIM PERMINTAAN
   const sendRequest = (item, onSendRequestCallback) => {
     if (window.confirm(`Kirim permintaan rescue untuk "${item.name}" dengan opsi "${item.deliveryOption}"?`)) {
       
-      // 1. Kurangi stok produk secara permanen di sistem toko
       const productId = String(item.id);
       const currentStock = getProductStock(item);
       const newStock = Math.max(0, currentStock - (item.quantity || 1));
@@ -121,10 +116,8 @@ export function CartProvider({ children }) {
       const updatedStocks = { ...productStocks, [productId]: newStock };
       saveStocksToStorage(updatedStocks);
 
-      // 2. Hapus dari keranjang pembeli
       removeFromCart(item.id);
       
-      // 3. Buat objek pesanan baru (Masuk ke status Menunggu Konfirmasi / Dalam Proses)
       const newOrder = {
         id: `REQ-${Date.now().toString().slice(-6)}`,
         productId: item.id,
@@ -145,7 +138,6 @@ export function CartProvider({ children }) {
         })
       };
 
-      // 4. Simpan ke daftar pesanan global
       const updatedOrders = [newOrder, ...orders];
       saveOrdersToStorage(updatedOrders);
 
@@ -156,7 +148,39 @@ export function CartProvider({ children }) {
     }
   };
 
-  // Total item untuk badge navbar
+  // ==========================================
+  // FUNGSI BARU: BATALKAN PESANAN
+  // ==========================================
+  const cancelOrder = (orderId) => {
+    const orderToCancel = orders.find(o => String(o.id) === String(orderId));
+    if (!orderToCancel) return;
+
+    // 1. Kembalikan stok toko
+    if (orderToCancel.productId) {
+      const pId = String(orderToCancel.productId);
+      const currentStock = productStocks[pId] !== undefined ? productStocks[pId] : 5;
+      const restoredStock = currentStock + (orderToCancel.quantity || 1);
+      const updatedStocks = { ...productStocks, [pId]: restoredStock };
+      saveStocksToStorage(updatedStocks);
+    }
+
+    // 2. Simpan ke Riwayat Pesanan (localStorage khusus riwayat)
+    const savedHistory = localStorage.getItem('reown_order_history');
+    const currentHistory = savedHistory ? JSON.parse(savedHistory) : [];
+    const canceledOrderEntry = {
+      ...orderToCancel,
+      status: 'Dibatalkan',
+      canceledAt: new Date().toLocaleString('id-ID')
+    };
+    localStorage.setItem('reown_order_history', JSON.stringify([canceledOrderEntry, ...currentHistory]));
+
+    // 3. Hapus dari daftar pesanan aktif
+    const updatedOrders = orders.filter(o => String(o.id) !== String(orderId));
+    saveOrdersToStorage(updatedOrders);
+
+    alert(`Pesanan ${orderToCancel.productName || 'produk'} berhasil dibatalkan dan dipindahkan ke Riwayat Pesanan!`);
+  };
+
   const totalCartItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   return (
@@ -167,9 +191,10 @@ export function CartProvider({ children }) {
       updateDeliveryOption,
       removeFromCart,
       sendRequest,
+      cancelOrder, // 👈 Jangan lupa di-export di sini agar terbaca di halaman pesanan!
       totalCartItems,
       getItemQuantityInCart,
-      getProductStock // <--- Di-export agar halaman produk/beranda bisa nampilkeun sisa stok real-time
+      getProductStock
     }}>
       {children}
     </CartContext.Provider>

@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Store } from 'lucide-react';
 import Link from 'next/link';
 
-// Import data slides dan products khusus dari dashboardData.js
-import { slides, products } from '@/lib/pembeli/dashboardData';
+// Import data slides banner
+import { slides } from '@/lib/pembeli/dashboardData';
 
-// Import context keranjang
+// Import helper produk dari localStorage
+import { getSharedProducts } from '@/lib/pembeli/productHelper';
+
+// Import context keranjang & komponen pembeli
 import { useCart } from '@/app/pembeli/context/cart';
-
-// Import komponen reusable
 import ProductCard from '@/components/pembeli/ProductCard';
 import ProductDetail from '@/components/pembeli/ProductDetail';
 import ReportModal from '@/components/pembeli/ReportModal';
@@ -20,8 +21,8 @@ export default function BuyerDashboard() {
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHoveredSlider, setIsHoveredSlider] = useState(false);
+  const [promoProducts, setPromoProducts] = useState([]);
   
-  // State untuk Popover Toko & Modal
   const [activeStorePopover, setActiveStorePopover] = useState(null);
   const [isSeeAllHovered, setIsSeeAllHovered] = useState(false);
   const [isExploreHovered, setIsExploreHovered] = useState(false);
@@ -29,7 +30,10 @@ export default function BuyerDashboard() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [reportingProduct, setReportingProduct] = useState(null);
 
-  const promoProducts = products || [];
+  // Ambil produk asli dari helper localStorage saat halaman dimuat
+  useEffect(() => {
+    setPromoProducts(getSharedProducts());
+  }, []);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
@@ -50,7 +54,7 @@ export default function BuyerDashboard() {
   return (
     <div style={{ backgroundColor: '#FAF0EC', minHeight: '100vh', margin: 0, paddingTop: '110px', paddingBottom: '60px', overflowX: 'hidden', fontFamily: 'Inter, sans-serif' }}>
       
-      {/* HERO SECTION SLIDER */}
+      {/* HERO SECTION SLIDER DENGAN EFEK GRADASI ASLI */}
       <div 
         onMouseEnter={() => setIsHoveredSlider(true)}
         onMouseLeave={() => setIsHoveredSlider(false)}
@@ -68,7 +72,7 @@ export default function BuyerDashboard() {
           display: 'flex'
         }}>
 
-          {/* SISI KIRI: BANNER */}
+          {/* SISI KIRI: BANNER GAMBAR & GRADASI HALUS */}
           <div style={{ position: 'relative', width: '55%', height: '100%', overflow: 'hidden' }}>
             {slides.map((slide, index) => (
               <img 
@@ -89,6 +93,7 @@ export default function BuyerDashboard() {
               />
             ))}
 
+            {/* EFEK GRADASI ANTARA FOTO DAN BACKGROUND PUTIH */}
             <div style={{
               position: 'absolute',
               top: 0,
@@ -166,6 +171,7 @@ export default function BuyerDashboard() {
             </Link>
           </div>
 
+          {/* TOMBOL NAVIGASI SLIDER KIRI & KANAN */}
           <button onClick={prevSlide} style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)', backgroundColor: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(4px)', border: 'none', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}>
             <ChevronLeft size={20} color="#1A1A1A" />
           </button>
@@ -174,6 +180,7 @@ export default function BuyerDashboard() {
             <ChevronRight size={20} color="#1A1A1A" />
           </button>
 
+          {/* INDIKATOR TITIK SLIDER */}
           <div style={{ position: 'absolute', bottom: '15px', right: '45px', display: 'flex', gap: '6px', zIndex: 10 }}>
             {slides.map((_, idx) => (
               <div 
@@ -193,15 +200,15 @@ export default function BuyerDashboard() {
         </div>
       </div>
 
-      {/* KONTEN UTAMA PROMO */}
+      {/* KONTEN UTAMA: DAFTAR PRODUK TERBARU DARI PENJUAL */}
       <div style={{ padding: '35px 40px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
           <div>
             <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '26px', color: '#1A1A1A', fontWeight: '600', margin: '0 0 4px 0' }}>
-              Promo "Last Chance" 🔥
+              Produk Rescue Terbaru 🔥
             </h2>
             <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
-              Penyelamatan makanan terlaris dengan batas waktu promo paling mendesak!
+              Daftar barang dan makanan surplus yang baru saja diposting oleh penjual lokal!
             </p>
           </div>
 
@@ -230,30 +237,48 @@ export default function BuyerDashboard() {
           </Link>
         </div>
 
-        {/* GRID PRODUK PROMO MENGGUNAKAN ProductCard REUSABLE */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
-          gap: '20px', 
-          paddingBottom: '20px', 
-          paddingTop: '10px' 
-        }}>
-          {promoProducts.map((item) => (
-            <ProductCard 
-              key={item.id}
-              item={item}
-              isPromo={true} // 👈 Nampilin Badge Promo
-              activeStorePopover={activeStorePopover}
-              setActiveStorePopover={setActiveStorePopover}
-              onAddToCart={(prod) => {
-                addToCart(prod, 1);
-                alert(`Berhasil menambahkan ${prod.name} ke Keranjang!`);
-              }}
-              onSelectProduct={(prod) => setSelectedProduct(prod)}
-              onReportProduct={(prod) => setReportingProduct(prod)}
-            />
-          ))}
-        </div>
+        {promoProducts.length === 0 ? (
+          <div style={{
+            backgroundColor: '#FFF',
+            borderRadius: '20px',
+            padding: '60px 20px',
+            textAlign: 'center',
+            border: '2px dashed #E5E7EB',
+            marginTop: '10px'
+          }}>
+            <div style={{ width: '60px', height: '60px', backgroundColor: '#FAF0EC', color: '#D95A36', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+              <Store size={28} />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1A1A1A', margin: '0 0 6px 0' }}>Belum Ada Produk Rescue</h3>
+            <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
+              Belum ada penjual yang memposting produk. Coba switch ke mode penjual lalu tambahkan beberapa produk terlebih dahulu!
+            </p>
+          </div>
+        ) : (
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+            gap: '24px', 
+            paddingBottom: '20px', 
+            paddingTop: '10px' 
+          }}>
+            {promoProducts.map((item) => (
+              <ProductCard 
+                key={item.id}
+                item={item}
+                isPromo={true}
+                activeStorePopover={activeStorePopover}
+                setActiveStorePopover={setActiveStorePopover}
+                onAddToCart={(prod) => {
+                  addToCart(prod, 1);
+                  alert(`Berhasil menambahkan ${prod.name} ke Keranjang!`);
+                }}
+                onSelectProduct={(prod) => setSelectedProduct(prod)}
+                onReportProduct={(prod) => setReportingProduct(prod)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* MODAL DETAIL PRODUK */}

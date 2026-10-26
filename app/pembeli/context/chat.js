@@ -1,90 +1,95 @@
 "use client";
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const ChatContext = createContext();
+const ChatContext = createContext(null);
 
-const initialChats = [
-  {
-    id: 1,
-    storeName: 'ReOwn Bakery Batam',
-    avatar: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=100&auto=format&fit=crop&q=80',
-    lastMessage: 'Halo Kak! Pesanan Roti Manis Box sudah siap diambil yaa di toko.',
-    time: '10:42 WIB',
-    unread: true,
-  },
-  {
-    id: 2,
-    storeName: 'Burger Grill Centre',
-    avatar: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100&auto=format&fit=crop&q=80',
-    lastMessage: 'Siap Kak, nanti tinggal tunjukkan nomor pesanan pas jemput.',
-    time: 'Kemarin',
-    unread: false,
-  },
-];
-
-// Simulasi database pesan awal per room chat ID
-const initialMessages = {
-  1: [
-    { id: 1, sender: 'seller', text: 'Halo Kak! Pesanan Roti Manis Box sudah siap diambil yaa di toko.', time: '10:40 WIB' },
-    { id: 2, sender: 'buyer', text: 'Baik Kak, saya otw ke Batam Centre sekarang ya.', time: '10:42 WIB' },
-  ],
-  2: [
-    { id: 1, sender: 'seller', text: 'Halo Kak, ada yang bisa dibantu untuk pesanan burgernya?', time: 'Kemarin' },
-    { id: 2, sender: 'buyer', text: 'Siap Kak, nanti tinggal tunjukkan nomor pesanan pas jemput.', time: 'Kemarin' },
-  ]
-};
+const CHAT_STORAGE_KEY = 'reown:chats:v1';
+const MESSAGES_STORAGE_KEY = 'reown:messages:v1';
 
 export function ChatProvider({ children }) {
-  const [chats, setChats] = useState(initialChats);
-  const [allMessages, setAllMessages] = useState(initialMessages);
+  // Kosongkan default state (bersih dari dummy)
+  const [chats, setChats] = useState([]);
+  const [allMessages, setAllMessages] = useState({});
 
-  const unreadChatCount = chats.filter((c) => c.unread).length;
+  // Load dari localStorage saat pertama kali
+  useEffect(() => {
+    try {
+      const savedChats = localStorage.getItem(CHAT_STORAGE_KEY);
+      const savedMsgs = localStorage.getItem(MESSAGES_STORAGE_KEY);
+      if (savedChats) setChats(JSON.parse(savedChats));
+      if (savedMsgs) setAllMessages(JSON.parse(savedMsgs));
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
-  const markChatAsRead = (chatId) => {
-    setChats((prev) =>
-      prev.map((c) => (c.id === chatId ? { ...c, unread: false } : c))
-    );
+  // Simpan otomatis ke localStorage setiap ada perubahan
+  const saveToStorage = (newChats, newMsgs) => {
+    setChats(newChats);
+    setAllMessages(newMsgs);
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(newChats));
+    localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(newMsgs));
   };
 
-  // Fungsi mengirim pesan (bisa dari buyer atau seller)
-  const sendMessage = (chatId, text, senderRole = 'buyer') => {
-    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const newMessage = {
-      id: Date.now(),
-      sender: senderRole, // 'buyer' atau 'seller'
-      text: text,
-      time: timeNow
+  const sendMessage = (chatId, text, sender = 'buyer') => {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const newMessage = { id: Date.now(), text, sender, time };
+
+    const updatedMsgs = {
+      ...allMessages,
+      [chatId]: [...(allMessages[chatId] || []), newMessage]
     };
 
-    // Update list pesan di room tersebut
-    setAllMessages((prev) => ({
-      ...prev,
-      [chatId]: [...(prev[chatId] || []), newMessage]
-    }));
+    const updatedChats = chats.map(c => {
+      if (c.id === chatId) {
+        return { ...c, lastMessage: text, time, unread: sender === 'seller' };
+      }
+      return c;
+    });
 
-    // Update pesan terakhir di list preview chat
-    setChats((prev) =>
-      prev.map((c) =>
-        c.id === chatId
-          ? {
-              ...c,
-              lastMessage: `${senderRole === 'seller' ? 'Penjual: ' : ''}${text}`,
-              time: timeNow
-            }
-          : c
-      )
-    );
+    saveToStorage(updatedChats, updatedMsgs);
   };
 
+  // Fungsi khusus untuk membuka/membuat room chat baru saat tombol "Hubungi Penjual" diklik
+  const openOrCreateChat = (storeInfo) => {
+    const chatId = `store_${storeInfo.id || Date.now()}`;
+    const existingChat = chats.find(c => c.id === chatId);
+
+    if (!existingChat) {
+      const newChatObj = {
+        id: chatId,
+        storeName: storeInfo.storeName || storeInfo.store || 'Toko Penjual',
+        avatar: storeInfo.image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        lastMessage: 'Halo, apakah produk ini masih tersedia?',
+        time: 'Baru saja',
+        unread: false
+      };
+      const newChats = [newChatObj, ...chats];
+      
+      const initialMsgs = {
+        ...allMessages,
+        [chatId]: [
+          { id: Date.now(), text: 'Halo, apakah produk ini masih tersedia?', sender: 'buyer', time: 'Baru saja' }
+        ]
+      };
+      saveToStorage(newChats, initialMsgs);
+    }
+
+    return chatId;
+  };
+
+  const unreadChatCount = chats.filter(c => c.unread).length;
+
   return (
-    <ChatContext.Provider value={{ chats, allMessages, unreadChatCount, markChatAsRead, sendMessage }}>
+    <ChatContext.Provider value={{ chats, allMessages, sendMessage, openOrCreateChat, unreadChatCount }}>
       {children}
     </ChatContext.Provider>
   );
 }
 
 export function useChat() {
-  return useContext(ChatContext);
+  const context = useContext(ChatContext);
+  if (!context) throw new Error("useChat harus di dalam ChatProvider");
+  return context;
 }

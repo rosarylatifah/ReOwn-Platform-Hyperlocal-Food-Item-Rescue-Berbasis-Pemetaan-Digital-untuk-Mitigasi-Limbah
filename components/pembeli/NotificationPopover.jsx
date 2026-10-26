@@ -1,20 +1,15 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Clock, X, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+import { X, CheckCheck } from 'lucide-react';
 import { useNotification } from '@/app/pembeli/context/notification';
+import NotificationList from './NotificationList';
 
 export default function NotificationPopover({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('semua');
   const { notifications, unreadCount, markAllAsRead, handleNotificationClick } = useNotification();
 
   if (!isOpen) return null;
-
-  const filteredNotifications = notifications.filter((item) => {
-    if (activeTab === 'unread') return item.unread;
-    return true;
-  });
 
   return (
     <>
@@ -29,7 +24,7 @@ export default function NotificationPopover({ isOpen, onClose }) {
 
       <div 
         style={{
-          position: 'fixed', top: '80px', right: '40px', width: '380px', maxHeight: '520px',
+          position: 'fixed', top: '80px', right: '40px', width: '380px', maxHeight: '560px',
           backgroundColor: '#FFFFFF', borderRadius: '20px',
           boxShadow: '0 20px 40px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(217, 90, 54, 0.08)',
           border: '1px solid rgba(217, 90, 54, 0.12)', zIndex: 999,
@@ -47,7 +42,7 @@ export default function NotificationPopover({ isOpen, onClose }) {
         `}</style>
 
         {/* HEADER */}
-        <div style={{ padding: '18px 20px 14px 20px', borderBottom: '1px solid #F0F0F0', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#FFF' }}>
+        <div style={{ padding: '18px 20px 14px 20px', borderBottom: '1px solid #F0F0F0', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#FFF', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '20px', fontWeight: '700', color: '#1A1A1A', margin: 0 }}>
@@ -83,52 +78,21 @@ export default function NotificationPopover({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* LIST NOTIFIKASI */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0', display: 'flex', flexDirection: 'column' }}>
-          {filteredNotifications.length === 0 ? (
-            <div style={{ padding: '40px 20px', textAlign: 'center', color: '#888' }}>
-              <Clock size={32} color="#CCC" style={{ marginBottom: '8px' }} />
-              <p style={{ margin: 0, fontSize: '13px' }}>Tidak ada notifikasi {activeTab === 'unread' ? 'belum dibaca' : ''}.</p>
-            </div>
-          ) : (
-            filteredNotifications.map((item) => {
-              const IconComp = item.icon;
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => handleNotificationClick(item.id, item.link, onClose)}
-                  style={{
-                    padding: '12px 20px', display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer',
-                    backgroundColor: item.unread ? '#FFF8F6' : '#FFFFFF', borderBottom: '1px solid #F7F7F7', position: 'relative',
-                    transition: 'background-color 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF0EB'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = item.unread ? '#FFF8F6' : '#FFFFFF'}
-                >
-                  <div style={{ backgroundColor: item.bgColor, color: item.color, padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <IconComp size={18} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-                      <h4 style={{ margin: 0, fontSize: '13px', fontWeight: item.unread ? '700' : '600', color: '#1A1A1A' }}>{item.title}</h4>
-                      <span style={{ fontSize: '10px', color: '#999', whiteSpace: 'nowrap' }}>{item.time}</span>
-                    </div>
-                    <p style={{ margin: 0, fontSize: '12px', color: item.unread ? '#333' : '#666', lineHeight: '1.45', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {item.message}
-                    </p>
-                  </div>
-                  {item.unread && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#D95A36', marginTop: '6px', flexShrink: 0 }} />}
-                </div>
-              );
-            })
-          )}
+        {/* LIST NOTIFIKASI (BISA DI-SCROLL KE BAWAH DENGAN RAPI & ADA TANGGALNYA) */}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <NotificationList 
+            notifications={notifications}
+            activeTab={activeTab}
+            onClose={onClose}
+            onNotificationClick={handleNotificationClick}
+          />
         </div>
 
-        {/* FOOTER */}
-        <div style={{ padding: '12px 20px', borderTop: '1px solid #F0F0F0', backgroundColor: '#FAFAFA', textAlign: 'center' }}>
-          <Link href="/pembeli/notifikasi" onClick={onClose} style={{ fontSize: '12px', fontWeight: 'bold', color: '#D95A36', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            Lihat Seluruh Notifikasi <ChevronRight size={14} />
-          </Link>
+        {/* FOOTER STATIS (OPSIONAL: TANDA SEMUA DIBACA / TUTUP) */}
+        <div style={{ padding: '10px 20px', borderTop: '1px solid #F0F0F0', backgroundColor: '#FAFAFA', textAlign: 'center', flexShrink: 0 }}>
+          <span style={{ fontSize: '11px', color: '#888' }}>
+            Menampilkan seluruh riwayat notifikasi terbaru
+          </span>
         </div>
       </div>
     </>

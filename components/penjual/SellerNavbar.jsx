@@ -1,25 +1,33 @@
 "use client";
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Home, Package, CheckSquare, Inbox, History, MessageSquare, Bell, User } from 'lucide-react';
+import Link from 'next/link';
+import ProfilePopover from '@/components/profil/ProfilePopover'; // 👈 1. Import ProfilePopover (sesuaikan foldernya jika berbeda)
 
-export default function SellerNavbar({ currentPage, setCurrentPage }) {
+export default function SellerNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState(null);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const [hoveredIcon, setHoveredIcon] = useState(null); // State untuk efek hover ikon kanan
+  const [hoveredIcon, setHoveredIcon] = useState(null);
 
+  // 👈 2. State untuk mengontrol buka/tutup popover profil
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const pathname = usePathname();
+
+  // Daftar menu navigasi lengkap dengan path rutenya masing-masing
   const navItems = [
-    { id: 'beranda', label: 'BERANDA', icon: Home },
-    { id: 'kelola-produk', label: 'KELOLA PRODUK', icon: Package },
-    { id: 'konfirmasi-pesanan', label: 'KONFIRMASI PESANAN', icon: CheckSquare },
-    { id: 'pesanan-masuk', label: 'PESANAN MASUK', icon: Inbox },
-    { id: 'riwayat-pesanan', label: 'RIWAYAT PESANAN', icon: History },
+    { id: 'beranda', path: '/penjual/beranda', label: 'BERANDA', icon: Home },
+    { id: 'kelola-produk', path: '/penjual/kelola-produk', label: 'KELOLA PRODUK', icon: Package },
+    { id: 'konfirmasi-pesanan', path: '/penjual/konfirmasi-pesanan', label: 'KONFIRMASI PESANAN', icon: CheckSquare },
+    { id: 'pesanan-masuk', path: '/penjual/pesanan-masuk', label: 'PESANAN MASUK', icon: Inbox },
+    { id: 'riwayat-pesanan', path: '/penjual/riwayat', label: 'RIWAYAT PESANAN', icon: History },
   ];
 
   return (
     <>
-      {/* Dynamic CSS untuk Responsive Tampilan Mobile/HP */}
       <style jsx>{`
         @media (max-width: 900px) {
           .hamburger-btn {
@@ -47,34 +55,27 @@ export default function SellerNavbar({ currentPage, setCurrentPage }) {
             opacity: 1;
             pointer-events: auto;
           }
-          .nav-menu button {
+          .nav-menu a {
             width: 100%;
             justify-content: flex-start;
           }
         }
 
-        /* ------------------------------------------------------------- */
-        /* 💡 KHUSUS LAYAR HP SANGAT SEMPIT (MEPET BIAR GA NABRAK)      */
-        /* ------------------------------------------------------------- */
         @media (max-width: 600px) {
-          /* Mengecilkan padding navbar utama */
           nav {
             padding: 10px 14px !important;
           }
-          
-          /* Mengecilkan padding logo ReOwn */
           .logo-btn {
             padding: 6px 14px !important;
           }
           .logo-btn h2 {
             font-size: 16px !important;
           }
-
-          /* Mempersempit jarak & mengecilkan lingkaran ikon kanan */
           .action-icons-group {
             gap: 5px !important;
           }
-          .action-icons-group button {
+          .action-icons-group button,
+          .action-icons-group a {
             width: 32px !important;
             height: 32px !important;
           }
@@ -98,15 +99,16 @@ export default function SellerNavbar({ currentPage, setCurrentPage }) {
         />
       )}
 
-      {/* NAVBAR SELLER DENGAN EFEK BLUR (GLASSMORPHISM) */}
+      {/* NAVBAR SELLER */}
       <nav style={{ 
         position: 'fixed', 
         top: 0, 
         left: 0, 
+        right: 0,
         width: '100%', 
         zIndex: 1000,
-        backgroundColor: 'rgba(250, 240, 236, 0.75)', // Warna semi-transparan ReOwn
-        backdropFilter: 'blur(12px)',                  // Efek blur kaca
+        backgroundColor: 'rgba(250, 240, 236, 0.75)',
+        backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderBottom: '1px solid rgba(217, 90, 54, 0.1)',
         padding: '14px 30px', 
@@ -140,13 +142,14 @@ export default function SellerNavbar({ currentPage, setCurrentPage }) {
             {isOpen ? '✕' : '☰'}
           </button>
 
-          {/* LOGO REOWN DENGAN EFEK INTERAKTIF */}
-          <div 
-            onClick={() => setCurrentPage && setCurrentPage('beranda')}
+          {/* LOGO REOWN (MENGARAH KE BERANDA PENJUAL) */}
+          <Link 
+            href="/penjual/beranda"
             className="logo-btn"
             onMouseEnter={() => setIsLogoHovered(true)}
             onMouseLeave={() => setIsLogoHovered(false)}
             style={{ 
+              textDecoration: 'none',
               backgroundColor: '#D95A36', 
               padding: '8px 20px', 
               borderRadius: '20px', 
@@ -161,26 +164,25 @@ export default function SellerNavbar({ currentPage, setCurrentPage }) {
             <h2 style={{ fontFamily: 'Fraunces, serif', color: '#FFF', margin: 0, fontSize: '20px', letterSpacing: '0.5px' }}>
               Re<span style={{ color: '#86efac' }}>O</span>wn
             </h2>
-          </div>
+          </Link>
         </div>
 
-        {/* Tengah: Tombol Navigasi Utama Seller */}
+        {/* Tengah: Tombol Navigasi Utama Seller Menggunakan Link Next.js */}
         <div className={`nav-menu ${isOpen ? 'open' : ''}`} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           {navItems.map((item) => {
-            const isActive = currentPage === item.id;
+            const isActive = pathname === item.path;
             const isHovered = hoveredNav === item.id;
             const IconComponent = item.icon;
 
             return (
-              <button
+              <Link
                 key={item.id}
-                onClick={() => {
-                  setCurrentPage && setCurrentPage(item.id);
-                  setIsOpen(false);
-                }}
+                href={item.path}
+                onClick={() => setIsOpen(false)}
                 onMouseEnter={() => setHoveredNav(item.id)}
                 onMouseLeave={() => setHoveredNav(null)}
                 style={{
+                  textDecoration: 'none',
                   fontFamily: 'Inter, sans-serif',
                   border: isActive ? '2px solid #FFF' : 'none',
                   cursor: 'pointer',
@@ -201,12 +203,12 @@ export default function SellerNavbar({ currentPage, setCurrentPage }) {
               >
                 {IconComponent && <IconComponent size={15} />}
                 {item.label}
-              </button>
+              </Link>
             );
           })}
         </div>
 
-        {/* Kanan: Ikon Akses Cepat Seller (EFEK INTERAKTIF ORANYE REOWN) */}
+        {/* Kanan: Ikon Akses Cepat Seller */}
         <div className="action-icons-group" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           
           {/* TOMBOL CHAT */}
@@ -255,9 +257,9 @@ export default function SellerNavbar({ currentPage, setCurrentPage }) {
             <Bell size={18} color="#FFF" />
           </button>
 
-          {/* TOMBOL PROFIL */}
+          {/* TOMBOL PROFIL (Memicu ProfilePopover) */}
           <button 
-            onClick={() => alert('Halaman Profil Penjual')}
+            onClick={() => setIsProfileOpen(true)} // 👈 3. Buka popover saat tombol diklik
             onMouseEnter={() => setHoveredIcon('profile')}
             onMouseLeave={() => setHoveredIcon(null)}
             style={{ 
@@ -280,6 +282,12 @@ export default function SellerNavbar({ currentPage, setCurrentPage }) {
 
         </div>
       </nav>
+
+      {/* 👈 4. Render komponen ProfilePopover di sini */}
+      <ProfilePopover 
+        isOpen={isProfileOpen} 
+        onClose={() => setIsProfileOpen(false)} 
+      />
     </>
   );
 }
