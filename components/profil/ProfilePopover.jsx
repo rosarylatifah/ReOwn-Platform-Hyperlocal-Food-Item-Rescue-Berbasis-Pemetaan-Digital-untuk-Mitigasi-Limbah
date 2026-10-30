@@ -1,33 +1,75 @@
 "use client";
 
 import React, { useState } from 'react';
-import { 
-  User, ShoppingBag, LogOut, ChevronRight, Store, AlertTriangle, 
-  ArrowLeft, Lock, ShieldCheck, Bell, Trash2, Phone, MapPin, Key, Smartphone 
+import {
+  User, ShoppingBag, LogOut, ChevronRight, Store, AlertTriangle,
+  ArrowLeft, ShieldCheck, Bell, Trash2, Phone, MapPin, Key, Smartphone
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import { useAuth } from '@/lib/auth';
-import { useProfile } from '@/lib/ProfileContext'; // 👈 Import context profil global
+import { useProfile } from '@/lib/ProfileContext';
+import { useProfileDrawer } from '@/lib/ProfileDrawer';
+import { fraunces } from '@/lib/fonts';
+
+const focusRing =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
+
+// Baris menu: hover jadi putih dengan bayangan halus
+const rowBase =
+  `flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-[13px] font-semibold text-stone-900 transition-all duration-200 hover:bg-white hover:shadow-sm ${focusRing}`;
+const rowDanger =
+  `flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[13px] font-semibold text-red-600 transition-all duration-200 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600`;
+
+const backButton =
+  `grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[#D85834] ring-1 ring-stone-200 transition-colors hover:bg-stone-100 ${focusRing}`;
+
+const toggleRow =
+  "flex items-center justify-between rounded-xl bg-white px-4 py-3 ring-1 ring-stone-100";
+
+// Transisi antar tampilan di dalam popover
+function View({ children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function SubHeader({ title, onBack }) {
+  return (
+    <div className="flex items-center gap-3 rounded-t-[22px] border-b border-stone-200 bg-white px-5 py-4">
+      <button type="button" onClick={onBack} aria-label="Kembali" className={backButton}>
+        <ArrowLeft size={17} />
+      </button>
+      <h3 className={`${fraunces.className} text-lg font-extrabold text-stone-900`}>{title}</h3>
+    </div>
+  );
+}
 
 export default function ProfilePopover({ isOpen, onClose }) {
   const { user, logout } = useAuth();
-  const { profile, toggleSellerMode } = useProfile(); // 👈 Ambil status isSellerActive
+  const { profile, toggleSellerMode } = useProfile();
+  const { open: openProfileDrawer } = useProfileDrawer();
   const router = useRouter();
 
-  // State untuk mengatur level navigasi popover ('main', 'settings', 'privacy', 'security', 'notifications')
+  // Level navigasi popover: 'main', 'settings', 'privacy', 'security', 'notifications'
   const [currentView, setCurrentView] = useState('main');
 
-  // State untuk memunculkan mini popover kartu profil HANYA KETIKA FOTO DIKLIK
-  const [showMiniCard, setShowMiniCard] = useState(false);
-
-  // State toggle interaktif di dalam sub-menu
+  // Toggle interaktif di dalam sub-menu
   const [showPhone, setShowPhone] = useState(true);
   const [showAddress, setShowAddress] = useState(false);
   const [locationNotif, setLocationNotif] = useState(true);
 
-  // State untuk modal pop-up kecil (ubah sandi & aktivitas login)
+  // Modal kecil (ubah sandi & aktivitas login)
   const [activeModal, setActiveModal] = useState(null); // 'password' atau 'sessions'
+  const [confirmSwitch, setConfirmSwitch] = useState(false);
 
   if (!isOpen) return null;
 
@@ -46,424 +88,343 @@ export default function ProfilePopover({ isOpen, onClose }) {
 
   const handleClose = () => {
     setCurrentView('main');
-    setShowMiniCard(false);
     setActiveModal(null);
+    setConfirmSwitch(false);
     onClose();
   };
 
-  // Fungsi khusus untuk tombol switch mode
-  const handleSwitchMode = () => {
-    onClose();
+  // Edit profil: tutup popover, langsung buka sidebar edit profil
+  const handleEditProfile = () => {
+    handleClose();
+    openProfileDrawer();
+  };
+
+  // Tombol switch hanya memunculkan konfirmasi
+  const handleSwitchMode = () => setConfirmSwitch(true);
+
+  // Dijalankan setelah pengguna menekan "Ya"
+  const doSwitchMode = () => {
+    handleClose();
     if (profile.isSellerActive) {
-      // Jika sedang jadi Penjual -> Langsung pindah ke Mode Pembeli
       toggleSellerMode(false);
-      router.push('/pembeli/beranda'); // Sesuaikan rute beranda pembeli kamu
+      router.push('/pembeli/beranda');
+    } else if (profile.storeName && profile.storeAddress) {
+      toggleSellerMode(true);
+      router.push('/penjual/beranda');
     } else {
-      // Jika sedang jadi Pembeli -> Masuk ke /profil dulu untuk verifikasi data toko
-      router.push('/profil');
+      openProfileDrawer(); // data toko belum lengkap
     }
   };
 
   return (
     <>
-      <div 
+      {/* Overlay */}
+      <div
         onClick={handleClose}
-        style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          zIndex: 998, backgroundColor: 'rgba(0, 0, 0, 0.15)', backdropFilter: 'blur(1px)'
-        }}
+        aria-hidden
+        className="fixed inset-0 z-[998] bg-stone-900/20 backdrop-blur-[2px]"
       />
 
-      <div 
-        style={{
-          position: 'fixed', top: '80px', right: '30px', width: '340px',
-          backgroundColor: '#FFFFFF', borderRadius: '20px',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(217, 90, 54, 0.08)',
-          border: '1px solid rgba(217, 90, 54, 0.12)', zIndex: 999,
-          display: 'flex', flexDirection: 'column', overflow: 'visible',
-          fontFamily: 'Inter, sans-serif', animation: 'fadeInPopover 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
-        }}
-        className="reown-profile-popover"
+      {/* Panel popover */}
+      <motion.div
+        role="dialog"
+        aria-label="Menu profil"
+        initial={{ opacity: 0, y: -10, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+        className="fixed right-4 top-[96px] z-[999] flex w-[340px] flex-col rounded-[22px] border border-stone-200 bg-[#FFF7E9] shadow-[0_24px_60px_rgba(60,30,10,0.25)] max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:top-0 max-sm:h-[100dvh] max-sm:w-screen max-sm:overflow-y-auto max-sm:rounded-none md:right-7"
       >
-        <style jsx global>{`
-          @keyframes fadeInPopover {
-            from { opacity: 0; transform: translateY(-10px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-          }
-          @media (max-width: 640px) {
-            .reown-profile-popover {
-              top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-              width: 100vw !important; height: 100vh !important; border-radius: 0 !important;
-            }
-          }
-        `}</style>
-
         {/* ================= VIEW 1: MENU UTAMA ================= */}
         {currentView === 'main' && (
-          <div style={{ animation: 'fadeInPopover 0.2s ease', position: 'relative' }}>
-            
+          <View>
             {/* HEADER USER INFO */}
-            <div 
-              style={{ 
-                padding: '20px', backgroundColor: '#FFF3ED', borderBottom: '1px solid rgba(217, 90, 54, 0.15)', 
-                borderTopLeftRadius: '20px', borderTopRightRadius: '20px', position: 'relative' 
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                
+            <div className="relative rounded-t-[22px] border-b border-stone-200 bg-white px-5 py-5 max-sm:rounded-none">
+              <div className="flex items-center gap-3.5">
                 {/* FOTO PROFIL */}
-                <div style={{ position: 'relative' }}>
-                  <img 
-                    src={userData.avatar} 
+                <button
+                  type="button"
+                  onClick={handleEditProfile}
+                  title="Edit profil"
+                  aria-label="Edit profil"
+                  className={`block rounded-full ${focusRing}`}
+                >
+                  <img
+                    src={userData.avatar}
                     alt={userData.name}
-                    onClick={() => setShowMiniCard(!showMiniCard)}
-                    title="Klik untuk lihat semua profil"
-                    style={{ 
-                      width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', 
-                      border: '2px solid #D95A36', cursor: 'pointer', transition: 'transform 0.2s' 
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    className="h-[52px] w-[52px] rounded-full border-2 border-[#D85834] object-cover transition-transform duration-200 hover:scale-105"
                   />
+                </button>
 
-                  {/* MINI POPOVER KARTU PROFIL */}
-                  {showMiniCard && (
-                    <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onClose();
-                        router.push('/profil');
-                      }}
-                      style={{
-                        position: 'absolute',
-                        top: '0px',
-                        left: '65px',
-                        width: '260px',
-                        backgroundColor: '#FFFFFF',
-                        borderRadius: '16px',
-                        padding: '16px',
-                        boxShadow: '0 14px 32px rgba(217, 90, 54, 0.25)',
-                        border: '2px solid #D95A36',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        cursor: 'pointer',
-                        zIndex: 1005,
-                        animation: 'fadeInPopover 0.2s ease-out'
-                      }}
-                    >
-                      <img 
-                        src={userData.avatar} alt="Avatar"
-                        style={{ width: '45px', height: '45px', borderRadius: '12px', objectFit: 'cover', border: '1px solid #ddd' }}
-                      />
-                      <div style={{ overflow: 'hidden', flex: 1 }}>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#1A1A1A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {userData.name}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#D95A36', fontWeight: '600', marginTop: '2px' }}>
-                          Lihat Semua Profil
-                        </div>
-                      </div>
-                      <ChevronRight size={16} color="#D95A36" />
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ overflow: 'hidden', flex: 1 }}>
-                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#1A1A1A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div className="min-w-0 flex-1">
+                  <h4 className={`${fraunces.className} truncate text-base font-extrabold leading-tight text-stone-900`}>
                     {userData.name}
                   </h4>
-                  <p style={{ margin: '2px 0 4px 0', fontSize: '11px', color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {userData.email}
-                  </p>
-                  
-                  <span 
-                    onClick={() => setShowMiniCard(!showMiniCard)}
-                    style={{ 
-                      backgroundColor: '#D95A36', color: '#FFF', fontSize: '10px', fontWeight: 'bold', 
-                      padding: '2px 8px', borderRadius: '10px', display: 'inline-block', cursor: 'pointer' 
-                    }}
+                  <p className="mb-1.5 mt-0.5 truncate text-[11px] text-stone-500">{userData.email}</p>
+
+                  <button
+                    type="button"
+                    onClick={handleEditProfile}
+                    className={`inline-block rounded-full bg-stone-900 px-3 py-1 text-[10px] font-bold text-white transition-colors duration-200 hover:bg-[#D85834] ${focusRing}`}
                   >
-                    Lihat semua profil
-                  </span>
+                    Edit Profil
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div style={{ padding: '8px 0' }}>
-              <div
-                onClick={() => setCurrentView('settings')}
-                style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', color: '#1A1A1A', fontSize: '13px', fontWeight: '600' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FAF0EC'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <User size={18} color="#D95A36" /> Pengaturan Profil
-                </div>
-                <ChevronRight size={16} color="#888" />
-              </div>
+            <div className="flex flex-col gap-0.5 p-2.5">
+              <button type="button" onClick={() => setCurrentView('settings')} className={rowBase}>
+                <span className="flex items-center gap-3">
+                  <User size={18} className="text-[#D85834]" /> Pengaturan Profil
+                </span>
+                <ChevronRight size={16} className="text-stone-400" />
+              </button>
 
-              <Link
-                href="/pembeli/pesanan"
-                onClick={handleClose}
-                style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: '#1A1A1A', fontSize: '13px', fontWeight: '600' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FAF0EC'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <ShoppingBag size={18} color="#D95A36" /> Pesanan Saya
+              <Link href="/pembeli/pesanan" onClick={handleClose} className={rowBase}>
+                <span className="flex items-center gap-3">
+                  <ShoppingBag size={18} className="text-[#D85834]" /> Pesanan Saya
+                </span>
               </Link>
 
               {/* TOMBOL SWITCH DINAMIS: BERUBAH OTOMATIS SESUAI STATUS AKUN */}
-              <div style={{ margin: '8px 16px', borderTop: '1px solid #F0F0F0', borderBottom: '1px solid #F0F0F0', padding: '8px 0' }}>
-                <div
+              <div className="my-2 border-y border-stone-200 py-3">
+                <button
+                  type="button"
                   onClick={handleSwitchMode}
-                  style={{
-                    padding: '10px 14px', borderRadius: '12px', backgroundColor: '#1A1A1A', color: '#FFF',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
-                  }}
+                  className={`flex w-full items-center justify-between rounded-full bg-stone-900 px-5 py-3 text-xs font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#D85834] hover:shadow-md active:translate-y-0 active:scale-95 ${focusRing}`}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Store size={16} color="#86efac" /> 
+                  <span className="flex items-center gap-2.5">
+                    <Store size={16} className="text-[#95F57C]" />
                     {profile.isSellerActive ? 'Switch ke Mode Pembeli' : 'Switch ke Mode Penjual'}
-                  </div>
+                  </span>
                   <ChevronRight size={14} />
-                </div>
+                </button>
               </div>
 
-              <Link
-                href="/pembeli/Pelaporan"
-                onClick={handleClose}
-                style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: '#1A1A1A', fontSize: '13px', fontWeight: '600' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FAF0EC'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <AlertTriangle size={18} color="#DC2626" /> Laporkan Masalah
+              <Link href="/pembeli/Pelaporan" onClick={handleClose} className={rowBase}>
+                <span className="flex items-center gap-3">
+                  <AlertTriangle size={18} className="text-red-600" /> Laporkan Masalah
+                </span>
               </Link>
 
-              <button
-                onClick={handleLogout}
-                style={{
-                  width: '100%', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px',
-                  border: 'none', backgroundColor: 'transparent', color: '#DC2626', fontSize: '13px', fontWeight: '600', cursor: 'pointer', textAlign: 'left'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEE2E2'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <LogOut size={18} color="#DC2626" /> Keluar
+              <button type="button" onClick={handleLogout} className={rowDanger}>
+                <LogOut size={18} /> Keluar
               </button>
             </div>
-          </div>
+          </View>
         )}
 
         {/* ================= VIEW 2: MENU SETELAN UTAMA ================= */}
         {currentView === 'settings' && (
-          <div style={{ animation: 'fadeInPopover 0.2s ease', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '16px 20px', backgroundColor: '#FFF3ED', borderBottom: '1px solid rgba(217, 90, 54, 0.15)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button 
-                onClick={() => setCurrentView('main')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FFF', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}
-              >
-                <ArrowLeft size={18} color="#D95A36" />
+          <View>
+            <SubHeader title="Pengaturan Profil" onBack={() => setCurrentView('main')} />
+
+            <div className="flex flex-col gap-0.5 p-2.5">
+              <button type="button" onClick={() => setCurrentView('privacy')} className={rowBase}>
+                <span className="flex items-center gap-3">
+                  <User size={16} className="text-[#D85834]" /> Privasi Profil Utama
+                </span>
+                <ChevronRight size={16} className="text-stone-400" />
               </button>
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#1A1A1A' }}>Pengaturan Profil</h3>
-            </div>
 
-            <div style={{ padding: '8px 0' }}>
-              <div
-                onClick={() => setCurrentView('privacy')}
-                style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', color: '#1A1A1A', fontSize: '13px', fontWeight: '600' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FAF0EC'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <User size={16} color="#D95A36" /> Privasi Profil Utama
-                </div>
-                <ChevronRight size={16} color="#888" />
-              </div>
+              <button type="button" onClick={() => setCurrentView('security')} className={rowBase}>
+                <span className="flex items-center gap-3">
+                  <ShieldCheck size={16} className="text-[#D85834]" /> Keamanan Akun
+                </span>
+                <ChevronRight size={16} className="text-stone-400" />
+              </button>
 
-              <div
-                onClick={() => setCurrentView('security')}
-                style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', color: '#1A1A1A', fontSize: '13px', fontWeight: '600' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FAF0EC'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <ShieldCheck size={16} color="#0284C7" /> Keamanan Akun
-                </div>
-                <ChevronRight size={16} color="#888" />
-              </div>
+              <button type="button" onClick={() => setCurrentView('notifications')} className={rowBase}>
+                <span className="flex items-center gap-3">
+                  <Bell size={16} className="text-[#D85834]" /> Pengaturan Notifikasi
+                </span>
+                <ChevronRight size={16} className="text-stone-400" />
+              </button>
 
-              <div
-                onClick={() => setCurrentView('notifications')}
-                style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', color: '#1A1A1A', fontSize: '13px', fontWeight: '600' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FAF0EC'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Bell size={16} color="#CA8A04" /> Pengaturan Notifikasi
-                </div>
-                <ChevronRight size={16} color="#888" />
-              </div>
+              <div className="my-2 border-t border-stone-200" />
 
-              <div style={{ margin: '8px 16px', borderTop: '1px solid #F0F0F0' }} />
-
-              <div
+              <button
+                type="button"
                 onClick={() => {
                   if (window.confirm("Yakin ingin menghapus akun secara permanen?")) alert("Akun dihapus.");
                 }}
-                style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#DC2626', fontSize: '13px', fontWeight: '600' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEE2E2'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                className={rowDanger}
               >
-                <Trash2 size={16} color="#DC2626" /> Penghapusan Akun
-              </div>
+                <Trash2 size={16} /> Penghapusan Akun
+              </button>
             </div>
-          </div>
+          </View>
         )}
 
         {/* ================= VIEW 3A: PRIVASI PROFIL UTAMA ================= */}
         {currentView === 'privacy' && (
-          <div style={{ animation: 'fadeInPopover 0.2s ease', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '16px 20px', backgroundColor: '#FFF3ED', borderBottom: '1px solid rgba(217, 90, 54, 0.15)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button 
-                onClick={() => setCurrentView('settings')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FFF', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}
-              >
-                <ArrowLeft size={18} color="#D95A36" />
-              </button>
-              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#1A1A1A' }}>Privasi Profil Utama</h3>
-            </div>
+          <View>
+            <SubHeader title="Privasi Profil Utama" onBack={() => setCurrentView('settings')} />
 
-            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px' }}>
-              <div style={{ color: '#666', fontSize: '11px' }}>Atur visibilitas informasi pribadi kamu agar terlihat oleh pengguna lain di platform ReOwn.</div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FAF0EC', padding: '10px 14px', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#1A1A1A', fontWeight: '600' }}>
-                  <Phone size={16} color="#D95A36" /> Tampilkan No. HP
-                </div>
-                <input 
-                  type="checkbox" 
-                  checked={showPhone} 
+            <div className="flex flex-col gap-3 p-4 text-[13px]">
+              <p className="text-[11px] leading-relaxed text-stone-500">
+                Atur visibilitas informasi pribadi kamu agar terlihat oleh pengguna lain di platform ReOwn.
+              </p>
+
+              <label className={`${toggleRow} cursor-pointer`}>
+                <span className="flex items-center gap-2.5 font-semibold text-stone-900">
+                  <Phone size={16} className="text-[#D85834]" /> Tampilkan No. HP
+                </span>
+                <input
+                  type="checkbox"
+                  checked={showPhone}
                   onChange={() => setShowPhone(!showPhone)}
-                  style={{ width: '18px', height: '18px', accentColor: '#D95A36', cursor: 'pointer' }}
+                  className="h-[18px] w-[18px] cursor-pointer accent-[#D85834]"
                 />
-              </div>
+              </label>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FAF0EC', padding: '10px 14px', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#1A1A1A', fontWeight: '600' }}>
-                  <MapPin size={16} color="#D95A36" /> Tampilkan Alamat
-                </div>
-                <input 
-                  type="checkbox" 
-                  checked={showAddress} 
+              <label className={`${toggleRow} cursor-pointer`}>
+                <span className="flex items-center gap-2.5 font-semibold text-stone-900">
+                  <MapPin size={16} className="text-[#D85834]" /> Tampilkan Alamat
+                </span>
+                <input
+                  type="checkbox"
+                  checked={showAddress}
                   onChange={() => setShowAddress(!showAddress)}
-                  style={{ width: '18px', height: '18px', accentColor: '#D95A36', cursor: 'pointer' }}
+                  className="h-[18px] w-[18px] cursor-pointer accent-[#D85834]"
                 />
-              </div>
+              </label>
             </div>
-          </div>
+          </View>
         )}
 
         {/* ================= VIEW 3B: KEAMANAN AKUN ================= */}
         {currentView === 'security' && (
-          <div style={{ animation: 'fadeInPopover 0.2s ease', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '16px 20px', backgroundColor: '#FFF3ED', borderBottom: '1px solid rgba(217, 90, 54, 0.15)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button 
-                onClick={() => setCurrentView('settings')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FFF', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}
-              >
-                <ArrowLeft size={18} color="#D95A36" />
+          <View>
+            <SubHeader title="Keamanan Akun" onBack={() => setCurrentView('settings')} />
+
+            <div className="flex flex-col gap-0.5 p-2.5">
+              <button type="button" onClick={() => setActiveModal('password')} className={rowBase}>
+                <span className="flex items-center gap-3">
+                  <Key size={16} className="text-[#D85834]" /> Ubah Kata Sandi
+                </span>
               </button>
-              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#1A1A1A' }}>Keamanan Akun</h3>
-            </div>
 
-            <div style={{ padding: '12px 0' }}>
-              <div
-                onClick={() => setActiveModal('password')}
-                style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#1A1A1A', fontSize: '13px', fontWeight: '600' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FAF0EC'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <Key size={16} color="#0284C7" /> Ubah Kata Sandi
-              </div>
-
-              <div
-                onClick={() => setActiveModal('sessions')}
-                style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#1A1A1A', fontSize: '13px', fontWeight: '600' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FAF0EC'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <Smartphone size={16} color="#0284C7" /> Aktivasi Sesi Login
-              </div>
+              <button type="button" onClick={() => setActiveModal('sessions')} className={rowBase}>
+                <span className="flex items-center gap-3">
+                  <Smartphone size={16} className="text-[#D85834]" /> Aktivasi Sesi Login
+                </span>
+              </button>
             </div>
-          </div>
+          </View>
         )}
 
         {/* ================= VIEW 3C: PENGATURAN NOTIFIKASI ================= */}
         {currentView === 'notifications' && (
-          <div style={{ animation: 'fadeInPopover 0.2s ease', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '16px 20px', backgroundColor: '#FFF3ED', borderBottom: '1px solid rgba(217, 90, 54, 0.15)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button 
-                onClick={() => setCurrentView('settings')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FFF', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}
-              >
-                <ArrowLeft size={18} color="#D95A36" />
-              </button>
-              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#1A1A1A' }}>Pengaturan Notifikasi</h3>
-            </div>
+          <View>
+            <SubHeader title="Pengaturan Notifikasi" onBack={() => setCurrentView('settings')} />
 
-            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px' }}>
-              <div style={{ color: '#666', fontSize: '11px' }}>Kelola izin akses notifikasi untuk fitur pendukung aplikasi.</div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FEFCE8', padding: '10px 14px', borderRadius: '12px' }}>
-                <div style={{ fontWeight: '600', color: '#1A1A1A' }}>Izin Akses Lokasi</div>
-                <input 
-                  type="checkbox" 
-                  checked={locationNotif} 
+            <div className="flex flex-col gap-3 p-4 text-[13px]">
+              <p className="text-[11px] leading-relaxed text-stone-500">
+                Kelola izin akses notifikasi untuk fitur pendukung aplikasi.
+              </p>
+
+              <label className={`${toggleRow} cursor-pointer`}>
+                <span className="font-semibold text-stone-900">Izin Akses Lokasi</span>
+                <input
+                  type="checkbox"
+                  checked={locationNotif}
                   onChange={() => setLocationNotif(!locationNotif)}
-                  style={{ width: '18px', height: '18px', accentColor: '#CA8A04', cursor: 'pointer' }}
+                  className="h-[18px] w-[18px] cursor-pointer accent-[#D85834]"
                 />
-              </div>
+              </label>
             </div>
-          </div>
+          </View>
         )}
+      </motion.div>
 
-      </div>
+      {/* ================= MODAL KONFIRMASI SWITCH MODE ================= */}
+      {confirmSwitch && (
+        <div
+          onClick={() => setConfirmSwitch(false)}
+          className="fixed inset-0 z-[1100] grid place-items-center bg-stone-900/40 px-6 backdrop-blur-sm"
+        >
+          <motion.div
+            role="alertdialog"
+            aria-modal="true"
+            initial={{ scale: 0.92, y: 8 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-[22px] bg-white p-6 text-center shadow-[0_24px_60px_rgba(60,30,10,0.3)]"
+          >
+            <span aria-hidden className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#FBE9E2] text-2xl">🔄</span>
+            <h4 className={`${fraunces.className} mt-4 text-xl font-extrabold text-stone-900`}>
+              Switch ke Mode {profile.isSellerActive ? 'Pembeli' : 'Penjual'}?
+            </h4>
+            <p className="mt-2 text-sm leading-relaxed text-stone-600">
+              Apakah kamu yakin ingin switch ke mode {profile.isSellerActive ? 'pembeli' : 'penjual'}?
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmSwitch(false)}
+                className={`rounded-full border-[1.5px] border-stone-300 py-2.5 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-100 ${focusRing}`}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={doSwitchMode}
+                className={`rounded-full bg-stone-900 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#D85834] ${focusRing}`}
+              >
+                Ya, switch
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* ================= MODAL KECIL POP-UP ================= */}
       {activeModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, backgroundColor: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ backgroundColor: '#FFF', padding: '24px', borderRadius: '16px', width: '300px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', fontFamily: 'Inter, sans-serif' }}>
-            <h4 style={{ margin: '0 0 10px 0', fontSize: '16px', color: '#1A1A1A' }}>
+        <div className="fixed inset-0 z-[1100] grid place-items-center bg-stone-900/40 px-6 backdrop-blur-sm">
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            initial={{ scale: 0.92, y: 8 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+            className="w-full max-w-sm rounded-[22px] bg-white p-6 shadow-[0_24px_60px_rgba(60,30,10,0.3)]"
+          >
+            <h4 className={`${fraunces.className} text-xl font-extrabold text-stone-900`}>
               {activeModal === 'password' ? 'Ubah Kata Sandi' : 'Aktivasi Sesi Login'}
             </h4>
-            <p style={{ fontSize: '12px', color: '#666', margin: '0 0 16px 0' }}>
-              {activeModal === 'password' 
-                ? 'Masukkan kata sandi baru untuk mengamankan akun ReOwn kamu.' 
+            <p className="mb-5 mt-2 text-sm leading-relaxed text-stone-600">
+              {activeModal === 'password'
+                ? 'Masukkan kata sandi baru untuk mengamankan akun ReOwn kamu.'
                 : 'Perangkat ini terdaftar aktif dan aman untuk sesi login saat ini.'}
             </p>
+
             {activeModal === 'password' && (
-              <input 
-                type="password" 
-                placeholder="Kata sandi baru..." 
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '16px', fontSize: '12px' }} 
+              <input
+                type="password"
+                placeholder="Kata sandi baru..."
+                className="mb-5 w-full rounded-xl border-[1.5px] border-stone-200 bg-[#FFF7E9] px-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-[#D85834] focus:outline-none"
               />
             )}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button 
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
                 onClick={() => setActiveModal(null)}
-                style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #ddd', background: '#FFF', fontSize: '12px', cursor: 'pointer' }}
+                className={`rounded-full border-[1.5px] border-stone-300 py-2.5 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-100 ${focusRing}`}
               >
                 Tutup
               </button>
-              <button 
+              <button
+                type="button"
                 onClick={() => { alert("Berhasil disimpan!"); setActiveModal(null); }}
-                style={{ padding: '8px 14px', borderRadius: '8px', border: 'none', background: '#D95A36', color: '#FFF', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                className={`rounded-full bg-stone-900 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#D85834] ${focusRing}`}
               >
                 Simpan
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </>

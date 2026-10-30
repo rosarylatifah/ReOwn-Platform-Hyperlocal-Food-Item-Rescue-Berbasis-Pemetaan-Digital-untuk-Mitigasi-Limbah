@@ -1,173 +1,84 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Plus, MapPin, Clock, AlertCircle } from 'lucide-react';
+import React from 'react';
+import { Plus, MapPin, Clock } from 'lucide-react';
 import StorePopover from '../profil/StorePopover';
+import { fraunces } from '@/lib/fonts';
+
+const focusRing =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
 
 export default function ProductCard({
   item,
   isPromo = false,
-  showStoreInfo = true, // 👈 Control muncul/tidaknya nama toko
-  showLocation = true,  // 👈 Control muncul/tidaknya alamat toko
+  showStoreInfo = true, // Control muncul/tidaknya nama toko
+  showLocation = true,  // Control muncul/tidaknya alamat toko
   activeStorePopover,
   setActiveStorePopover,
   onAddToCart,
   onSelectProduct,
   onReportProduct
 }) {
-  const [isCardHovered, setIsCardHovered] = useState(false);
-  const [isPlusHovered, setIsPlusHovered] = useState(false);
-  const [isDetailHovered, setIsDetailHovered] = useState(false);
-  const [isReportHovered, setIsReportHovered] = useState(false);
-
   const storeName = item.store || item.merchant || "REOWN MERCHANT";
 
   return (
-    <div 
-      onMouseEnter={() => setIsCardHovered(true)}
-      onMouseLeave={() => setIsCardHovered(false)}
-      style={{ 
-        width: '100%',
-        backgroundColor: '#FFF', 
-        borderRadius: '16px', 
-        border: isCardHovered ? '1.5px solid #D95A36' : '1px solid rgba(0,0,0,0.06)',
-        boxShadow: isCardHovered ? '0 12px 28px rgba(217, 90, 54, 0.18)' : '0 4px 12px rgba(0,0,0,0.04)',
-        transform: isCardHovered ? 'translateY(-6px)' : 'translateY(0)',
-        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
-        position: 'relative',
-        zIndex: activeStorePopover === item.id ? 30 : 1,
-        boxSizing: 'border-box'
-      }}
+    <div
+      className={`group relative box-border w-full rounded-[22px] border border-stone-100 bg-white shadow-[0_10px_30px_rgba(120,70,30,0.08)] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#D85834]/40 hover:shadow-[0_20px_44px_rgba(120,70,30,0.15)] ${
+        activeStorePopover === item.id ? 'z-30' : 'z-[1]'
+      }`}
     >
       {/* BADGE PROMO TERBATAS */}
       {isPromo && (
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          left: '10px',
-          backgroundColor: '#D95A36',
-          color: '#FFF',
-          fontSize: '10px',
-          fontWeight: 'bold',
-          padding: '4px 10px',
-          borderRadius: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          zIndex: 2,
-          boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-        }}>
+        <div className="absolute left-3 top-3 z-[2] flex items-center gap-1 rounded-full bg-[#D85834] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-md">
           <Clock size={11} /> Promo Terbatas
         </div>
       )}
 
       {/* BADGE JARAK */}
       {!isPromo && item.distance && (
-        <span style={{ 
-          position: 'absolute', top: '10px', left: '10px', 
-          backgroundColor: 'rgba(0,0,0,0.7)', color: '#FFF', 
-          padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
-          backdropFilter: 'blur(4px)', zIndex: 2
-        }}>
+        <span className="absolute left-3 top-3 z-[2] rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-stone-900 shadow-md backdrop-blur">
           {item.distance}
         </span>
       )}
 
-      {/* TOMBOL LAPORKAN */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onReportProduct(item);
-        }}
-        onMouseEnter={() => setIsReportHovered(true)}
-        onMouseLeave={() => setIsReportHovered(false)}
-        title="Laporkan produk/gambar bermasalah"
-        style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          backgroundColor: isReportHovered ? '#DC2626' : 'rgba(255, 255, 255, 0.9)',
-          color: isReportHovered ? '#FFF' : '#666',
-          border: 'none',
-          borderRadius: '50%',
-          width: '28px',
-          height: '28px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 2,
-          boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-          transform: isReportHovered ? 'scale(1.1)' : 'scale(1)',
-          transition: 'all 0.2s ease'
-        }}
-      >
-        <AlertCircle size={16} />
-      </button>
-
       {/* WADAH GAMBAR */}
-      <div style={{ 
-        width: '100%', 
-        height: '150px', 
-        overflow: 'hidden', 
-        borderTopLeftRadius: '16px', 
-        borderTopRightRadius: '16px', 
-        backgroundColor: '#F9F9F9',
-        position: 'relative'
-      }}>
-        <img 
-          src={item.image} 
-          alt={item.name} 
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'cover',
-            transform: isCardHovered ? 'scale(1.08)' : 'scale(1)',
-            transition: 'transform 0.3s ease'
-          }} 
+      <div className="relative h-[150px] w-full overflow-hidden rounded-t-[22px] bg-gradient-to-br from-amber-100 to-orange-200">
+        <img
+          src={item.image}
+          alt={item.name}
+          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.08]"
         />
       </div>
 
       {/* INFO PRODUK */}
-      <div style={{ padding: '16px' }}>
+      <div className="p-4">
         {/* NAMA PRODUK DI ATAS */}
-        <h4 style={{ 
-          margin: showStoreInfo || showLocation ? '0 0 4px 0' : '0 0 14px 0', 
-          fontSize: '15px', 
-          color: isCardHovered ? '#D95A36' : '#1A1A1A', 
-          fontWeight: '600', 
-          whiteSpace: 'nowrap', 
-          overflow: 'hidden', 
-          textOverflow: 'ellipsis',
-          transition: 'color 0.25s ease'
-        }}>
+        <h4
+          className={`${fraunces.className} truncate text-base font-extrabold leading-tight text-stone-900 transition-colors duration-200 group-hover:text-[#D85834] ${
+            showStoreInfo || showLocation ? 'mb-1' : 'mb-3.5'
+          }`}
+        >
           {item.name}
         </h4>
 
         {/* NAMA TOKO (Muncul jika showStoreInfo = true) */}
         {showStoreInfo && (
-          <div style={{ position: 'relative', marginBottom: '8px', display: 'inline-block' }}>
-            <span 
+          <div className="relative mb-2 inline-block">
+            <span
               onClick={(e) => {
                 e.stopPropagation();
                 if (setActiveStorePopover) {
                   setActiveStorePopover(activeStorePopover === item.id ? null : item.id);
                 }
               }}
-              style={{ 
-                fontSize: '12px', 
-                color: '#D95A36', 
-                fontWeight: 'bold', 
-                cursor: 'pointer', 
-                textDecoration: 'underline' 
-              }}
+              className="cursor-pointer text-xs font-bold text-[#D85834] underline underline-offset-2 transition-colors hover:text-[#B94524]"
             >
               {storeName}
             </span>
 
             {/* POPOVER TOKO */}
             {activeStorePopover === item.id && (
-              <StorePopover 
+              <StorePopover
                 store={{
                   name: storeName,
                   location: item.location || item.address || 'Batam Centre',
@@ -183,80 +94,45 @@ export default function ProductCard({
             )}
           </div>
         )}
-        
+
         {/* ALAMAT (Muncul jika showLocation = true) */}
         {showLocation && (
-          <p style={{ margin: '0 0 14px 0', fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            <MapPin size={13} color="#D95A36" /> {item.location || item.address || "Batam"}
+          <p className="mb-3.5 flex items-center gap-1 truncate text-xs text-stone-600">
+            <MapPin size={13} className="shrink-0 text-[#D85834]" />
+            <span className="truncate">{item.location || item.address || "Batam"}</span>
           </p>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#D95A36', display: 'block' }}>
-              {item.price}
-            </span>
-            {item.originalPrice && (
-              <span style={{ fontSize: '11px', color: '#999', textDecoration: 'line-through' }}>
-                {item.originalPrice}
-              </span>
-            )}
-          </div>
+        <div className="flex flex-col gap-2.5">
+  <div>
+    <span className={`${fraunces.className} block text-base font-extrabold text-[#D85834]`}>
+      {item.price}
+    </span>
+    {item.originalPrice && (
+      <span className="text-[11px] text-stone-400 line-through">{item.originalPrice}</span>
+    )}
+  </div>
 
-          {/* TOMBOL AKSI */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToCart(item);
-              }}
-              onMouseEnter={() => setIsPlusHovered(true)}
-              onMouseLeave={() => setIsPlusHovered(false)}
-              title="Tambah ke Keranjang"
-              style={{ 
-                backgroundColor: isPlusHovered ? '#D95A36' : '#1A1A1A', 
-                color: '#FFF', 
-                border: 'none', 
-                width: '32px', 
-                height: '32px', 
-                borderRadius: '8px', 
-                cursor: 'pointer', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                boxShadow: isPlusHovered ? '0 4px 12px rgba(217, 90, 54, 0.35)' : 'none',
-                transform: isPlusHovered ? 'scale(1.08)' : 'scale(1)',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              <Plus size={16} />
-            </button>
+  <div className="flex items-center gap-1.5">
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onAddToCart(item); }}
+      title="Tambah ke Keranjang"
+      aria-label="Tambah ke keranjang"
+      className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#D85834] hover:shadow-lg active:translate-y-0 active:scale-95 ${focusRing}`}
+    >
+      <Plus size={16} />
+    </button>
 
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectProduct(item);
-              }}
-              onMouseEnter={() => setIsDetailHovered(true)}
-              onMouseLeave={() => setIsDetailHovered(false)}
-              style={{ 
-                backgroundColor: isDetailHovered ? '#D95A36' : '#1A1A1A', 
-                color: '#FFF', 
-                border: 'none', 
-                padding: '8px 12px', 
-                borderRadius: '8px', 
-                fontSize: '11px',
-                fontWeight: 'bold',
-                cursor: 'pointer', 
-                boxShadow: isDetailHovered ? '0 4px 12px rgba(217, 90, 54, 0.35)' : 'none',
-                transform: isDetailHovered ? 'scale(1.05)' : 'scale(1)',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              LIHAT DETAIL
-            </button>
-          </div>
-        </div>
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onSelectProduct(item); }}
+      className={`flex-1 whitespace-nowrap rounded-xl bg-[#D85834] px-3 py-2 text-xs font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#C24A28] hover:shadow-lg active:translate-y-0 active:scale-95 ${focusRing}`}
+    >
+      Lihat Detail
+    </button>
+  </div>
+</div>
       </div>
     </div>
   );

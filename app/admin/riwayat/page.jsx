@@ -8,10 +8,20 @@ import Pagination, { usePaged } from "@/components/admin/Pagination";
 import { toYMD } from "@/lib/admin/format";
 import { useAdmin } from "@/lib/admin/store";
 
+// Ubah status aktivitas (apa pun format tulisannya) jadi 3 kunci filter
+function statusKey(a) {
+  const s = String(a.status ?? "").toLowerCase();
+  if (s.includes("belum") || s === "baru" || s === "pending") return "belum";
+  if (s.includes("proses")) return "diproses";
+  if (s.includes("selesai")) return "selesai";
+  return "";
+}
+
 export default function RiwayatPage() {
   const { activities } = useAdmin();
   const [q, setQ] = useState("");
   const [kind, setKind] = useState("semua");
+  const [status, setStatus] = useState("semua");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
@@ -22,6 +32,7 @@ export default function RiwayatPage() {
       return (
         (a.text + " " + a.actor + " " + a.actorEmail).toLowerCase().includes(needle) &&
         (kind === "semua" || a.actorKind === kind) &&
+        (status === "semua" || statusKey(a) === status) &&
         (!from || day >= from) &&
         (!to || day <= to)
       );
@@ -44,13 +55,24 @@ export default function RiwayatPage() {
             { value: "pengguna", label: "Aktivitas pengguna" },
           ]}
         />
+        <SelectFilter
+          value={status}
+          onChange={reset(setStatus)}
+          label="Filter status"
+          options={[
+            { value: "semua", label: "Semua status" },
+            { value: "belum", label: "Belum ditindak" },
+            { value: "diproses", label: "Diproses" },
+            { value: "selesai", label: "Selesai" },
+          ]}
+        />
         <DateFilter label="Dari" value={from} onChange={reset(setFrom)} />
         <DateFilter label="Sampai" value={to} onChange={reset(setTo)} />
       </Toolbar>
 
       <section className="adm-panel">
         {list.length === 0 ? (
-          <EmptyState title="Tidak ada aktivitas" hint="Ubah kata kunci, jenis, atau rentang tanggal." />
+          <EmptyState title="Tidak ada aktivitas" hint="Ubah kata kunci, jenis, status, atau rentang tanggal." />
         ) : (
           <>
             <ActivityTable items={paged.pageItems} showKind />

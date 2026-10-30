@@ -1,0 +1,130 @@
+"use client";
+
+import React from "react";
+import { X, MapPin, Calendar, Clock, ShoppingBag, Package, User, Truck, MessageCircle } from "lucide-react";
+
+import { fraunces } from "@/lib/fonts";
+
+const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
+const labelClass = "mb-1 block text-[11px] font-bold uppercase text-stone-500";
+const fieldClass =
+  "box-border flex w-full items-center gap-1.5 rounded-xl border border-stone-200 bg-stone-50 px-3 py-[9px] text-[13px] text-stone-900";
+const accentFieldClass =
+  "box-border flex w-full items-center gap-1.5 rounded-xl border border-[#D85834]/25 bg-[#FBE9E2] px-3 py-[9px] font-semibold text-[#D85834]";
+
+const STATUS_CLS = {
+  completed: "bg-green-100 text-green-700",
+  cancelled: "bg-red-100 text-red-700",
+};
+
+function Field({ label, Icon, children, accent = false, className = "" }) {
+  return (
+    <div className={className}>
+      <label className={`${labelClass} ${accent ? "text-[#D85834]" : ""}`}>{label}</label>
+      <div className={accent ? accentFieldClass : fieldClass}>
+        {Icon && <Icon size={14} className={accent ? "" : "shrink-0 text-[#D85834]"} aria-hidden />}
+        <span>{children}</span>
+      </div>
+    </div>
+  );
+}
+
+export default function SellerOrderModal({ order, onClose }) {
+  if (!order) return null;
+
+  return (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/45 p-5 backdrop-blur-[5px]"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Rincian detail pesanan"
+        className="relative max-h-[90vh] w-full max-w-[720px] overflow-y-auto rounded-[22px] bg-white p-5 shadow-[0_24px_50px_rgba(120,70,30,0.22)] ring-1 ring-stone-100 sm:p-7"
+      >
+        {/* Header */}
+        <div className="mb-5 flex items-center justify-between border-b border-stone-200 pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase text-[#D85834]">ID: {order.id}</span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                  STATUS_CLS[order.statusType] ?? "bg-[#FBE9E2] text-[#D85834]"
+                }`}
+              >
+                {order.status}
+              </span>
+            </div>
+            <h3 className={`${fraunces.className} mt-0.5 text-xl font-extrabold text-stone-900 sm:text-[21px]`}>
+              Rincian Detail Pesanan
+            </h3>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Tutup"
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border-[1.5px] border-stone-900 text-stone-900 transition-colors duration-200 hover:bg-stone-900 hover:text-white ${focusRing}`}
+          >
+            <X size={18} aria-hidden />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2">
+          {/* Kiri: info utama */}
+          <div className="flex flex-col gap-2.5">
+            <Field label="Nama Produk" Icon={Package}>
+              <b>{order.name}</b>
+            </Field>
+            <Field label="Nama Pembeli" Icon={User}>
+              {order.buyerName || "-"}
+            </Field>
+            <Field label="Alamat Toko" Icon={MapPin}>
+              {order.sellerAddress || "-"}
+            </Field>
+            <Field label="Tanggal Pemesanan" Icon={Calendar}>
+              {order.orderDate || "-"}
+            </Field>
+            <Field label="Tanggal Konfirmasi" Icon={Clock} accent>
+              {order.confirmDate || "-"}
+            </Field>
+            <Field label="Total Pembayaran" Icon={ShoppingBag} accent className="mt-auto">
+              <span className="text-[15px] font-bold">{order.totalPrice}</span>
+            </Field>
+          </div>
+
+          {/* Kanan: gambar, deskripsi, pengantaran, aksi */}
+          <div className="flex flex-col justify-between gap-2.5">
+            <div className="h-[130px] w-full shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-amber-100 to-orange-200 ring-1 ring-stone-100">
+              {order.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={order.image} alt={order.name} className="h-full w-full object-cover" />
+              )}
+            </div>
+
+            <div className="flex flex-1 flex-col">
+              <label className={labelClass}>Deskripsi Produk</label>
+              <div className={`${fieldClass} min-h-[70px] flex-1 items-start py-2.5 text-xs leading-relaxed text-stone-600`}>
+                {order.description || "-"}
+              </div>
+            </div>
+
+            <Field label="Opsi Pengantaran" Icon={Truck}>
+              {order.deliveryOption || "-"}
+            </Field>
+
+            <button
+              type="button"
+              onClick={() => alert("Fitur Chat Seller akan datang!")}
+              className={`mt-1 flex w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-[#D85834] bg-white px-4 py-2.5 text-[13px] font-bold text-[#D85834] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#D85834] hover:text-white hover:shadow-md active:translate-y-0 active:scale-95 ${focusRing}`}
+            >
+              <MessageCircle size={16} aria-hidden /> Hubungi Pembeli
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

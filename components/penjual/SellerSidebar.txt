@@ -1,0 +1,108 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Home, Package, CheckSquare, Inbox, History, MessageSquare, Bell, User, Menu, X } from "lucide-react";
+
+import Logo from "@/components/common/Logo";
+import ProfilePopover from "@/components/profil/ProfilePopover";
+import { delaGothic } from "@/lib/fonts";
+import { styles } from "@/lib/navStyles";
+
+const s = styles.overlay;
+const pill = s.pill;
+const pillActive = "border-white bg-white text-[#F24827] focus-visible:outline-white";
+
+const itemBase =
+  "flex w-full items-center gap-3 rounded-full border-[1.5px] px-4 py-2.5 text-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
+
+const NAV_ITEMS = [
+  { id: "beranda", path: "/penjual/beranda", label: "Beranda", Icon: Home },
+  { id: "kelola-produk", path: "/penjual/kelola-produk", label: "Kelola Produk", Icon: Package },
+  { id: "konfirmasi-pesanan", path: "/penjual/konfirmasi-pesanan", label: "Konfirmasi Pesanan", Icon: CheckSquare },
+  { id: "pesanan-masuk", path: "/penjual/pesanan-masuk", label: "Pesanan Masuk", Icon: Inbox },
+  { id: "riwayat", path: "/penjual/riwayat", label: "Riwayat Pesanan", Icon: History },
+];
+
+export default function SellerSidebar() {
+  const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const pathname = usePathname();
+
+  const closeMenu = () => setOpen(false);
+
+  return (
+    <>
+      {/* Top bar (mobile) */}
+      <header className="sticky top-0 z-40 flex items-center justify-between bg-[#F24827] px-5 py-3 lg:hidden">
+        <Logo tone={s.logo} />
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? "Tutup menu" : "Buka menu"}
+          aria-expanded={open}
+          className={`flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] ${s.burger}`}
+        >
+          {open ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </header>
+
+      {/* Backdrop (mobile) */}
+      {open && <div onClick={closeMenu} aria-hidden className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden" />}
+
+      {/* Sidebar */}
+      <aside
+        aria-label="Navigasi penjual"
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-6 overflow-y-auto bg-[#F24827] px-4 py-6 transition-transform duration-300 lg:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="px-2">
+          <Logo tone={s.logo} />
+          <p className="mt-2 text-[11px] font-semibold uppercase tracking-widest text-white/80">Mode Penjual</p>
+        </div>
+
+        <ul className={`${delaGothic.className} flex flex-col gap-2`}>
+          {NAV_ITEMS.map(({ id, path, label, Icon }) => {
+            const isActive = pathname === path;
+            return (
+              <li key={id}>
+                <Link
+                  href={path}
+                  onClick={closeMenu}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`${itemBase} ${isActive ? pillActive : pill}`}
+                >
+                  <Icon size={18} strokeWidth={2} /> {label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Akses cepat, di bagian bawah */}
+        <div className={`${delaGothic.className} mt-auto flex flex-col gap-2 border-t border-white/25 pt-4`}>
+          <button type="button" onClick={() => alert("Fitur Chat Seller akan datang!")} className={`${itemBase} ${pill}`}>
+            <MessageSquare size={18} /> Chat
+          </button>
+          <button type="button" onClick={() => alert("Tidak ada notifikasi baru.")} className={`${itemBase} ${pill}`}>
+            <Bell size={18} /> Notifikasi
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu();
+              setProfileOpen(true);
+            }}
+            className={`${itemBase} ${profileOpen ? pillActive : pill}`}
+          >
+            <User size={18} /> Profil
+          </button>
+        </div>
+      </aside>
+
+      <ProfilePopover isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
+    </>
+  );
+}

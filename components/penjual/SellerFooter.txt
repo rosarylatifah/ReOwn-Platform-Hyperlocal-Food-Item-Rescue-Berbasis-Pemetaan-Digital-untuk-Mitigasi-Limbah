@@ -1,0 +1,26 @@
+import Link from "next/link";
+
+const LINKS = [
+  { href: "/faq", label: "Pusat Bantuan" },
+  { href: "/hubungi", label: "Hubungi Kami" },
+  { href: "/syarat", label: "Syarat & Ketentuan" },
+  { href: "/privasi", label: "Privasi" },
+  { href: "/pembeli/beranda", label: "Mode Pembeli" },
+];
+
+export default function SellerFooter() {
+  return (
+    <footer className="relative z-10 border-t border-[#D85834]/15 bg-white/70 px-5 py-4 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 text-xs text-stone-500">
+        <span>© 2026 ReOwn · Mode Penjual</span>
+        <nav aria-label="Tautan penjual" className="flex flex-wrap gap-x-5 gap-y-1 font-medium text-stone-600">
+          {LINKS.map((l) => (
+            <Link key={l.href} href={l.href} className="transition-colors hover:text-[#D95A36]">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    </footer>
+  );
+}

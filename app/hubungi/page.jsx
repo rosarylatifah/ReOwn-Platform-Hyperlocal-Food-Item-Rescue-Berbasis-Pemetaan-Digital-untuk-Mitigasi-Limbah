@@ -3,6 +3,7 @@ import Reveal from "@/components/ui/Reveal";
 import { fraunces } from "@/lib/fonts";
 import { CONTACT } from "@/lib/site";
 import ContactForm from "@/components/contact/ContactForm";
+import ContactHistory from "@/components/contact/ContactHistory";
 
 export const metadata = {
   title: "Hubungi Kami | ReOwn",
@@ -58,7 +59,11 @@ export default function HubungiPage() {
         </ul>
       ) : null}
 
-      <Reveal className="mt-10">
+      <div className="mt-10 flex justify-end">
+        <ContactHistory />
+      </div>
+
+      <Reveal className="mt-4">
         <ContactForm />
       </Reveal>
     </PageShell>

@@ -1,37 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-export const YEAR_SECONDS = 365 * 24 * 3600;
-
-// Perkiraan akumulasi sejak 1 Januari tahun ini
-function estimate(tonnesPerYear) {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const elapsed = (now.getTime() - start.getTime()) / 1000;
-  return Math.floor(elapsed * (tonnesPerYear / YEAR_SECONDS));
-}
-
-export default function LiveCounter({ unit, tonnesPerYear }) {
-  const [value, setValue] = useState(null);
-
-  useEffect(() => {
-    const tick = () => setValue(estimate(tonnesPerYear));
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [tonnesPerYear]);
+export default function RibbonTape() {
+  const textItems = [
+    "MASIH BERGUNA",
+    "TERLUPAKAN",
+    "DISELAMATKAN OLEHMU",
+    "MASIH BERGUNA",
+    "TERLUPAKAN",
+    "DISELAMATKAN OLEHMU",
+  ];
 
   return (
-    <div className="rounded-[22px] bg-[#16A34A] p-[7px]">
-      <div className="rounded-2xl bg-[#FFF9F2] px-3 py-3 text-center font-mono text-stone-900">
-        <p className="text-[11px]">sebanyak</p>
-        <p className="my-1 text-2xl font-bold tabular-nums">{value === null ? "0" : value.toLocaleString("en-US")}</p>
-        <p className="text-[11px] leading-tight">
-          {unit}
-          <br />
-          Global secara Real-time
-        </p>
+    <div className="relative w-full overflow-hidden bg-[#E84118] py-3 -rotate-2 shadow-md my-8">
+      <style jsx>{`
+        @keyframes marquee {
+          0% {
+            transform: translateX(0%);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .animate-ribbon-marquee {
+          display: flex;
+          width: max-content;
+          animation: marquee 22s linear infinite;
+        }
+      `}</style>
+
+      <div className="animate-ribbon-marquee items-center">
+        {/* Render dua kali untuk efek infinite loop yang mulus */}
+        {[...Array(2)].map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center space-x-6 px-3 text-white font-bold tracking-wider uppercase text-sm md:text-base"
+          >
+            {textItems.map((item, idx) => (
+              <span key={idx} className="flex items-center">
+                <span>{item}</span>
+                <span className="mx-6 text-white/70">·</span>
+              </span>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );

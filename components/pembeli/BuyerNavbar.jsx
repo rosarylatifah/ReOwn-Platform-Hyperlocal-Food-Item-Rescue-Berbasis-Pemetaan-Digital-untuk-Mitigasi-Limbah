@@ -1,364 +1,253 @@
 "use client";
 
-import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { Home, Package, CheckSquare, History, MessageSquare, Bell, User, ShoppingCart } from 'lucide-react';
-import Link from 'next/link';
-import { useCart } from '@/app/pembeli/context/cart';
-import { useChat } from '@/app/pembeli/context/chat';
-import { useNotification } from '@/app/pembeli/context/notification'; // 👈 Tambahkan import notification
+import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
+import { Bell, MessageSquare, User } from "lucide-react";
 
-import NotificationPopover from '@/components/pembeli/NotificationPopover';
-import ChatPopover from '@/components/pembeli/ChatPopover';
-import ProfilePopover from '@/components/profil/ProfilePopover';
+import Logo from "@/components/common/Logo";
+import ScrollAwareHeader from "@/components/common/ScrollAwareHeader";
+import { delaGothic } from "@/lib/fonts";
+import { styles, pillBase } from "@/lib/navStyles";
+
+import { useCart } from "@/app/pembeli/context/cart";
+import { useChat } from "@/app/pembeli/context/chat";
+import { useNotification } from "@/app/pembeli/context/notification";
+import { useCartDrawer } from "@/app/pembeli/context/cartDrawer";
+
+import NotificationPopover from "@/components/pembeli/NotificationPopover";
+import ChatPopover from "@/components/pembeli/ChatPopover";
+import ProfilePopover from "@/components/profil/ProfilePopover";
+
+// Gaya diambil dari sumber yang sama dengan Navbar landing (variant "overlay")
+const s = styles.overlay;
+const pill = s.pill;
+
+// Halaman aktif: putih terisi, sama dengan keadaan hover kapsul landing
+const pillActive =
+  "border-white bg-white text-[#F24827] focus-visible:outline-white";
+
+// Sama dengan CartButton landing
+const iconBase =
+  "relative grid h-11 w-11 shrink-0 place-items-center rounded-full border-[1.5px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 md:h-[41px] md:w-[41px]";
+
+const NAV_ITEMS = [
+  { id: "beranda", path: "/pembeli/beranda", label: "Beranda" },
+  { id: "produk", path: "/pembeli/produk", label: "Produk" },
+  { id: "pesanan", path: "/pembeli/pesanan", label: "Pesanan" },
+  { id: "tentang", label: "Tentang Kami", footer: true },
+];
+
+function Badge({ value }) {
+  if (!value) return null;
+  return (
+    <motion.span
+      key={value}
+      initial={{ scale: 0.4, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 500, damping: 14 }}
+      className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#95F57C] px-1 text-[11px] font-bold leading-none text-stone-900 ring-2 ring-stone-900"
+    >
+      {value}
+    </motion.span>
+  );
+}
+
+function CartIcon() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M6 7h12l1 13H5L6 7Z" />
+      <path d="M9 7a3 3 0 0 1 6 0" />
+    </svg>
+  );
+}
 
 export default function BuyerNavbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [hoveredNav, setHoveredNav] = useState(null);
-  const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const [hoveredIcon, setHoveredIcon] = useState(null);
-
+  const [menuOpen, setMenuOpen] = useState(false);
   const [activePopover, setActivePopover] = useState(null); // 'notif' | 'chat' | 'profile' | null
 
   const { totalCartItems } = useCart();
   const { unreadChatCount } = useChat();
-  const { unreadCount } = useNotification(); // 👈 Ambil data unreadCount notifikasi
+  const { unreadCount } = useNotification();
+  const { open: openCart } = useCartDrawer();
   const pathname = usePathname();
 
-  const navItems = [
-    { id: 'beranda', path: '/pembeli/beranda', label: 'BERANDA', icon: Home },
-    { id: 'produk', path: '/pembeli/produk', label: 'PRODUK', icon: Package },
-    { id: 'pesanan', path: '/pembeli/pesanan', label: 'PESANAN', icon: CheckSquare },
-    { id: 'riwayat', path: '/pembeli/riwayat', label: 'RIWAYAT PESANAN', icon: History },
+  const togglePopover = (name) => {
+    setMenuOpen(false);
+    setActivePopover((prev) => (prev === name ? null : name));
+  };
+
+  const iconClass = (active) => `${iconBase} ${active ? pillActive : pill}`;
+
+  const handleOpenCart = () => {
+    setMenuOpen(false);
+    setActivePopover(null);
+    openCart();
+  };
+
+const scrollToFooter = () => {
+  setMenuOpen(false);
+  setActivePopover(null);
+  // Tunggu menu tertutup, lalu cari footer (id, tag <footer>, atau paling bawah halaman)
+  setTimeout(() => {
+    const el = document.getElementById("footer") || document.querySelector("footer");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "end" });
+    else window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+  }, 50);
+};
+
+  const quickActions = [
+    { id: "chat", label: "Chat", Icon: MessageSquare, count: unreadChatCount },
+    { id: "notif", label: "Notifikasi", Icon: Bell, count: unreadCount },
+    { id: "profile", label: "Profil", Icon: User, count: 0 },
   ];
 
-  const togglePopover = (popoverName) => {
-    setActivePopover((prev) => (prev === popoverName ? null : popoverName));
-  };
+  const cartLabel = totalCartItems ? `Buka keranjang, ${totalCartItems} barang` : "Buka keranjang";
 
   return (
     <>
-      <style jsx>{`
-        @media (max-width: 900px) {
-          .hamburger-btn {
-            display: flex !important;
-          }
-          .nav-menu {
-            position: fixed;
-            top: 80px;
-            left: 30px;
-            flex-direction: column;
-            align-items: flex-start !important;
-            gap: 10px !important;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            transform: translateY(-20px);
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s ease;
-          }
-          .nav-menu.open {
-            transform: translateY(0);
-            opacity: 1;
-            pointer-events: auto;
-          }
-          .nav-menu a {
-            width: 100%;
-            justify-content: flex-start;
-          }
-        }
+      <ScrollAwareHeader variant="overlay">
+        <nav aria-label="Navigasi pembeli" className="flex w-full items-center justify-between gap-6 bg-[#F24827] px-7 py-3.5">
+          <Logo tone={s.logo} />
 
-        @media (max-width: 600px) {
-          nav {
-            padding: 10px 14px !important;
-          }
-          .logo-btn {
-            padding: 6px 14px !important;
-          }
-          .logo-btn h2 {
-            font-size: 16px !important;
-          }
-          .action-icons-group {
-            gap: 8px !important;
-          }
-          .action-icons-group button, 
-          .action-icons-group a {
-            width: 36px !important;
-            height: 36px !important;
-          }
-        }
-      `}</style>
+          {/* Menu tengah (desktop) */}
+          <ul className={`${delaGothic.className} hidden items-center gap-3 lg:flex`}>
+            {NAV_ITEMS.map((item) => {
+if (item.footer) {
+  return (
+    <li key={item.id}>
+      <button type="button" onClick={scrollToFooter} className={`${pillBase} ${pill}`}>
+        {item.label}
+      </button>
+    </li>
+  );
+}
 
-      {/* OVERLAY HAMBURGER MENU MOBILE */}
-      {isOpen && (
-        <div 
-          onClick={() => setIsOpen(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 998,
-          }}
-        />
-      )}
+              const isActive = pathname === item.path;
+              return (
+                <li key={item.id}>
+                  <Link
+                    href={item.path}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`${pillBase} ${isActive ? pillActive : pill}`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
 
-      <nav style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0,
-        width: '100%', 
-        zIndex: 1000,
-        backgroundColor: 'rgba(250, 240, 236, 0.75)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(217, 90, 54, 0.1)',
-        padding: '14px 30px', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        boxSizing: 'border-box',
-        transition: 'all 0.3s ease'
-      }}>
-        {/* KIRI: LOGO & HAMBURGER */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button 
-            onClick={() => setIsOpen(!isOpen)}
-            className="hamburger-btn"
-            style={{ 
-              display: 'none', 
-              backgroundColor: '#D95A36', 
-              color: '#FFF', 
-              border: 'none', 
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%', 
-              cursor: 'pointer',
-              fontSize: '18px',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'transform 0.2s ease'
-            }}
-          >
-            {isOpen ? '✕' : '☰'}
-          </button>
-
-          <Link 
-            href="/pembeli/beranda"
-            className="logo-btn"
-            onMouseEnter={() => setIsLogoHovered(true)}
-            onMouseLeave={() => setIsLogoHovered(false)}
-            style={{ 
-              textDecoration: 'none',
-              backgroundColor: '#D95A36', 
-              padding: '8px 20px', 
-              borderRadius: '20px', 
-              boxShadow: isLogoHovered ? '0 8px 20px rgba(217, 90, 54, 0.4)' : '0 4px 10px rgba(0,0,0,0.15)',
-              display: 'flex', 
-              alignItems: 'center',
-              cursor: 'pointer',
-              transform: isLogoHovered ? 'scale(1.05) translateY(-2px)' : 'scale(1)',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-            }} 
-          >
-            <h2 style={{ fontFamily: 'Fraunces, serif', color: '#FFF', margin: 0, fontSize: '20px', letterSpacing: '0.5px' }}>
-              Re<span style={{ color: '#86efac' }}>O</span>wn
-            </h2>
-          </Link>
-        </div>
-
-        {/* TENGAH: MENU NAVIGASI UTAMA */}
-        <div className={`nav-menu ${isOpen ? 'open' : ''}`} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {navItems.map((item) => {
-            const isActive = pathname === item.path;
-            const isHovered = hoveredNav === item.id;
-            const IconComponent = item.icon;
-
-            return (
-              <Link
-                key={item.id}
-                href={item.path}
-                onClick={() => setIsOpen(false)}
-                onMouseEnter={() => setHoveredNav(item.id)}
-                onMouseLeave={() => setHoveredNav(null)}
-                style={{
-                  textDecoration: 'none',
-                  fontFamily: 'Inter, sans-serif',
-                  border: isActive ? '2px solid #FFF' : 'none',
-                  cursor: 'pointer',
-                  backgroundColor: isActive ? '#C54E2D' : isHovered ? '#E87A5D' : '#D95A36',
-                  color: '#FFF',
-                  padding: '8px 18px',
-                  borderRadius: '20px',
-                  fontSize: '13px',
-                  fontWeight: isActive ? 'bold' : '600',
-                  boxShadow: isHovered || isActive ? '0 6px 14px rgba(217, 90, 54, 0.4)' : '0 4px 10px rgba(0,0,0,0.15)',
-                  transform: isHovered ? 'translateY(-2px) scale(1.05)' : isActive ? 'scale(1.02)' : 'scale(1)',
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  outline: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
+          {/* Aksi kanan (desktop) */}
+          <div className="hidden items-center gap-2.5 lg:flex">
+            {quickActions.slice(0, 2).map(({ id, label, Icon, count }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => togglePopover(id)}
+                aria-label={label}
+                className={iconClass(activePopover === id)}
               >
-                {IconComponent && <IconComponent size={15} />}
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
+                <Icon size={19} strokeWidth={2} />
+                <Badge value={count} />
+              </button>
+            ))}
 
-        {/* KANAN: AKSES CEPAT */}
-        <div className="action-icons-group" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          
-          {/* TOMBOL CHAT */}
-          <div style={{ position: 'relative' }}>
-            <button 
-              onClick={() => togglePopover('chat')}
-              onMouseEnter={() => setHoveredIcon('chat')}
-              onMouseLeave={() => setHoveredIcon(null)}
-              style={{ 
-                width: '38px', height: '38px', borderRadius: '50%', 
-                border: activePopover === 'chat' ? '2px solid #FFF' : 'none', 
-                backgroundColor: activePopover === 'chat' ? '#C54E2D' : hoveredIcon === 'chat' ? '#E87A5D' : '#D95A36', 
-                boxShadow: hoveredIcon === 'chat' || activePopover === 'chat' ? '0 6px 14px rgba(217, 90, 54, 0.45)' : '0 4px 10px rgba(0,0,0,0.15)', 
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transform: hoveredIcon === 'chat' ? 'translateY(-2px) scale(1.08)' : 'scale(1)',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              <MessageSquare size={18} color="#FFF" />
+            <button type="button" onClick={handleOpenCart} aria-label={cartLabel} className={`${iconBase} ${pill}`}>
+              <CartIcon />
+              <Badge value={totalCartItems} />
             </button>
 
-            {unreadChatCount > 0 && (
-              <span style={{
-                position: 'absolute', top: '-4px', right: '-4px',
-                backgroundColor: '#FFF', color: '#D95A36', fontSize: '10px', fontWeight: 'bold',
-                borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-              }}>
-                {unreadChatCount}
-              </span>
-            )}
+            <button
+              type="button"
+              onClick={() => togglePopover("profile")}
+              aria-label="Profil"
+              className={iconClass(activePopover === "profile")}
+            >
+              <User size={19} strokeWidth={2} />
+            </button>
           </div>
 
-          {/* TOMBOL NOTIFIKASI (DINAMIS SESUAI unreadCount) */}
-          <div style={{ position: 'relative' }}>
-            <button 
-              onClick={() => togglePopover('notif')}
-              onMouseEnter={() => setHoveredIcon('bell')}
-              onMouseLeave={() => setHoveredIcon(null)}
-              style={{ 
-                width: '38px', height: '38px', borderRadius: '50%', 
-                border: activePopover === 'notif' ? '2px solid #FFF' : 'none', 
-                backgroundColor: activePopover === 'notif' ? '#C54E2D' : hoveredIcon === 'bell' ? '#E87A5D' : '#D95A36', 
-                boxShadow: hoveredIcon === 'bell' || activePopover === 'notif' ? '0 6px 14px rgba(217, 90, 54, 0.45)' : '0 4px 10px rgba(0,0,0,0.15)', 
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transform: hoveredIcon === 'bell' ? 'translateY(-2px) scale(1.08)' : 'scale(1)',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              <Bell size={18} color="#FFF" />
+          {/* Mobile: keranjang + burger */}
+          <div className="flex items-center gap-2.5 lg:hidden">
+            <button type="button" onClick={handleOpenCart} aria-label={cartLabel} className={`${iconBase} ${pill}`}>
+              <CartIcon />
+              <Badge value={totalCartItems} />
             </button>
 
-            {/* BADGE NOTIFIKASI HANYA MUNCUL JIKA unreadCount > 0 */}
-            {unreadCount > 0 && (
-              <span style={{
-                position: 'absolute', top: '-4px', right: '-4px',
-                backgroundColor: '#FFF', color: '#D95A36', fontSize: '10px', fontWeight: 'bold',
-                borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-              }}>
-                {unreadCount}
-              </span>
-            )}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label={menuOpen ? "Tutup menu" : "Buka menu"}
+                aria-expanded={menuOpen}
+                className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[1.5px] ${s.burger}`}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                  {menuOpen ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+                </svg>
+              </button>
+
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 -z-10" onClick={() => setMenuOpen(false)} aria-hidden />
+                  <div className="absolute right-0 mt-3 w-64 rounded-2xl bg-white p-3 shadow-xl">
+                    {NAV_ITEMS.map((item) =>
+  item.footer ? (
+    <button
+      key={item.id}
+      type="button"
+      onClick={scrollToFooter}
+      className="block w-full rounded-xl px-4 py-3 text-left text-base font-medium text-stone-800 hover:bg-orange-50"
+    >
+      {item.label}
+    </button>
+  ) : (
+    <Link
+      key={item.id}
+      href={item.path}
+      onClick={() => setMenuOpen(false)}
+      aria-current={pathname === item.path ? "page" : undefined}
+      className={`block rounded-xl px-4 py-3 text-base font-medium hover:bg-orange-50 ${
+        pathname === item.path ? "bg-[#95F57C]/40 text-stone-900" : "text-stone-800"
+      }`}
+    >
+      {item.label}
+    </Link>
+  )
+)}
+                    <div className="mt-2 flex flex-col gap-1 border-t border-stone-100 pt-3">
+                      {quickActions.map(({ id, label, Icon, count }) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => togglePopover(id)}
+                          className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium text-stone-800 hover:bg-orange-50"
+                        >
+                          <span className="flex items-center gap-2.5">
+                            <Icon size={18} /> {label}
+                          </span>
+                          {count > 0 && (
+                            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#95F57C] px-1 text-[11px] font-bold text-stone-900 ring-2 ring-stone-900">
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
+        </nav>
+      </ScrollAwareHeader>
 
-          {/* TOMBOL KERANJANG */}
-          <Link
-            href="/pembeli/keranjang"
-            onMouseEnter={() => setHoveredIcon('cart')}
-            onMouseLeave={() => setHoveredIcon(null)}
-            style={{
-              textDecoration: 'none',
-              position: 'relative',
-              width: '38px', 
-              height: '38px', 
-              borderRadius: '50%', 
-              border: pathname === '/pembeli/keranjang' ? '2px solid #FFF' : 'none', 
-              backgroundColor: pathname === '/pembeli/keranjang' 
-                ? '#C54E2D' 
-                : hoveredIcon === 'cart' 
-                ? '#E87A5D' 
-                : '#D95A36', 
-              boxShadow: hoveredIcon === 'cart' || pathname === '/pembeli/keranjang' 
-                ? '0 6px 14px rgba(217, 90, 54, 0.45)' 
-                : '0 4px 10px rgba(0,0,0,0.15)', 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              transform: hoveredIcon === 'cart' ? 'translateY(-2px) scale(1.08)' : pathname === '/pembeli/keranjang' ? 'scale(1.02)' : 'scale(1)',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            <ShoppingCart size={18} color="#FFF" />
-
-            {/* BADGE ANGKA JUMLAH KERANJANG */}
-            {totalCartItems > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '-4px',
-                right: '-4px',
-                backgroundColor: '#FFF',
-                color: '#D95A36',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                borderRadius: '50%',
-                width: '18px',
-                height: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-              }}>
-                {totalCartItems}
-              </span>
-            )}
-          </Link>
-
-          {/* TOMBOL PROFIL */}
-          <button 
-            onClick={() => togglePopover('profile')}
-            onMouseEnter={() => setHoveredIcon('profile')}
-            onMouseLeave={() => setHoveredIcon(null)}
-            style={{ 
-              width: '38px', height: '38px', borderRadius: '50%', 
-              border: activePopover === 'profile' ? '2px solid #FFF' : 'none', 
-              backgroundColor: activePopover === 'profile' ? '#C54E2D' : hoveredIcon === 'profile' ? '#E87A5D' : '#D95A36', 
-              boxShadow: hoveredIcon === 'profile' || activePopover === 'profile' ? '0 6px 14px rgba(217, 90, 54, 0.45)' : '0 4px 10px rgba(0,0,0,0.15)', 
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transform: hoveredIcon === 'profile' ? 'translateY(-2px) scale(1.08)' : 'scale(1)',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            <User size={18} color="#FFF" />
-          </button>
-        </div>
-      </nav>
-
-      {/* RENDER POPOVER */}
-      <ChatPopover isOpen={activePopover === 'chat'} onClose={() => setActivePopover(null)} />
-      <NotificationPopover isOpen={activePopover === 'notif'} onClose={() => setActivePopover(null)} />
-      <ProfilePopover isOpen={activePopover === 'profile'} onClose={() => setActivePopover(null)} />
+      {/* Popover */}
+      <ChatPopover isOpen={activePopover === "chat"} onClose={() => setActivePopover(null)} />
+      <NotificationPopover isOpen={activePopover === "notif"} onClose={() => setActivePopover(null)} />
+      <ProfilePopover isOpen={activePopover === "profile"} onClose={() => setActivePopover(null)} />
     </>
   );
 }

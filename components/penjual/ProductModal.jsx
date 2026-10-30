@@ -2,123 +2,188 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
+import { fraunces } from '@/lib/fonts';
+import { compressImage } from '@/lib/pembeli/productHelper';
+import { URGENCY_MIN_HOURS, validateExpiry } from '@/lib/pembeli/productExpiry';
 
-export default function ProductModal({ 
-  isOpen, 
-  onClose, 
-  editingProductId, 
-  formData, 
-  setFormData, 
-  onSubmit 
+const labelClass = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-600';
+const fieldClass =
+  'box-border w-full rounded-xl border-2 border-stone-200 bg-white px-3 py-2.5 text-[13px] text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus:border-[#F23A10] focus-visible:ring-4 focus-visible:ring-[#16A34A]/30 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500';
+const errClass = 'mt-1 text-xs font-medium text-red-600';
+
+export default function ProductModal({
+  isOpen,
+  onClose,
+  editingProductId,
+  formData,
+  setFormData,
+  onSubmit
 }) {
   if (!isOpen) return null;
 
+  const isFood = formData.category === 'Makanan';
+  const expiryAt = formData.expiryAt ?? '';
+  const urgencyAt = formData.urgencyAt ?? '';
+
+  // Pesan error hanya tampil setelah kolomnya terisi
+  const errors = validateExpiry(formData);
+  const expiryErr = expiryAt ? errors.expiryAt : null;
+  const urgencyErr = urgencyAt ? errors.urgencyAt : null;
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '20px'
-    }}>
-      <div style={{
-        backgroundColor: '#FFF',
-        borderRadius: '20px',
-        width: '100%',
-        maxWidth: '480px',
-        padding: '24px',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-        position: 'relative'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#1A1A1A' }}>
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center overflow-y-auto bg-black/50 p-5 backdrop-blur-sm">
+      <div className="relative my-auto w-full max-w-[480px] rounded-[22px] bg-white p-6 shadow-[8px_10px_8px_-2px_rgba(0,0,0,0.35)]">
+        <div className="mb-5 flex items-center justify-between">
+          <h3 className={`${fraunces.className} m-0 text-lg font-extrabold uppercase tracking-tight text-stone-900`}>
             {editingProductId ? 'Edit Produk' : 'Tambah Produk Baru'}
           </h3>
-          <button 
+          <button
+            type="button"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}
+            aria-label="Tutup"
+            className="flex rounded-full p-1.5 text-stone-500 transition-colors hover:bg-[#95F57C] hover:text-stone-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#16A34A]"
           >
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <form onSubmit={onSubmit} className="flex flex-col gap-3.5">
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#444', display: 'block', marginBottom: '6px' }}>Nama Produk</label>
-            <input 
-              type="text" 
-              placeholder="Misal: Roti Donat Surplus / Baju Preloved" 
+            <label className={labelClass}>Nama Produk</label>
+            <input
+              type="text"
+              placeholder="Misal: Roti Donat Surplus / Baju Preloved"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #CCC', fontSize: '13px', boxSizing: 'border-box' }}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className={fieldClass}
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#444', display: 'block', marginBottom: '6px' }}>Kategori</label>
+              <label className={labelClass}>Kategori</label>
               <select
                 value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #CCC', fontSize: '13px', boxSizing: 'border-box' }}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className={fieldClass}
               >
                 <option value="Makanan">Makanan</option>
                 <option value="Barang">Barang</option>
               </select>
             </div>
             <div>
-              <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#444', display: 'block', marginBottom: '6px' }}>Harga (Rp)</label>
-              <input 
-                type="text" 
-                placeholder="15000" 
+              <label className={labelClass}>Harga (Rp)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="15000"
                 value={formData.price}
-                onChange={(e) => setFormData({...formData, price: e.target.value})}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #CCC', fontSize: '13px', boxSizing: 'border-box' }}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value.replace(/[^0-9]/g, '') })}
+                className={fieldClass}
               />
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Urgensi</label>
+              <select
+                value={isFood ? 'Normal' : formData.urgency}
+                onChange={(e) => setFormData({ ...formData, urgency: e.target.value })}
+                disabled={isFood}
+                title={isFood ? 'Diatur otomatis dari batas urgensi' : undefined}
+                className={fieldClass}
+              >
+                <option value="Normal">{isFood ? 'Otomatis' : 'Normal'}</option>
+                <option value="Segera">Segera</option>
+                <option value="Mendesak">Mendesak</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Stok</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="5"
+                value={formData.stock}
+                onChange={(e) => setFormData({ ...formData, stock: e.target.value.replace(/[^0-9]/g, '') })}
+                className={fieldClass}
+              />
+            </div>
+          </div>
+
+          {/* KHUSUS MAKANAN: batas kadaluarsa + batas urgensi (wajib) */}
+          {isFood && (
+            <div className="flex flex-col gap-3.5 rounded-2xl border border-amber-200 bg-[#FFF7E9] p-3.5">
+              <div>
+                <label className={labelClass} htmlFor="pm-expiry">Batas Kadaluarsa</label>
+                <input
+                  id="pm-expiry"
+                  type="datetime-local"
+                  required
+                  value={expiryAt}
+                  onChange={(e) => setFormData({ ...formData, expiryAt: e.target.value })}
+                  aria-invalid={expiryErr ? true : undefined}
+                  className={fieldClass}
+                />
+                {expiryErr && <p className={errClass} role="alert">{expiryErr}</p>}
+                <p className="mt-1 text-xs text-stone-600">
+                  Produk yang sudah melewati batas ini otomatis di-takedown dari etalase pembeli.
+                </p>
+              </div>
+
+              <div>
+                <label className={labelClass} htmlFor="pm-urgency">Batas Urgensi</label>
+                <input
+                  id="pm-urgency"
+                  type="datetime-local"
+                  required
+                  value={urgencyAt}
+                  onChange={(e) => setFormData({ ...formData, urgencyAt: e.target.value })}
+                  aria-invalid={urgencyErr ? true : undefined}
+                  className={fieldClass}
+                />
+                {urgencyErr && <p className={errClass} role="alert">{urgencyErr}</p>}
+                <p className="mt-1 text-xs text-stone-600">
+                  Saat batas ini tercapai, sistem otomatis mengubah status menjadi <b>Mendesak</b> dan
+                  menggratiskan produk. Batas urgensi minimal {URGENCY_MIN_HOURS} jam sebelum kadaluarsa.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#444', display: 'block', marginBottom: '6px' }}>Lokasi Toko</label>
-            <input 
-              type="text" 
-              placeholder="Batam Centre" 
+            <label className={labelClass}>Lokasi Toko</label>
+            <input
+              type="text"
+              placeholder="Batam Centre"
               value={formData.location}
-              onChange={(e) => setFormData({...formData, location: e.target.value})}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #CCC', fontSize: '13px', boxSizing: 'border-box' }}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className={fieldClass}
             />
           </div>
 
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#444', display: 'block', marginBottom: '6px' }}>URL Gambar Produk (Opsional)</label>
-            <input 
-              type="text" 
-              placeholder="https://..." 
-              value={formData.image}
-              onChange={(e) => setFormData({...formData, image: e.target.value})}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #CCC', fontSize: '13px', boxSizing: 'border-box' }}
+            <label className={labelClass}>Gambar Produk (Opsional)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const dataUrl = await compressImage(file);
+                setFormData({ ...formData, image: dataUrl });
+              }}
+              className={fieldClass}
             />
+            {formData.image && (
+              <img src={formData.image} alt="Pratinjau" className="mt-2 h-24 w-24 rounded-xl object-cover" />
+            )}
           </div>
 
           <button
             type="submit"
-            style={{
-              backgroundColor: '#D95A36',
-              color: '#FFF',
-              border: 'none',
-              padding: '12px',
-              borderRadius: '10px',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              cursor: 'pointer',
-              marginTop: '10px'
-            }}
+            className="mt-2.5 rounded-xl bg-[#F23A10] px-3 py-3 text-[13px] font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#95F57C] hover:text-stone-900 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#16A34A]"
           >
             {editingProductId ? 'Simpan Perubahan' : 'Simpan Produk Baru'}
           </button>

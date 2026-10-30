@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
+import { fraunces } from '@/lib/fonts';
 
 // Data simulasi pendapatan rescue (Puluhan Ribu)
 const yearlyRevenueData = {
@@ -41,17 +42,14 @@ export default function RevenueChart({ onOpenModal, activeTooltip, setActiveTool
   const rawData = yearlyRevenueData[selectedYear] || yearlyRevenueData['2026'];
 
   const svgWidth = 1000;
-  const svgHeight = 200; // Ditambah sedikit tingginya biar lega untuk 7 tingkatan kelipatan
+  const svgHeight = 200;
 
-  // 💡 OPSIONAL DYNAMIC: Mencari nilai tertinggi otomatis dari data
   const highestValue = Math.max(
     ...rawData.map(d => Math.max(d.makanan, d.barang))
   );
 
-  // Jika nilai tertinggi di bawah 300k, patokan plafon di 300k. Kalau lebih, bulatkan ke kelipatan 50k
   const maxVal = Math.max(300000, Math.ceil(highestValue / 50000) * 50000);
 
-  // Skala sumbu Y kelipatan 50k (0, 50k, 100k, 150k, 200k, 250k, 300k)
   const step = 50000;
   const yAxisTicks = [];
   for (let val = maxVal; val >= 0; val -= step) {
@@ -101,248 +99,146 @@ export default function RevenueChart({ onOpenModal, activeTooltip, setActiveTool
     setActiveTooltip(closest);
   };
 
+  const COLOR_FOOD = '#F23A10';
+  const COLOR_ITEM = '#16A34A';
+
   return (
-    <div style={{
-      backgroundColor: '#FFF',
-      borderRadius: '20px',
-      padding: '24px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      border: '1px solid rgba(217, 90, 54, 0.1)',
-      position: 'relative',
-      width: '100%',
-      maxWidth: '100%',
-      boxSizing: 'border-box',
-      overflow: 'hidden'
-    }}>
-      {/* HEADER, LEGENDA KATEGORI, & FILTER TAHUN */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+    <div className="relative flex w-full max-w-full flex-col justify-between overflow-hidden rounded-[22px] bg-white p-6 shadow-[6px_8px_8px_-2px_rgba(0,0,0,0.25)]">
+      {/* HEADER, LEGENDA, FILTER TAHUN */}
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1A1A1A', margin: 0 }}>
+          <div className="mb-1 flex items-center gap-2">
+            <h3 className={`${fraunces.className} m-0 text-lg font-extrabold uppercase tracking-tight text-stone-900`}>
               Pendapatan Penyelamatan
             </h3>
-            <select 
-              value={selectedYear} 
+            <select
+              value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              style={{
-                backgroundColor: '#FAF0EC',
-                color: '#D95A36',
-                border: '1px solid #FFDBCC',
-                borderRadius: '8px',
-                padding: '4px 8px',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
+              className="cursor-pointer rounded-lg border-2 border-[#F23A10] bg-white px-2 py-1 text-xs font-bold text-[#E0452A] outline-none focus-visible:ring-4 focus-visible:ring-[#16A34A]/40"
             >
               <option value="2026">2026</option>
               <option value="2025">2025</option>
             </select>
           </div>
 
-          <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
-            <span style={{ fontSize: '12px', color: '#D95A36', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#D95A36', display: 'inline-block' }}></span>
+          <div className="mt-1.5 flex gap-4">
+            <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: COLOR_FOOD }}>
+              <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLOR_FOOD }} />
               Makanan Terselamatkan
             </span>
-            <span style={{ fontSize: '12px', color: '#0EA5E9', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#0EA5E9', display: 'inline-block' }}></span>
+            <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: COLOR_ITEM }}>
+              <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLOR_ITEM }} />
               Barang Terselamatkan
             </span>
           </div>
         </div>
-        
-        <div style={{ textAlign: 'right' }}>
-          <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#D95A36', fontFamily: 'Fraunces, serif', display: 'block' }}>
+
+        <div className="text-right">
+          <span className={`${fraunces.className} block text-xl font-extrabold text-[#F23A10]`}>
             {activeTooltip ? activeTooltip.formattedMakanan : chartData[chartData.length - 1].formattedMakanan}
           </span>
-          <button 
+          <button
             onClick={() => onOpenModal('pendapatan')}
-            style={{
-              backgroundColor: '#FAF0EC',
-              color: '#D95A36',
-              border: 'none',
-              padding: '5px 12px',
-              borderRadius: '8px',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              marginTop: '4px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
+            className="mt-1 inline-flex items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-[11px] font-semibold text-stone-900 shadow-sm ring-1 ring-stone-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#95F57C] hover:shadow-lg"
           >
             Halaman Pendapatan <ArrowUpRight size={13} />
           </button>
         </div>
       </div>
 
-      {/* CONTAINER GRAFIK DENGAN SKALA KELIPATAN 50K */}
-      <div style={{ display: 'flex', width: '100%', alignItems: 'stretch', backgroundColor: '#FAFAFA', borderRadius: '12px', overflow: 'hidden' }}>
-        
-        {/* SKALA ANGKA SUMBU Y (0, 50k, 100k, 150k, 200k, 250k, 300k) */}
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          justifyContent: 'space-between', 
-          padding: '12px 10px 30px 10px', 
-          fontSize: '10px', 
-          fontWeight: '600', 
-          color: '#999', 
-          borderRight: '1px solid #E5E7EB',
-          backgroundColor: '#F3F4F6',
-          userSelect: 'none'
-        }}>
+      {/* CONTAINER GRAFIK */}
+      <div className="flex w-full items-stretch overflow-hidden rounded-2xl bg-[#FFF7E9]/60">
+        {/* Skala Y */}
+        <div className="flex select-none flex-col justify-between border-r border-stone-200 bg-[#FFF7E9] px-2.5 pb-[30px] pt-3 text-[10px] font-semibold text-stone-500">
           {yAxisTicks.map((tick, i) => (
             <span key={i}>{tick.label}</span>
           ))}
         </div>
 
-        {/* AREA GRAFIK SCROLL */}
-        <div 
+        {/* Area grafik scroll */}
+        <div
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setActiveTooltip(null)}
-          style={{ 
-            flex: 1,
-            overflowX: 'auto', 
-            overflowY: 'hidden',
-            padding: '12px 0 16px 0',
-            boxSizing: 'border-box'
-          }}
+          className="box-border flex-1 overflow-x-auto overflow-y-hidden pb-4 pt-3"
         >
-          <div style={{ width: `${svgWidth}px`, minWidth: `${svgWidth}px`, height: '240px', position: 'relative' }}>
-            <svg 
-              viewBox={`0 0 ${svgWidth} ${svgHeight}`} 
-              style={{ 
-                width: '100%', 
-                height: '200px', 
-                overflow: 'visible'
-              }}
+          <div
+            className="relative h-[240px]"
+            style={{ width: `${svgWidth}px`, minWidth: `${svgWidth}px` }}
+          >
+            <svg
+              viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+              className="h-[200px] w-full overflow-visible"
             >
               <defs>
                 <linearGradient id="gradientMakanan" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#D95A36" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#D95A36" stopOpacity="0.05" />
+                  <stop offset="0%" stopColor={COLOR_FOOD} stopOpacity="0.35" />
+                  <stop offset="100%" stopColor={COLOR_FOOD} stopOpacity="0.05" />
                 </linearGradient>
-
                 <linearGradient id="gradientBarang" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#0EA5E9" stopOpacity="0.02" />
+                  <stop offset="0%" stopColor={COLOR_ITEM} stopOpacity="0.3" />
+                  <stop offset="100%" stopColor={COLOR_ITEM} stopOpacity="0.02" />
                 </linearGradient>
               </defs>
 
-              {/* GARIS HORIZONTAL GRID LINES (KELIPATAN 50K) */}
               {yAxisTicks.map((tick, i) => {
                 const yPos = svgHeight - 20 - (tick.value / maxVal) * (svgHeight - 40);
                 return (
-                  <line 
-                    key={i}
-                    x1="0" 
-                    y1={yPos} 
-                    x2={svgWidth} 
-                    y2={yPos} 
-                    stroke="#E5E7EB" 
-                    strokeWidth="1" 
-                    strokeDasharray="4 4" 
-                  />
+                  <line key={i} x1="0" y1={yPos} x2={svgWidth} y2={yPos} stroke="#E7E0D6" strokeWidth="1" strokeDasharray="4 4" />
                 );
               })}
 
-              {/* AREA & GARIS BARANG */}
               <path d={areaPathBarang} fill="url(#gradientBarang)" />
-              <path d={linePathBarang} fill="none" stroke="#0EA5E9" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={linePathBarang} fill="none" stroke={COLOR_ITEM} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
 
-              {/* AREA & GARIS MAKANAN */}
               <path d={areaPathMakanan} fill="url(#gradientMakanan)" />
-              <path d={linePathMakanan} fill="none" stroke="#D95A36" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={linePathMakanan} fill="none" stroke={COLOR_FOOD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
 
-              {/* TITIK-TITIK CHART */}
-              {chartData.map((item, idx) => (
-                <React.Fragment key={idx}>
-                  <circle 
-                    cx={item.x} 
-                    cy={item.yBarang} 
-                    r={activeTooltip && activeTooltip.month === item.month ? 6 : 4} 
-                    fill={activeTooltip && activeTooltip.month === item.month ? '#0EA5E9' : '#FFF'} 
-                    stroke="#0EA5E9" 
-                    strokeWidth="2.5" 
-                  />
-                  <circle 
-                    cx={item.x} 
-                    cy={item.yMakanan} 
-                    r={activeTooltip && activeTooltip.month === item.month ? 6 : 4} 
-                    fill={activeTooltip && activeTooltip.month === item.month ? '#D95A36' : '#FFF'} 
-                    stroke="#D95A36" 
-                    strokeWidth="2.5" 
-                  />
-                </React.Fragment>
-              ))}
+              {chartData.map((item, idx) => {
+                const active = activeTooltip && activeTooltip.month === item.month;
+                return (
+                  <React.Fragment key={idx}>
+                    <circle cx={item.x} cy={item.yBarang} r={active ? 6 : 4} fill={active ? COLOR_ITEM : '#FFF'} stroke={COLOR_ITEM} strokeWidth="2.5" />
+                    <circle cx={item.x} cy={item.yMakanan} r={active ? 6 : 4} fill={active ? COLOR_FOOD : '#FFF'} stroke={COLOR_FOOD} strokeWidth="2.5" />
+                  </React.Fragment>
+                );
+              })}
 
-              {/* GARIS BANTU HOVER */}
               {activeTooltip && (
-                <line 
-                  x1={activeTooltip.x} 
-                  y1="0" 
-                  x2={activeTooltip.x} 
-                  y2={svgHeight} 
-                  stroke="#888" 
-                  strokeWidth="1.5" 
-                  strokeDasharray="4 4" 
-                  opacity="0.5"
-                />
+                <line x1={activeTooltip.x} y1="0" x2={activeTooltip.x} y2={svgHeight} stroke="#78716C" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
               )}
             </svg>
 
-            {/* LABEL BULAN (JAN - DES) */}
-            <div style={{ position: 'absolute', bottom: '0', left: 0, width: '100%', display: 'flex' }}>
-              {chartData.map((item) => (
-                <span 
-                  key={item.month} 
-                  style={{ 
-                    position: 'absolute', 
-                    left: `${item.x}px`, 
-                    transform: 'translateX(-50%)', 
-                    fontSize: '11px', 
-                    color: activeTooltip && activeTooltip.month === item.month ? '#D95A36' : '#888', 
-                    fontWeight: activeTooltip && activeTooltip.month === item.month ? 'bold' : '600' 
-                  }}
-                >
-                  {item.month}
-                </span>
-              ))}
+            {/* Label bulan */}
+            <div className="absolute bottom-0 left-0 flex w-full">
+              {chartData.map((item) => {
+                const active = activeTooltip && activeTooltip.month === item.month;
+                return (
+                  <span
+                    key={item.month}
+                    className={`absolute -translate-x-1/2 text-[11px] ${active ? 'font-bold text-[#F23A10]' : 'font-semibold text-stone-500'}`}
+                    style={{ left: `${item.x}px` }}
+                  >
+                    {item.month}
+                  </span>
+                );
+              })}
             </div>
 
-            {/* TOOLTIP MELAYANG */}
+            {/* Tooltip */}
             {activeTooltip && (
-              <div style={{
-                position: 'absolute',
-                top: '10px',
-                left: `${activeTooltip.x}px`,
-                transform: 'translateX(-50%)',
-                backgroundColor: '#FFF',
-                padding: '8px 12px',
-                borderRadius: '10px',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-                border: '1px solid rgba(0,0,0,0.1)',
-                pointerEvents: 'none',
-                fontSize: '11px',
-                zIndex: 10,
-                whiteSpace: 'nowrap'
-              }}>
-                <div style={{ fontWeight: 'bold', color: '#1A1A1A', marginBottom: '4px', textAlign: 'center' }}>
+              <div
+                className="pointer-events-none absolute top-2.5 z-10 -translate-x-1/2 whitespace-nowrap rounded-xl bg-white px-3 py-2 text-[11px] shadow-[4px_6px_8px_-2px_rgba(0,0,0,0.25)]"
+                style={{ left: `${activeTooltip.x}px` }}
+              >
+                <div className="mb-1 text-center font-bold text-stone-900">
                   Bulan {activeTooltip.month} ({selectedYear})
                 </div>
-                <div style={{ color: '#D95A36', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#D95A36' }}></span>
+                <div className="flex items-center gap-1 font-bold" style={{ color: COLOR_FOOD }}>
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLOR_FOOD }} />
                   Makanan: {activeTooltip.formattedMakanan}
                 </div>
-                <div style={{ color: '#0EA5E9', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0EA5E9' }}></span>
+                <div className="mt-0.5 flex items-center gap-1 font-bold" style={{ color: COLOR_ITEM }}>
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLOR_ITEM }} />
                   Barang: {activeTooltip.formattedBarang}
                 </div>
               </div>

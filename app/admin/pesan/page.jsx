@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import EmptyState from "@/components/admin/EmptyState";
-import { SearchInput, SelectFilter, Toolbar } from "@/components/admin/Filters";
+import { DateFilter, SearchInput, SelectFilter, Toolbar } from "@/components/admin/Filters";
 import MessageDetailModal, { ADMIN_STATUS_LABEL, KIND_TONE, STATUS_TONE } from "@/components/admin/MessageDetailModal";
 import Pagination, { usePaged } from "@/components/admin/Pagination";
 import StatusChip from "@/components/admin/StatusChip";
@@ -14,20 +14,44 @@ import { KIND_LABEL, markRead, useMessages } from "@/lib/contact";
 const inTab = (m, t) =>
   t === "masuk" ? m.status === "baru" || m.status === "dibaca" : m.status === t;
 
+const startOf = (d) => (d ? new Date(d + "T00:00:00").getTime() : null);
+const endOf = (d) => (d ? new Date(d + "T23:59:59.999").getTime() : null);
+
 export default function PesanPage() {
   const { messages } = useMessages();
   const [tab, setTab] = useState("masuk");
   const [q, setQ] = useState("");
   const [kind, setKind] = useState("semua");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [open, setOpen] = useState(null);
+
+  const inRange = (at) => {
+    const f = startOf(from);
+    const t = endOf(to);
+    if (!f && !t) return true;
+    if (!at) return false;
+    const ts = new Date(at).getTime();
+    return (f === null || ts >= f) && (t === null || ts <= t);
+  };
 
   const needle = q.trim().toLowerCase();
   const list = messages
     .filter((m) => inTab(m, tab))
     .filter((m) => kind === "semua" || m.kind === kind)
     .filter((m) => (m.subject + " " + m.body + " " + m.userName + " " + m.userEmail).toLowerCase().includes(needle))
+    .filter((m) => inRange(m.createdAt))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const paged = usePaged(list);
+
+  const hasFilter = q || from || to || kind !== "semua";
+  const clearFilters = () => {
+    setQ("");
+    setFrom("");
+    setTo("");
+    setKind("semua");
+    paged.setPage(1);
+  };
 
   return (
     <>
@@ -41,7 +65,11 @@ export default function PesanPage() {
         ]}
       />
       <Toolbar>
-        <SearchInput value={q} onChange={(v) => { setQ(v); paged.setPage(1); }} placeholder="Cari subjek, isi, atau pengirim" />
+        <SearchInput
+          value={q}
+          onChange={(v) => { setQ(v); paged.setPage(1); }}
+          placeholder="Cari subjek, isi, atau pengirim"
+        />
         <SelectFilter
           value={kind}
           onChange={(v) => { setKind(v); paged.setPage(1); }}
@@ -53,6 +81,13 @@ export default function PesanPage() {
             { value: "kendala", label: "Kendala" },
           ]}
         />
+        <DateFilter label="Dari" value={from} onChange={(v) => { setFrom(v); paged.setPage(1); }} />
+        <DateFilter label="Sampai" value={to} onChange={(v) => { setTo(v); paged.setPage(1); }} />
+        {hasFilter && (
+          <button type="button" className="adm-tb-clear" onClick={clearFilters}>
+            Reset
+          </button>
+        )}
       </Toolbar>
 
       <section className="adm-panel">
@@ -61,7 +96,7 @@ export default function PesanPage() {
             title={messages.length === 0 ? "Belum ada pesan masuk" : "Tidak ada pesan di sini"}
             hint={messages.length === 0
               ? "Pesan dari halaman Hubungi akan muncul di sini. Pengirim harus sudah punya akun."
-              : "Ubah tab, jenis, atau kata kunci pencarian."}
+              : "Ubah tab, jenis, kata kunci, atau rentang tanggal."}
           />
         ) : (
           <>
@@ -85,13 +120,15 @@ export default function PesanPage() {
                       </td>
                       <td><StatusChip tone={STATUS_TONE[m.status]}>{ADMIN_STATUS_LABEL[m.status]}</StatusChip></td>
                       <td>
-                        <button
-                          type="button"
-                          className="adm-btn adm-btn--sm adm-btn--primary"
-                          onClick={() => { markRead(m.id); setOpen(m.id); }}
-                        >
-                          Buka
-                        </button>
+                        <div className="adm-actcol">
+                          <button
+                            type="button"
+                            className="adm-act adm-act--main"
+                            onClick={() => { markRead(m.id); setOpen(m.id); }}
+                          >
+                            Buka
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

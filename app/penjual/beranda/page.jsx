@@ -2,14 +2,14 @@
 
 import React from 'react';
 
-// Import Component yang Dipakai
 import SellerNavbar from '@/components/penjual/SellerNavbar';
 import RevenueChart from '@/components/penjual/RevenueChart';
 import AvailableItemsCard from '@/components/penjual/AvailableItemsCard';
 import AvailableFoodsCard from '@/components/penjual/AvailableFoodsCard';
 import ActivityTable from '@/components/penjual/ActivityTable';
+import StatusDot from '@/components/ui/StatusDot';
+import { fraunces, gochiHand } from '@/lib/fonts';
 
-// Custom Hook Penjual
 import { useSellerDashboard } from '@/app/penjual/hooks/useSellerDashboard';
 
 export default function SellerBerandaPage() {
@@ -23,40 +23,34 @@ export default function SellerBerandaPage() {
   } = useSellerDashboard();
 
   return (
-    <div style={{ backgroundColor: '#FAF6F0', minHeight: '100vh', paddingBottom: '40px' }}>
-      {/* NAVBAR PENJUAL */}
+    <div className="min-h-screen bg-[#FFF7E9] pb-10">
       <SellerNavbar activeTab="beranda" />
 
-      {/* CONTAINER UTAMA */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 20px' }}>
-        
+      <div className="mx-auto max-w-[1280px] px-5 pb-6 pt-24 md:px-8">
         {/* HEADER WELCOME */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1A1A1A', margin: '0 0 6px 0', fontFamily: 'Fraunces, serif' }}>
+            <p className="inline-flex items-center gap-2 rounded-full border-2 border-[#F23A10] bg-white px-3.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#E0452A]">
+              <StatusDot />
+              Dasbor penjual
+            </p>
+            <h1 className={`${fraunces.className} mt-3 text-3xl font-extrabold uppercase leading-[1.05] tracking-tight text-stone-900 md:text-[2.6rem]`}>
               Halo, Penjual
             </h1>
-            <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
+            <p className={`${gochiHand.className} mt-2 text-base leading-relaxed text-stone-600`}>
               Berikut ringkasan performa toko dan aktivitas ReOwn kamu hari ini.
             </p>
           </div>
 
-          <div style={{ backgroundColor: '#FFF', padding: '8px 16px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: '#1A1A1A' }}>
-            <span style={{ color: '#D95A36' }}>19.21.02 WIB</span>
-            <span style={{ color: '#888', fontWeight: 'normal' }}>Jum, 23 Okt 2026</span>
+          <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-semibold text-stone-900 shadow-sm">
+            <span className="text-[#F23A10]">19.21.02 WIB</span>
+            <span className="font-normal text-stone-500">Jum, 23 Okt 2026</span>
           </div>
         </div>
 
-        {/* BARIS ATAS: REVENUE CHART (KIRI) & STATS BARANG/MAKANAN TERSEDIA (KANAN) */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr 340px', // Chart dapat porsi lebih luas (1fr), stats di kanan 340px
-          gap: '20px', 
-          marginBottom: '28px',
-          alignItems: 'stretch'
-        }}>
-          {/* CHART PENDAPATAN DENGAN DUA LINE */}
-          <RevenueChart 
+        {/* BARIS ATAS: CHART (KIRI) & STATS (KANAN) */}
+        <div className="mb-7 grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[1fr_340px]">
+          <RevenueChart
             chartScale={chartScale}
             onScroll={handleChartScroll}
             onOpenModal={(modalName) => setActiveModal(modalName)}
@@ -64,16 +58,14 @@ export default function SellerBerandaPage() {
             setActiveTooltip={setActiveTooltip}
           />
 
-          {/* DUA CARD STATS ETALASE TERSEDIA */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="flex flex-col gap-4">
             <AvailableItemsCard onOpenModal={() => setActiveModal('barang-tersedia')} />
             <AvailableFoodsCard onOpenModal={() => setActiveModal('makanan-tersedia')} />
           </div>
         </div>
 
-        {/* BARIS BAWAH: RIWAYAT AKTIVITAS TOKO */}
+        {/* BARIS BAWAH */}
         <ActivityTable />
-
       </div>
     </div>
   );

@@ -56,16 +56,29 @@ export default function ChatPopover({ isOpen, onClose, externalActiveChatId, onC
         }}
       />
 
-      <div 
-        style={{
-          position: 'fixed', top: '80px', right: '120px', width: '380px', height: '500px',
-          backgroundColor: '#FFFFFF', borderRadius: '20px',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(217, 90, 54, 0.08)',
-          border: '1px solid rgba(217, 90, 54, 0.12)', zIndex: 999,
-          display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, sans-serif'
-        }}
-        className="reown-chat-popover"
-      >
+<div
+  style={{
+    position: 'fixed', top: '80px', right: '120px', width: '380px', height: '500px',
+    maxWidth: 'calc(100vw - 24px)', boxSizing: 'border-box',
+    backgroundColor: '#FFFFFF', borderRadius: '20px',
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(217, 90, 54, 0.08)',
+    border: '1px solid rgba(217, 90, 54, 0.12)', zIndex: 999,
+    display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, sans-serif'
+  }}
+  className="reown-chat-popover"
+>
+  <style jsx global>{`
+    @media (max-width: 900px) {
+      .reown-chat-popover {
+        top: 76px !important;
+        left: 12px !important;
+        right: 12px !important;
+        width: auto !important;
+        height: calc(100vh - 92px) !important;
+        max-width: none !important;
+      }
+    }
+  `}</style>
         {!activeChatId ? (
           <>
             {/* HEADER LIST CHAT */}

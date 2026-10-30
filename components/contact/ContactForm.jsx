@@ -3,27 +3,22 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  KIND_HINT, KIND_LABEL, MAX_BODY, STATUS_LABEL,
-  sendMessage, useContactUser, useMessages,
+  KIND_HINT, KIND_LABEL, MAX_BODY,
+  sendMessage, useContactUser,
 } from "@/lib/contact";
 import "./contact.css";
 
 const DRAFT_KEY = "reown_contact_draft";
 const KINDS = ["pertanyaan", "saran", "kendala"];
 
-const when = (iso) =>
-  new Intl.DateTimeFormat("id-ID", {
-    timeZone: "Asia/Jakarta", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-  }).format(new Date(iso));
-
 /**
  * Kotak pesan di halaman Hubungi. Siapa pun bisa mengetik, tetapi MENGIRIM butuh akun:
  * bila belum login, tulisan disimpan sebagai draf dan pengunjung diarahkan masuk/daftar.
  * Pesan yang terkirim langsung muncul di panel admin (halaman Pesan Masuk).
+ * Riwayat pesan pengguna ditampilkan lewat <ContactHistory /> (pop-up).
  */
 export default function ContactForm() {
   const { ready, user } = useContactUser();
-  const { messages } = useMessages();
   const [kind, setKind] = useState("pertanyaan");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -79,11 +74,6 @@ export default function ContactForm() {
     setRestored(false);
   };
 
-  const mine = user ? messages.filter((m) => m.userEmail.toLowerCase() === user.email.toLowerCase()) : [];
-  const currentUser = user;
-  const isDemo = false;
-  const demoLogout = () => undefined;
-
   return (
     <div className="ct">
       <form className="ct-card" onSubmit={submit} noValidate>
@@ -133,28 +123,20 @@ export default function ContactForm() {
               <Link href="/masuk" className="ct-btn">Masuk</Link>
               <Link href="/daftar" className="ct-btn ct-btn--ghost">Buat akun</Link>
             </div>
-          <span className="ct-who">
-            {currentUser ? (
-              <>Dikirim sebagai <b>{currentUser.name}</b> ({currentUser.email})</>
-            ) : (
-              <>Untuk mengirim, kamu perlu akun.</>
-            )}
-          </span>
           </div>
         )}
 
         {sent && (
           <div className="ct-ok" role="status">
             <b>Pesan terkirim. Terima kasih!</b>
-            <p>Nomor pesanmu <code>{sent.id}</code>. Tim admin akan menanggapi, dan balasannya muncul di bagian &ldquo;Pesanmu&rdquo; di bawah.</p>
+            <p>Nomor pesanmu <code>{sent.id}</code>. Tim admin akan menanggapi, dan balasannya bisa dilihat lewat tombol &ldquo;Buka riwayat pesan&rdquo;.</p>
           </div>
         )}
 
         <div className="ct-foot">
           <span className="ct-who">
-            {currentUser ? (
-              <>Dikirim sebagai <b>{currentUser.name}</b> ({currentUser.email})
-                {isDemo && <> · <button type="button" className="ct-link" onClick={demoLogout}>Keluar akun uji</button></>}</>
+            {user ? (
+              <>Dikirim sebagai <b>{user.name}</b> ({user.email})</>
             ) : (
               <>Untuk mengirim, kamu perlu akun.</>
             )}
@@ -162,30 +144,6 @@ export default function ContactForm() {
           <button type="submit" className="ct-send" disabled={!ready}>Kirim pesan</button>
         </div>
       </form>
-
-      {user && mine.length > 0 && (
-        <section className="ct-mine" aria-label="Pesanmu">
-          <h3 className="ct-mine-title">Pesanmu</h3>
-          <ul>
-            {mine.map((m) => (
-              <li key={m.id}>
-                <div className="ct-mine-head">
-                  <b>{m.subject}</b>
-                  <span className={"ct-chip ct-chip--" + m.status}>{STATUS_LABEL[m.status]}</span>
-                </div>
-                <small>{KIND_LABEL[m.kind]} · {when(m.createdAt)} WIB · {m.id}</small>
-                <p>{m.body}</p>
-                {m.reply && (
-                  <div className="ct-reply">
-                    <b>Balasan dari {m.reply.by}</b> <small>{when(m.reply.at)} WIB</small>
-                    <p>{m.reply.text}</p>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useCart } from '@/app/pembeli/context/cart';
 
 export function useBuyerCart(onSendRequest) {
-  const { cart, updateDeliveryOption, removeFromCart, addToCart, sendRequest } = useCart();
-  
+  const { cart, updateDeliveryOption, removeFromCart, addToCart, sendRequest, sendRequests } = useCart();
+
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredBtn, setHoveredBtn] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -15,13 +15,12 @@ export function useBuyerCart(onSendRequest) {
     return `Rp ${num.toLocaleString('id-ID')}`;
   };
 
-  // Hitung total harga per item (Harga Satuan x Quantity)
+  // Total harga per item (harga satuan x quantity)
   const calculateItemTotal = (item) => {
     const unitPrice = parseInt(String(item.price || item.totalPrice || '0').replace(/[^0-9]/g, '')) || 0;
     return formatRupiah(unitPrice * (item.quantity || 1));
   };
 
-  // Handler Pengurangan Kuantitas
   const handleDecreaseQuantity = (item) => {
     if ((item.quantity || 1) > 1) {
       addToCart(item, -1);
@@ -30,15 +29,17 @@ export function useBuyerCart(onSendRequest) {
     }
   };
 
-  // Handler Penambahan Kuantitas
   const handleIncreaseQuantity = (item) => {
     addToCart(item, 1);
   };
 
-  // Handler Kirim Permintaan
+  // Kirim satu item
   const handleSendRequest = (item) => {
     sendRequest(item, onSendRequest);
   };
+
+  // Kirim banyak item sekaligus (true jika terkirim)
+  const handleSendSelected = (items) => sendRequests(items, onSendRequest);
 
   return {
     cart,
@@ -53,6 +54,7 @@ export function useBuyerCart(onSendRequest) {
     calculateItemTotal,
     handleDecreaseQuantity,
     handleIncreaseQuantity,
-    handleSendRequest
+    handleSendRequest,
+    handleSendSelected,
   };
 }

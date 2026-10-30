@@ -1,25 +1,29 @@
 "use client";
 
-import React, { useState } from 'react';
-import { MapPin, Clock, User, Package, Check, X, Eye } from 'lucide-react';
+import React, { useState } from "react";
+import { MapPin, Clock, User, Package, Check, X, Eye } from "lucide-react";
 
-// Import data dummy dari lib
-import { initialConfirmOrders } from '@/lib/penjual/confirmOrdersData';
+import SellerNavbar from "@/components/penjual/SellerNavbar";
+import Footer from "@/components/common/Footer";
+import SectionHeading from "@/components/ui/SectionHeading";
+import { fraunces } from "@/lib/fonts";
+import { initialConfirmOrders } from "@/lib/penjual/confirmOrdersData";
+
+const isFree = (price) => price === "Gratis" || price === "FREE";
 
 export default function SellerConfirmOrders() {
   const [orders, setOrders] = useState(initialConfirmOrders);
-  const [hoveredCard, setHoveredCard] = useState(null);
 
   const handleTolak = (id, name) => {
     if (confirm(`Apakah kamu yakin ingin menolak pesanan "${name}"?`)) {
-      setOrders(orders.filter(item => item.id !== id));
+      setOrders((prev) => prev.filter((o) => o.id !== id));
       alert(`Pesanan ${name} berhasil ditolak.`);
     }
   };
 
   const handleTerima = (id, name) => {
     if (confirm(`Terima pesanan "${name}" dan lanjutkan ke proses pengiriman/penjemputan?`)) {
-      setOrders(orders.filter(item => item.id !== id));
+      setOrders((prev) => prev.filter((o) => o.id !== id));
       alert(`Pesanan ${name} diterima! Silakan cek menu 'Pesanan Masuk'.`);
     }
   };
@@ -29,219 +33,118 @@ export default function SellerConfirmOrders() {
   };
 
   return (
-    <div style={{ 
-      backgroundColor: '#FAF6F0', 
-      minHeight: '100vh', 
-      margin: 0, 
-      paddingTop: '100px', 
-      paddingBottom: '50px',
-      paddingLeft: '40px',
-      paddingRight: '40px',
-      fontFamily: 'Inter, sans-serif'
-    }}>
-      
-      {/* HEADER HALAMAN */}
-      <div style={{ 
-        marginBottom: '24px',
-        paddingBottom: '15px',
-        borderBottom: '2px solid #EAE0D5',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div>
-          <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '28px', color: '#1A1A1A', margin: '0 0 4px 0', fontWeight: 'bold' }}>
-            Konfirmasi Pesanan
-          </h1>
-          <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
-            Tinjau dan konfirmasi pesanan masuk dari pembeli sebelum diproses.
-          </p>
-        </div>
-        <span style={{ backgroundColor: '#FFF3ED', color: '#D95A36', padding: '6px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', border: '1px solid rgba(217,90,54,0.2)' }}>
-          {orders.length} Pesanan Baru
-        </span>
+    <>
+      {/* Pita oranye di belakang navbar, sama seperti PageShell */}
+      <div className="min-h-[69px] bg-[#F24827]">
+        <SellerNavbar />
       </div>
 
-      {/* DAFTAR KARTU PESANAN */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {orders.length > 0 ? (
-          orders.map((item) => {
-            const isHovered = hoveredCard === item.id;
+      <div className="relative bg-gradient-to-b from-[#FFF7E9] via-[#FEEBCB] to-[#EDE8B8]/70">
+        {/* Grid titik oranye */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(216,88,52,0.22)_1.5px,transparent_1.5px)] [background-size:24px_24px] [mask-image:linear-gradient(to_bottom,black,transparent_90%)]"
+        />
 
-            return (
-              <div 
-                key={item.id}
-                onMouseEnter={() => setHoveredCard(item.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-                style={{ 
-                  backgroundColor: '#FFF', 
-                  borderRadius: '16px', 
-                  padding: '20px 24px',
-                  border: isHovered ? '1.5px solid #D95A36' : '1px solid rgba(0,0,0,0.06)',
-                  boxShadow: isHovered ? '0 10px 25px rgba(217, 90, 54, 0.12)' : '0 4px 12px rgba(0,0,0,0.04)',
-                  transform: isHovered ? 'translateY(-3px)' : 'translateY(0)',
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '16px'
-                }}
-              >
-                {/* SISI KIRI: Gambar & Detail Informasi Pesanan */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div style={{ 
-                    width: '90px', 
-                    height: '90px', 
-                    backgroundColor: '#F0F0F0', 
-                    borderRadius: '12px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    textAlign: 'center',
-                    fontSize: '11px', 
-                    color: '#888',
-                    fontWeight: '500',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    flexShrink: 0
-                  }}>
-                    <span>Foto Produk</span>
-                    <span style={{ 
-                      position: 'absolute', top: '6px', left: '6px', 
-                      backgroundColor: 'rgba(255,255,255,0.9)', color: '#333', 
-                      padding: '2px 6px', borderRadius: '8px', fontSize: '9px', fontWeight: 'bold' 
-                    }}>
-                      {item.category}
-                    </span>
-                  </div>
+        <main className="relative z-10 mx-auto max-w-5xl px-5 pb-20 pt-12 md:pt-16">
+          <SectionHeading
+            title="Konfirmasi Pesanan"
+            desc="Tinjau dan konfirmasi pesanan masuk dari pembeli sebelum diproses."
+          />
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#1A1A1A' }}>
-                        {item.name}
-                      </h3>
-                      <span style={{ fontWeight: 'bold', color: item.price === 'Gratis' || item.price === 'FREE' ? '#2E7D32' : '#D95A36', fontSize: '14px' }}>
-                        {item.price}
+          <div className="mt-8 flex justify-center">
+            <span className="rounded-full border border-[#D95A36]/20 bg-[#FDE3D9] px-4 py-1.5 text-sm font-bold text-[#D95A36]">
+              {orders.length} Pesanan Baru
+            </span>
+          </div>
+
+          <div className="mt-8 flex flex-col gap-4">
+            {orders.length > 0 ? (
+              orders.map((item) => (
+                <article
+                  key={item.id}
+                  className="flex flex-wrap items-center justify-between gap-4 rounded-[22px] bg-white p-5 shadow-[0_8px_24px_rgba(120,70,30,0.08)] ring-1 ring-stone-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(217,90,54,0.16)] hover:ring-[#D95A36]/60 md:px-6"
+                >
+                  {/* Kiri: foto + info */}
+                  <div className="flex items-center gap-5">
+                    <div className="relative grid h-24 w-24 shrink-0 place-items-center rounded-2xl bg-[#FDE3D9]/60 text-[11px] font-medium text-stone-400">
+                      Foto Produk
+                      <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#D95A36]">
+                        {item.category}
                       </span>
                     </div>
 
-                    <p style={{ margin: 0, fontSize: '12px', color: '#555', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <User size={13} color="#D95A36" /> Pembeli: <strong style={{ color: '#1A1A1A' }}>{item.buyer}</strong>
-                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <h3 className={`${fraunces.className} text-lg font-extrabold leading-tight text-stone-900`}>
+                          {item.name}
+                        </h3>
+                        <span className={`text-sm font-bold ${isFree(item.price) ? "text-emerald-700" : "text-[#D95A36]"}`}>
+                          {item.price}
+                        </span>
+                      </div>
 
-                    <p style={{ margin: 0, fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <MapPin size={13} color="#D95A36" /> {item.location}
-                      <Clock size={12} color="#888" style={{ marginLeft: '4px' }} /> {item.date}
-                    </p>
+                      <p className="flex items-center gap-1.5 text-[13px] text-stone-600">
+                        <User size={14} className="text-[#D95A36]" />
+                        Pembeli: <strong className="text-stone-900">{item.buyer}</strong>
+                      </p>
 
-                    <button 
-                      onClick={() => handleLihatDetail(item)}
-                      style={{ 
-                        backgroundColor: '#FAF0EC', 
-                        color: '#D95A36', 
-                        border: 'none', 
-                        padding: '5px 12px', 
-                        borderRadius: '6px', 
-                        fontSize: '11px', 
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        width: 'fit-content',
-                        marginTop: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F5DCD3'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FAF0EC'}
+                      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-stone-500">
+                        <span className="flex items-center gap-1.5">
+                          <MapPin size={14} className="text-[#D95A36]" /> {item.location}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Clock size={13} /> {item.date}
+                        </span>
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => handleLihatDetail(item)}
+                        className="mt-1 flex w-fit items-center gap-1.5 rounded-full bg-[#FDE3D9] px-3.5 py-1.5 text-xs font-bold text-[#D95A36] transition hover:bg-[#FBD2C2]"
+                      >
+                        <Eye size={13} /> Lihat Detail
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Kanan: aksi */}
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTolak(item.id, item.name)}
+                      className="flex items-center gap-1.5 rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-bold text-stone-700 transition hover:border-red-500 hover:bg-red-50 hover:text-red-600"
                     >
-                      <Eye size={13} /> LIHAT DETAIL
+                      <X size={16} /> Tolak
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTerima(item.id, item.name)}
+                      className="flex items-center gap-1.5 rounded-full bg-[#D95A36] px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#C44A28] hover:shadow-lg"
+                    >
+                      <Check size={16} /> Terima
                     </button>
                   </div>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-[22px] border border-dashed border-[#D3C5B4] bg-white/80 px-6 py-16 text-center">
+                <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#FDE3D9] text-[#D95A36]">
+                  <Package size={28} />
                 </div>
-
-                {/* SISI KANAN: Tombol Aksi */}
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <button 
-                    onClick={() => handleTolak(item.id, item.name)}
-                    style={{ 
-                      backgroundColor: '#F5F5F5', 
-                      color: '#444', 
-                      border: '1px solid #DDD', 
-                      padding: '10px 20px', 
-                      borderRadius: '10px', 
-                      fontSize: '13px', 
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#FFEBEE';
-                      e.currentTarget.style.borderColor = '#D93025';
-                      e.currentTarget.style.color = '#D93025';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#F5F5F5';
-                      e.currentTarget.style.borderColor = '#DDD';
-                      e.currentTarget.style.color = '#444';
-                    }}
-                  >
-                    <X size={16} /> TOLAK
-                  </button>
-
-                  <button 
-                    onClick={() => handleTerima(item.id, item.name)}
-                    style={{ 
-                      backgroundColor: '#1A1A1A', 
-                      color: '#FFF', 
-                      border: 'none', 
-                      padding: '10px 22px', 
-                      borderRadius: '10px', 
-                      fontSize: '13px', 
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#D95A36';
-                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(217, 90, 54, 0.35)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#1A1A1A';
-                      e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.15)';
-                    }}
-                  >
-                    <Check size={16} /> TERIMA
-                  </button>
-                </div>
-
+                <h3 className={`${fraunces.className} mt-4 text-xl font-extrabold text-stone-900`}>
+                  Semua Pesanan Sudah Dikonfirmasi!
+                </h3>
+                <p className="mt-1 text-[15px] text-stone-600">
+                  Tidak ada antrean pesanan baru yang menunggu saat ini.
+                </p>
               </div>
-            );
-          })
-        ) : (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '50px', 
-            color: '#777', 
-            backgroundColor: '#FFF', 
-            borderRadius: '16px',
-            border: '1px dashed #D3C5B4'
-          }}>
-            <Package size={40} color="#D95A36" style={{ marginBottom: '10px' }} />
-            <h3 style={{ margin: '0 0 5px 0', color: '#1A1A1A' }}>Semua Pesanan Sudah Dikonfirmasi!</h3>
-            <p style={{ margin: 0, fontSize: '13px' }}>Tidak ada antrean pesanan baru yang menunggu saat ini.</p>
+            )}
           </div>
-        )}
+        </main>
       </div>
 
-    </div>
+      <Footer />
+    </>
   );
 }

@@ -1,7 +1,9 @@
 import { DM_Sans } from "next/font/google";
+import { ProductsProvider } from "@/lib/productsStore";
 import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart";
 import { ProfileProvider } from "@/lib/ProfileContext";
+import { OrdersProvider } from "@/lib/ordersStore";
 import CartDrawer from "@/components/cart/CartDrawer";
 import "./globals.css";
 
@@ -20,14 +22,18 @@ export default function RootLayout({ children }) {
         style={{ backgroundColor: "#FFF7E9" }}
         className={`${body.variable} bg-[#FFF7E9] font-[family-name:var(--font-body)] text-stone-900 antialiased`}
       >
-        <AuthProvider>
-          <CartProvider>
-            <ProfileProvider>
-              {children}
-              <CartDrawer />
-            </ProfileProvider>
-          </CartProvider>
-        </AuthProvider>
+        <OrdersProvider>
+          <ProductsProvider>
+          <AuthProvider>
+            <CartProvider>
+              <ProfileProvider>
+                {children}
+                <CartDrawer />
+              </ProfileProvider>
+            </CartProvider>
+          </AuthProvider>
+          </ProductsProvider>
+        </OrdersProvider>
       </body>
     </html>
   );

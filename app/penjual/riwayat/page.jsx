@@ -1,254 +1,158 @@
 "use client";
 
-import React, { useState } from 'react';
-import { History, Eye, CheckCircle2, XCircle, ShoppingBag, Layers } from 'lucide-react';
+import React, { useState } from "react";
+import { Eye, CheckCircle2, XCircle, ShoppingBag, Layers, History } from "lucide-react";
 
-// Import data dummy dari lib
-import { sellerHistoryOrders } from '@/lib/penjual/historyData';
+import SellerNavbar from "@/components/penjual/SellerNavbar";
+import Footer from "@/components/common/Footer";
+import SectionHeading from "@/components/ui/SectionHeading";
+import OrderDetailModal from "@/components/pembeli/OrderDetailModal";
+import { fraunces } from "@/lib/fonts";
+import { sellerHistoryOrders } from "@/lib/penjual/historyData";
 
-// Import komponen modal detail pesanan
-import OrderDetailModal from '@/components/pembeli/OrderDetailModal';
+const STATUS_STYLE = {
+  completed: {
+    cls: "border-green-200 bg-green-100 text-green-700",
+    Icon: CheckCircle2,
+  },
+  cancelled: {
+    cls: "border-red-200 bg-red-100 text-red-700",
+    Icon: XCircle,
+  },
+};
+
+function StatusBadge({ type, text }) {
+  const { cls, Icon } = STATUS_STYLE[type] ?? STATUS_STYLE.cancelled;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold ${cls}`}>
+      <Icon size={14} /> {text}
+    </span>
+  );
+}
 
 export default function SellerHistory() {
-  const [activeFilter, setActiveFilter] = useState('Semua');
-  const [hoveredCard, setHoveredCard] = useState(null);
-  const [hoveredBtn, setHoveredBtn] = useState(null);
-  const [hoveredFilter, setHoveredFilter] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("Semua");
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  // Hitung jumlah data
   const totalCount = sellerHistoryOrders.length;
-  const completedCount = sellerHistoryOrders.filter(o => o.status === 'Selesai').length;
-  const cancelledCount = sellerHistoryOrders.filter(o => o.status === 'Dibatalkan').length;
+  const completedCount = sellerHistoryOrders.filter((o) => o.status === "Selesai").length;
+  const cancelledCount = sellerHistoryOrders.filter((o) => o.status === "Dibatalkan").length;
 
-  // Filter daftar transaksi sesuai tab yang dipilih
   const filteredOrders = sellerHistoryOrders.filter((item) => {
-    if (activeFilter === 'Selesai') return item.status === 'Selesai';
-    if (activeFilter === 'Dibatalkan') return item.status === 'Dibatalkan';
-    return true; // 'Semua'
+    if (activeFilter === "Selesai") return item.status === "Selesai";
+    if (activeFilter === "Dibatalkan") return item.status === "Dibatalkan";
+    return true;
   });
 
-  const getStatusBadge = (statusType, statusText) => {
-    if (statusType === 'completed') {
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          backgroundColor: '#DCFCE7',
-          color: '#15803D',
-          border: '1px solid #BBF7D0',
-          padding: '6px 14px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          fontWeight: '600'
-        }}>
-          <CheckCircle2 size={14} /> {statusText}
-        </span>
-      );
-    }
-    return (
-      <span style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        backgroundColor: '#FEE2E2',
-        color: '#B91C1C',
-        border: '1px solid #FCA5A5',
-        padding: '6px 14px',
-        borderRadius: '20px',
-        fontSize: '12px',
-        fontWeight: '600'
-      }}>
-        <XCircle size={14} /> {statusText}
-      </span>
-    );
-  };
+  const filters = [
+    { key: "Semua", label: "Semua Transaksi", count: totalCount, Icon: Layers },
+    { key: "Selesai", label: "Selesai", count: completedCount, Icon: ShoppingBag },
+    { key: "Dibatalkan", label: "Dibatalkan", count: cancelledCount, Icon: XCircle },
+  ];
 
   return (
-    <div style={{ 
-      backgroundColor: '#FAF6F0', 
-      minHeight: '100vh', 
-      margin: 0, 
-      paddingTop: '110px', 
-      paddingLeft: '50px',
-      paddingRight: '50px',
-      paddingBottom: '50px',
-      fontFamily: 'Inter, sans-serif'
-    }}>
-      
-      {/* JUDUL UTAMA */}
-      <div style={{ marginBottom: '25px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <History size={26} color="#D95A36" />
-          <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '28px', fontWeight: '600', color: '#1A1A1A', margin: 0 }}>
-            Riwayat Pesanan Toko
-          </h1>
-        </div>
-        <hr style={{ border: 'none', borderTop: '1.5px solid rgba(0,0,0,0.08)', margin: 0 }} />
+    <>
+      {/* Pita oranye di belakang navbar, sama seperti PageShell */}
+      <div className="min-h-[69px] bg-[#F24827]">
+        <SellerNavbar />
       </div>
 
-      {/* FILTER TABS */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '28px', flexWrap: 'wrap' }}>
-        
-        {/* Tab 1: Semua */}
-        <div 
-          onClick={() => setActiveFilter('Semua')}
-          onMouseEnter={() => setHoveredFilter('Semua')}
-          onMouseLeave={() => setHoveredFilter(null)}
-          style={{ 
-            backgroundColor: activeFilter === 'Semua' ? '#1A1A1A' : '#FFF', 
-            color: activeFilter === 'Semua' ? '#FFF' : '#333',
-            padding: '12px 20px', 
-            borderRadius: '14px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '10px',
-            border: activeFilter === 'Semua' ? '1px solid #1A1A1A' : '1px solid rgba(0,0,0,0.06)',
-            boxShadow: activeFilter === 'Semua' || hoveredFilter === 'Semua' ? '0 6px 16px rgba(0,0,0,0.12)' : '0 2px 8px rgba(0,0,0,0.02)',
-            cursor: 'pointer',
-            transform: hoveredFilter === 'Semua' ? 'translateY(-2px)' : 'translateY(0)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <Layers size={18} color={activeFilter === 'Semua' ? '#FFF' : '#1A1A1A'} />
-          <span style={{ fontSize: '13px', fontWeight: '500' }}>
-            Semua Transaksi: <strong>{totalCount}</strong>
-          </span>
-        </div>
+      <div className="relative bg-gradient-to-b from-[#FFF7E9] via-[#FEEBCB] to-[#EDE8B8]/70">
+        {/* Grid titik oranye */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(216,88,52,0.22)_1.5px,transparent_1.5px)] [background-size:24px_24px] [mask-image:linear-gradient(to_bottom,black,transparent_90%)]"
+        />
 
-        {/* Tab 2: Selesai */}
-        <div 
-          onClick={() => setActiveFilter('Selesai')}
-          onMouseEnter={() => setHoveredFilter('Selesai')}
-          onMouseLeave={() => setHoveredFilter(null)}
-          style={{ 
-            backgroundColor: activeFilter === 'Selesai' ? '#D95A36' : '#FFF', 
-            color: activeFilter === 'Selesai' ? '#FFF' : '#333',
-            padding: '12px 20px', 
-            borderRadius: '14px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '10px',
-            border: activeFilter === 'Selesai' ? '1px solid #D95A36' : '1px solid rgba(0,0,0,0.06)',
-            boxShadow: activeFilter === 'Selesai' || hoveredFilter === 'Selesai' ? '0 6px 16px rgba(217, 90, 54, 0.25)' : '0 2px 8px rgba(0,0,0,0.02)',
-            cursor: 'pointer',
-            transform: hoveredFilter === 'Selesai' ? 'translateY(-2px)' : 'translateY(0)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <ShoppingBag size={18} color={activeFilter === 'Selesai' ? '#FFF' : '#D95A36'} />
-          <span style={{ fontSize: '13px', fontWeight: '500' }}>
-            Selesai: <strong>{completedCount} Produk</strong>
-          </span>
-        </div>
+        <main className="relative z-10 mx-auto max-w-5xl px-5 pb-20 pt-12 md:pt-16">
+          <SectionHeading
+            title="Riwayat Pesanan Toko"
+            desc="Lihat semua transaksi yang sudah selesai maupun dibatalkan."
+          />
 
-        {/* Tab 3: Dibatalkan */}
-        <div 
-          onClick={() => setActiveFilter('Dibatalkan')}
-          onMouseEnter={() => setHoveredFilter('Dibatalkan')}
-          onMouseLeave={() => setHoveredFilter(null)}
-          style={{ 
-            backgroundColor: activeFilter === 'Dibatalkan' ? '#DC2626' : '#FFF', 
-            color: activeFilter === 'Dibatalkan' ? '#FFF' : '#333',
-            padding: '12px 20px', 
-            borderRadius: '14px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '10px',
-            border: activeFilter === 'Dibatalkan' ? '1px solid #DC2626' : '1px solid rgba(0,0,0,0.06)',
-            boxShadow: activeFilter === 'Dibatalkan' || hoveredFilter === 'Dibatalkan' ? '0 6px 16px rgba(220, 38, 38, 0.25)' : '0 2px 8px rgba(0,0,0,0.02)',
-            cursor: 'pointer',
-            transform: hoveredFilter === 'Dibatalkan' ? 'translateY(-2px)' : 'translateY(0)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <XCircle size={18} color={activeFilter === 'Dibatalkan' ? '#FFF' : '#DC2626'} />
-          <span style={{ fontSize: '13px', fontWeight: '500' }}>
-            Dibatalkan: <strong>{cancelledCount} Transaksi</strong>
-          </span>
-        </div>
+          {/* Filter pill */}
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            {filters.map(({ key, label, count, Icon }) => {
+              const active = activeFilter === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setActiveFilter(key)}
+                  aria-pressed={active}
+                  className={`flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-md ${
+                    active
+                      ? "border-[#D95A36] bg-[#D95A36] text-white shadow-md"
+                      : "border-stone-200 bg-white text-stone-800"
+                  }`}
+                >
+                  <Icon size={16} className={active ? "text-white" : "text-[#D95A36]"} />
+                  {label}: <strong>{count}</strong>
+                </button>
+              );
+            })}
+          </div>
 
-      </div>
+          {/* Daftar riwayat */}
+          <div className="mt-8 flex flex-col gap-4">
+            {filteredOrders.length > 0 ? (
+              filteredOrders.map((item) => (
+                <article
+                  key={item.id}
+                  className="group flex flex-wrap items-center justify-between gap-4 rounded-[22px] bg-white p-5 shadow-[0_8px_24px_rgba(120,70,30,0.08)] ring-1 ring-stone-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(217,90,54,0.16)] hover:ring-[#D95A36]/60 md:px-6"
+                >
+                  <div className="flex items-center gap-5">
+                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-stone-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
+                      />
+                    </div>
 
-      {/* DAFTAR KARTU RIWAYAT */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-        {filteredOrders.length > 0 ? (
-          filteredOrders.map((item) => {
-            const isCardHovered = hoveredCard === item.id;
-            const isBtnHovered = hoveredBtn === item.id;
-
-            return (
-              <div 
-                key={item.id}
-                onMouseEnter={() => setHoveredCard(item.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-                style={{
-                  backgroundColor: '#FFF',
-                  borderRadius: '16px',
-                  padding: '20px 24px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  border: isCardHovered ? '1.5px solid #D95A36' : '1px solid rgba(0,0,0,0.06)',
-                  boxShadow: isCardHovered ? '0 10px 25px rgba(217, 90, 54, 0.12)' : '0 4px 14px rgba(0,0,0,0.03)',
-                  transform: isCardHovered ? 'translateY(-3px)' : 'translateY(0)',
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-              >
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                  <div style={{ width: '95px', height: '95px', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#F9F9F9', flexShrink: 0 }}>
-                    <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: isCardHovered ? 'scale(1.08)' : 'scale(1)', transition: 'transform 0.3s ease' }} />
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <span style={{ fontSize: '11px', color: '#888' }}>{item.orderDate}</span>
-                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: isCardHovered ? '#D95A36' : '#1A1A1A' }}>{item.name}</h3>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#D95A36' }}>{item.totalPrice}</span>
-
-                    <div style={{ marginTop: '6px' }}>
-                      <button 
-                        onClick={() => setSelectedOrder(item)}
-                        onMouseEnter={() => setHoveredBtn(item.id)}
-                        onMouseLeave={() => setHoveredBtn(null)}
-                        style={{
-                          backgroundColor: isBtnHovered ? '#D95A36' : '#F3F4F6',
-                          color: isBtnHovered ? '#FFF' : '#374151',
-                          border: 'none',
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          transition: 'all 0.2s ease'
-                        }}
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs text-stone-500">{item.orderDate}</span>
+                      <h3
+                        className={`${fraunces.className} text-lg font-extrabold leading-tight text-stone-900 transition-colors group-hover:text-[#D95A36]`}
                       >
-                        <Eye size={14} /> LIHAT DETAIL
+                        {item.name}
+                      </h3>
+                      <span className="text-[15px] font-bold text-[#D95A36]">{item.totalPrice}</span>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrder(item)}
+                        className="mt-1 flex w-fit items-center gap-1.5 rounded-full bg-[#FDE3D9] px-3.5 py-1.5 text-xs font-bold text-[#D95A36] transition hover:bg-[#FBD2C2]"
+                      >
+                        <Eye size={13} /> Lihat Detail
                       </button>
                     </div>
                   </div>
-                </div>
 
-                <div>{getStatusBadge(item.statusType, item.status)}</div>
+                  <StatusBadge type={item.statusType} text={item.status} />
+                </article>
+              ))
+            ) : (
+              <div className="rounded-[22px] border border-dashed border-[#D3C5B4] bg-white/80 px-6 py-16 text-center">
+                <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#FDE3D9] text-[#D95A36]">
+                  <History size={28} />
+                </div>
+                <h3 className={`${fraunces.className} mt-4 text-xl font-extrabold text-stone-900`}>
+                  Belum Ada Riwayat
+                </h3>
+                <p className="mt-1 text-[15px] text-stone-600">
+                  Tidak ada riwayat pesanan dengan status &quot;{activeFilter}&quot;.
+                </p>
               </div>
-            );
-          })
-        ) : (
-          <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#FFF', borderRadius: '16px', color: '#888' }}>
-            Tidak ada riwayat pesanan dengan status "{activeFilter}".
+            )}
           </div>
-        )}
+        </main>
       </div>
 
-      {/* MODAL DETAIL */}
-      <OrderDetailModal 
-        order={selectedOrder} 
-        onClose={() => setSelectedOrder(null)} 
-      />
+      <Footer />
 
-    </div>
+      <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+    </>
   );
 }
