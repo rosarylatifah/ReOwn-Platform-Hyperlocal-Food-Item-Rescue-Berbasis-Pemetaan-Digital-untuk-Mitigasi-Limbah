@@ -1,9 +1,26 @@
 "use client";
 
 import React from 'react';
-import { MapPin, Edit2, Trash2 } from 'lucide-react';
+import { MapPin, Edit2, Trash2, Clock, Package } from 'lucide-react';
 
 export default function ProductCard({ item, isHovered, onHover, onLeave, onEdit, onDelete }) {
+  const checkStatus = (deadlineString) => {
+    if (!deadlineString) return { status: 'Available', color: '#2E7D32', text: 'Tersedia' };
+    const now = new Date();
+    const deadline = new Date(deadlineString);
+    const diffHours = (deadline - now) / (1000 * 60 * 60);
+
+    if (diffHours <= 0) {
+      return { status: 'Expired', color: '#DC2626', text: 'Expired' };
+    } else if (diffHours <= 6) {
+      return { status: 'Last Chance', color: '#D95A36', text: 'Last Chance' };
+    } else {
+      return { status: 'Available', color: '#2E7D32', text: 'Tersedia' };
+    }
+  };
+
+  const statusInfo = checkStatus(item.deadline);
+
   return (
     <div 
       onMouseEnter={onHover}
@@ -34,17 +51,10 @@ export default function ProductCard({ item, isHovered, onHover, onLeave, onEdit,
           }} 
         />
         <span style={{ 
-          position: 'absolute', 
-          top: '12px', 
-          left: '12px', 
-          backgroundColor: 'rgba(255,255,255,0.9)', 
-          color: '#1A1A1A', 
-          padding: '5px 12px', 
-          borderRadius: '15px', 
-          fontSize: '11px', 
-          fontWeight: 'bold',
-          textTransform: 'capitalize',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+          position: 'absolute', top: '12px', left: '12px', 
+          backgroundColor: item.category === 'Makanan' ? '#D95A36' : '#2563EB', 
+          color: '#FFF', padding: '5px 12px', borderRadius: '15px', 
+          fontSize: '11px', fontWeight: 'bold', boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
         }}>
           {item.category}
         </span>
@@ -52,53 +62,49 @@ export default function ProductCard({ item, isHovered, onHover, onLeave, onEdit,
 
       <div style={{ padding: '20px', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
             <h4 style={{ 
-              margin: 0, 
-              fontSize: '16px', 
-              color: isHovered ? '#D95A36' : '#1A1A1A', 
-              fontWeight: '700',
-              lineHeight: '1.3',
-              maxWidth: '75%',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
+              margin: 0, fontSize: '16px', color: isHovered ? '#D95A36' : '#1A1A1A', 
+              fontWeight: '700', lineHeight: '1.3', maxWidth: '75%',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
             }}>
               {item.name}
             </h4>
             
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <button 
-                onClick={() => onEdit(item)}
-                title="Edit Produk"
-                style={{ background: 'none', border: '1px solid #E5E5E5', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex' }}
-              >
+              <button onClick={() => onEdit(item)} title="Edit" style={{ background: 'none', border: '1px solid #E5E5E5', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex' }}>
                 <Edit2 size={14} color="#444" />
               </button>
-              <button 
-                onClick={() => onDelete(item.id, item.name)}
-                title="Hapus Produk"
-                style={{ background: 'none', border: '1px solid #E5E5E5', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex' }}
-              >
+              <button onClick={() => onDelete(item.id, item.name)} title="Hapus" style={{ background: 'none', border: '1px solid #E5E5E5', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex' }}>
                 <Trash2 size={14} color="#D93025" />
               </button>
             </div>
           </div>
           
-          <p style={{ margin: '0 0 14px 0', fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <MapPin size={13} color="#D95A36" /> {item.location}
           </p>
+
+          <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#444', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Package size={13} color="#D95A36" /> Tersedia: {item.stock || '1'} {item.category === 'Makanan' ? 'Porsi' : 'Pcs'}
+          </p>
+
+          {item.deadline && (
+            <p style={{ margin: '0 0 12px 0', fontSize: '11px', color: '#888', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Clock size={13} color="#D95A36" /> Deadline: {item.deadline.replace('T', ' ')}
+            </p>
+          )}
         </div>
 
         <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '10px', color: '#888', display: 'block' }}>Harga</span>
-            <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#D95A36' }}>{item.price}</span>
+            <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#D95A36' }}>Rp {item.price || '0'}</span>
           </div>
           <div style={{ textAlign: 'right' }}>
             <span style={{ fontSize: '10px', color: '#888', display: 'block' }}>Status</span>
-            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#2E7D32' }}>
-              {item.status}
+            <span style={{ fontSize: '11px', fontWeight: 'bold', color: statusInfo.color }}>
+              {statusInfo.text}
             </span>
           </div>
         </div>

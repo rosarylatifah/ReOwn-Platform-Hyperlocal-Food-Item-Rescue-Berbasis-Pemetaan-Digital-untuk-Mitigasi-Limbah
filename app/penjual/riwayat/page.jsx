@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { History, Eye, CheckCircle2, XCircle, ShoppingBag, Layers } from 'lucide-react';
-
+import SellerNavbar from '@/components/penjual/SellerNavbar'; // Pastikan path import ini bener sesuai foldermu
 // Import data dummy dari lib
 import { sellerHistoryOrders } from '@/lib/penjual/historyData';
 
@@ -76,6 +76,9 @@ export default function SellerHistory() {
       paddingBottom: '50px',
       fontFamily: 'Inter, sans-serif'
     }}>
+
+      {/* 1. PEMANGGILAN SELLER NAVBAR DI SINI */}
+      <SellerNavbar />
       
       {/* JUDUL UTAMA */}
       <div style={{ marginBottom: '25px' }}>

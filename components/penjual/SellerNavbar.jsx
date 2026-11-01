@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Home, Package, CheckSquare, Inbox, History, MessageSquare, Bell, User } from 'lucide-react';
 import Link from 'next/link';
-import ProfilePopover from '@/components/profil/ProfilePopover'; // 👈 1. Import ProfilePopover (sesuaikan foldernya jika berbeda)
+import ProfilePopover from '@/components/profil/ProfilePopover';
+import SellerChatPopover from '@/components/penjual/SellerChatPopover'; // 👈 1. Import SellerChatPopover
 
 export default function SellerNavbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,8 +13,9 @@ export default function SellerNavbar() {
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [hoveredIcon, setHoveredIcon] = useState(null);
 
-  // 👈 2. State untuk mengontrol buka/tutup popover profil
+  // State untuk mengontrol buka/tutup popover profil & chat
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false); // 👈 2. State untuk buka/tutup chat popover
 
   const pathname = usePathname();
 
@@ -142,7 +144,7 @@ export default function SellerNavbar() {
             {isOpen ? '✕' : '☰'}
           </button>
 
-          {/* LOGO REOWN (MENGARAH KE BERANDA PENJUAL) */}
+          {/* LOGO REOWN */}
           <Link 
             href="/penjual/beranda"
             className="logo-btn"
@@ -167,7 +169,7 @@ export default function SellerNavbar() {
           </Link>
         </div>
 
-        {/* Tengah: Tombol Navigasi Utama Seller Menggunakan Link Next.js */}
+        {/* Tengah: Tombol Navigasi Utama Seller */}
         <div className={`nav-menu ${isOpen ? 'open' : ''}`} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           {navItems.map((item) => {
             const isActive = pathname === item.path;
@@ -211,9 +213,9 @@ export default function SellerNavbar() {
         {/* Kanan: Ikon Akses Cepat Seller */}
         <div className="action-icons-group" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           
-          {/* TOMBOL CHAT */}
+          {/* TOMBOL CHAT (Memicu SellerChatPopover) */}
           <button 
-            onClick={() => alert('Fitur Chat Seller akan datang!')}
+            onClick={() => setIsChatOpen(true)} // 👈 3. Buka SellerChatPopover saat diklik
             onMouseEnter={() => setHoveredIcon('chat')}
             onMouseLeave={() => setHoveredIcon(null)}
             style={{ 
@@ -257,9 +259,9 @@ export default function SellerNavbar() {
             <Bell size={18} color="#FFF" />
           </button>
 
-          {/* TOMBOL PROFIL (Memicu ProfilePopover) */}
+          {/* TOMBOL PROFIL */}
           <button 
-            onClick={() => setIsProfileOpen(true)} // 👈 3. Buka popover saat tombol diklik
+            onClick={() => setIsProfileOpen(true)}
             onMouseEnter={() => setHoveredIcon('profile')}
             onMouseLeave={() => setHoveredIcon(null)}
             style={{ 
@@ -283,10 +285,15 @@ export default function SellerNavbar() {
         </div>
       </nav>
 
-      {/* 👈 4. Render komponen ProfilePopover di sini */}
+      {/* RENDER POPOVER PROFIL & CHAT */}
       <ProfilePopover 
         isOpen={isProfileOpen} 
         onClose={() => setIsProfileOpen(false)} 
+      />
+
+      <SellerChatPopover 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
       />
     </>
   );

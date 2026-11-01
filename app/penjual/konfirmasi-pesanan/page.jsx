@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { MapPin, Clock, User, Package, Check, X, Eye } from 'lucide-react';
-
+import SellerNavbar from '@/components/penjual/SellerNavbar';
 // Import data dummy dari lib
 import { initialConfirmOrders } from '@/lib/penjual/confirmOrdersData';
 
@@ -39,6 +39,9 @@ export default function SellerConfirmOrders() {
       paddingRight: '40px',
       fontFamily: 'Inter, sans-serif'
     }}>
+
+      {/* 1. PEMANGGILAN SELLER NAVBAR DI SINI */}
+      <SellerNavbar />
       
       {/* HEADER HALAMAN */}
       <div style={{ 

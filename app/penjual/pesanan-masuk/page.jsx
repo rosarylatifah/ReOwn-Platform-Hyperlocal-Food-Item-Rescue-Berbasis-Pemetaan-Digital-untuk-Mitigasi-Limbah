@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { MapPin, Clock, User, PackageCheck, Eye, CheckCircle2 } from 'lucide-react';
-
+import SellerNavbar from '@/components/penjual/SellerNavbar'; // Pastikan path import ini bener sesuai foldermu
 // Import data dummy dari lib
 import { initialIncomingOrders } from '@/lib/penjual/incomingOrdersData';
 
@@ -33,6 +33,9 @@ export default function SellerIncomingOrders() {
       paddingRight: '40px',
       fontFamily: 'Inter, sans-serif'
     }}>
+
+      {/* 1. PEMANGGILAN SELLER NAVBAR DI SINI */}
+      <SellerNavbar />
       
       {/* HEADER HALAMAN */}
       <div style={{ 

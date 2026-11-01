@@ -257,7 +257,7 @@ export default function BuyerDashboard() {
         ) : (
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 280px))', 
             gap: '24px', 
             paddingBottom: '20px', 
             paddingTop: '10px' 
