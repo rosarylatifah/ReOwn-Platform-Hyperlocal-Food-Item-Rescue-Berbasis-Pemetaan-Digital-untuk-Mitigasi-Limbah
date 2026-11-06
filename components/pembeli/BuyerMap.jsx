@@ -81,7 +81,46 @@ export default function BuyerMap({ products = [], onSelectProduct }) {
   };
 
   return (
-    <div style={{ padding: '0 40px', marginBottom: '30px' }}>
+    <div className="bm-outer" style={{ padding: '0 40px', marginBottom: '30px' }}>
+      <style jsx global>{`
+        /* ===== KHUSUS MOBILE (desktop tidak terpengaruh) ===== */
+        @media (max-width: 767px) {
+          .bm-outer {
+            padding: 0 16px !important;
+            margin-bottom: 16px !important;
+          }
+          .bm-header {
+            padding: 12px 14px !important;
+            gap: 8px !important;
+          }
+          .bm-title {
+            font-size: 17px !important;
+            margin: 0 0 2px 0 !important;
+          }
+          .bm-sub {
+            font-size: 11px !important;
+            gap: 4px !important;
+          }
+          .bm-loc-btn {
+            padding: 5px 10px !important;
+            font-size: 11px !important;
+          }
+          .bm-panel {
+            right: 14px !important;
+            width: min(260px, calc(100% - 28px)) !important;
+          }
+          .bm-map {
+            height: 210px !important;
+          }
+          .bm-map .leaflet-control-zoom a {
+            width: 26px !important;
+            height: 26px !important;
+            line-height: 26px !important;
+            font-size: 16px !important;
+          }
+        }
+      `}</style>
+
       <div
         onMouseEnter={() => setIsMapHovered(true)}
         onMouseLeave={() => setIsMapHovered(false)}
@@ -92,18 +131,19 @@ export default function BuyerMap({ products = [], onSelectProduct }) {
           transition: 'all 0.3s ease'
         }}
       >
-        <div style={{ position: 'relative', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', gap: '12px', flexWrap: 'wrap' }}>
+        <div className="bm-header" style={{ position: 'relative', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', gap: '12px', flexWrap: 'wrap' }}>
           <div>
-            <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', color: '#1A1A1A', margin: '0 0 4px 0' }}>
+            <h2 className="bm-title" style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', color: '#1A1A1A', margin: '0 0 4px 0' }}>
               Peta Lokasi Rescue Terdekat
             </h2>
-            <p style={{ fontSize: '13px', color: '#666', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <p className="bm-sub" style={{ fontSize: '13px', color: '#666', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Navigation size={14} color="#D95A36" /> Titik lokasi kamu & barang rescue di sekitarmu
             </p>
           </div>
 
           <button
             type="button"
+            className="bm-loc-btn"
             onClick={() => setPanelOpen((v) => !v)}
             aria-expanded={panelOpen}
             style={{
@@ -118,6 +158,7 @@ export default function BuyerMap({ products = [], onSelectProduct }) {
 
           {panelOpen && (
             <div
+              className="bm-panel"
               style={{
                 position: 'absolute', right: '24px', top: 'calc(100% - 8px)', zIndex: 20,
                 width: '260px', backgroundColor: '#FFF', borderRadius: '16px', padding: '12px',
@@ -147,7 +188,7 @@ export default function BuyerMap({ products = [], onSelectProduct }) {
           )}
         </div>
 
-        <div style={{ position: 'relative', width: '100%', height: '350px', zIndex: 1 }}>
+        <div className="bm-map" style={{ position: 'relative', width: '100%', height: '350px', zIndex: 1 }}>
           {picking && (
             <div
               style={{

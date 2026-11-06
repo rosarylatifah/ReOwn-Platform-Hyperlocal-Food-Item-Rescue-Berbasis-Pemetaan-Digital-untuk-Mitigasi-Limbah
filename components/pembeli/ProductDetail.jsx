@@ -1,11 +1,13 @@
 "use client";
 
+import { useChat } from '@/app/pembeli/context/chat';
 import React, { useState } from 'react';
 import { Plus, MapPin, X, Minus, ShoppingCart, AlertCircle } from 'lucide-react';
 import { useCart } from '@/app/pembeli/context/cart';
 
 export default function ProductDetail({ product, onClose, onAddToCart, onReport }) {
   const { getItemQuantityInCart, getProductStock, addToCart } = useCart();
+  const { requestOpenChat } = useChat();
   const [quantity, setQuantity] = useState(1);
 
   if (!product) return null;
@@ -44,6 +46,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
 
   return (
     <div
+      className="pd-overlay"
       style={{
         position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
         backgroundColor: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)',
@@ -72,9 +75,58 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
           background-color: #D1D5DB !important;
           color: #1A1A1A !important;
         }
+
+        /* ===== KHUSUS MOBILE (desktop tidak terpengaruh) ===== */
+        @media (max-width: 767px) {
+          .pd-card {
+            max-width: 420px !important;
+            max-height: 82dvh !important;
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+            padding: 16px !important;
+            align-items: start !important;
+          }
+          .pd-image {
+            height: 160px !important;
+          }
+          .pd-info {
+            padding-top: 0 !important;
+            gap: 10px !important;
+          }
+          .pd-close {
+            top: 24px !important;
+            right: 24px !important;
+            width: 36px !important;
+            height: 36px !important;
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          }
+          .pd-report {
+            top: 24px !important;
+            right: 68px !important;
+            height: 36px !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          }
+          .pd-title {
+            font-size: 20px !important;
+          }
+          .pd-desc {
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+          }
+          .btn-qty {
+            width: 40px !important;
+            height: 40px !important;
+          }
+          .pd-cart {
+            padding: 14px !important;
+            font-size: 14px !important;
+          }
+        }
       `}</style>
 
       <div
+        className="pd-card"
         style={{
           backgroundColor: '#FFF', borderRadius: '24px', width: '100%', maxWidth: '750px',
           maxHeight: '100%', overflowY: 'auto',
@@ -86,7 +138,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
         {/* TOMBOL TUTUP (X) */}
         <button
           onClick={onClose}
-          className="btn-close"
+          className="btn-close pd-close"
           aria-label="Tutup"
           style={{
             position: 'absolute', top: '20px', right: '20px', backgroundColor: '#E5E7EB',
@@ -105,7 +157,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
             onClick={onReport}
             title="Laporkan produk"
             aria-label="Laporkan produk"
-            className="absolute right-[60px] top-5 inline-flex h-8 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-xs font-semibold text-stone-600 transition-colors hover:border-red-600 hover:bg-red-600 hover:text-white"
+            className="pd-report absolute right-[60px] top-5 inline-flex h-8 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-xs font-semibold text-stone-600 transition-colors hover:border-red-600 hover:bg-red-600 hover:text-white"
           >
             <AlertCircle size={14} /> Laporkan
           </button>
@@ -113,6 +165,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
 
         {/* KOLOM KIRI: GAMBAR PRODUK */}
         <div
+          className="pd-image"
           style={{
             width: '100%', height: '320px', backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB',
             borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
@@ -126,12 +179,12 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
         </div>
 
         {/* KOLOM KANAN: DETAIL INFORMASI */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingTop: onReport ? '28px' : 0 }}>
-          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', fontWeight: 'bold', color: '#1A1A1A', margin: 0 }}>
+        <div className="pd-info" style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingTop: onReport ? '28px' : 0 }}>
+          <h2 className="pd-title" style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', fontWeight: 'bold', color: '#1A1A1A', margin: 0 }}>
             {product.name}
           </h2>
 
-          <p style={{ fontSize: '13px', color: '#555', margin: 0, lineHeight: '1.5' }}>
+          <p className="pd-desc" style={{ fontSize: '13px', color: '#555', margin: 0, lineHeight: '1.5' }}>
             {product.description || `${product.name} berkualitas segar dan siap diselamatkan di toko ini.`}
           </p>
 
@@ -194,19 +247,33 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
           <button
             onClick={handleAddToCart}
             disabled={availableStock <= 0}
-            className="btn-cart"
+            className="btn-cart pd-cart"
             style={{
-              marginTop: '10px', width: '100%', padding: '12px', borderRadius: '14px',
-              border: '1.5px solid transparent',
-              backgroundColor: availableStock <= 0 ? '#9CA3AF' : '#1A1A1A',
-              color: '#FFF', fontSize: '13px', fontWeight: '600',
-              cursor: availableStock <= 0 ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              transition: 'all 0.2s ease'
-            }}
+  marginTop: '10px', width: '100%', padding: '12px', borderRadius: '14px',
+  border: '1.5px solid transparent',
+  backgroundColor: availableStock <= 0 ? '#9CA3AF' : '#1A1A1A',
+  color: '#FFF', fontSize: '13px', fontWeight: '600',
+  cursor: availableStock <= 0 ? 'not-allowed' : 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+  transition: 'all 0.2s ease'
+}}
           >
             <ShoppingCart size={16} />
             {availableStock <= 0 ? 'Stok Tidak Mencukupi' : '+ Tambah ke Keranjang'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              requestOpenChat({
+                storeId: product.storeId ?? product.store ?? product.merchant,
+                storeName: product.store || product.merchant,
+              });
+              if (onClose) onClose();
+            }}
+            style={{ width: '100%', padding: '12px', borderRadius: '14px', border: '1.5px solid #D95A36', backgroundColor: '#FFF', color: '#D95A36', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+          >
+            Hubungi Penjual
           </button>
         </div>
       </div>

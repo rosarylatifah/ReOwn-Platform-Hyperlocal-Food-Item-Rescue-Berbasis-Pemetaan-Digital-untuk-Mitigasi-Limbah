@@ -1,5 +1,7 @@
 "use client";
 
+import { useChat } from "@/lib/chatStore";
+import ChatPopover from "@/components/pembeli/ChatPopover";
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,6 +29,8 @@ const NAV_ITEMS = [
 export default function SellerNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const { unreadChatCount } = useChat();
   const pathname = usePathname();
 
   return (
@@ -55,9 +59,14 @@ export default function SellerNavbar() {
 
           {/* Aksi kanan (desktop) */}
           <div className="hidden items-center gap-2.5 xl:flex">
-            <button type="button" aria-label="Chat" onClick={() => alert("Fitur Chat Seller akan datang!")} className={`${iconBase} ${pill}`}>
-              <MessageSquare size={19} strokeWidth={2} />
-            </button>
+<button type="button" aria-label="Chat" onClick={() => setChatOpen((v) => !v)} className={`${iconBase} ${chatOpen ? pillActive : pill}`}>
+  <MessageSquare size={19} strokeWidth={2} />
+  {unreadChatCount > 0 && (
+    <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#95F57C] px-1 text-[11px] font-bold leading-none text-stone-900 ring-2 ring-stone-900">
+      {unreadChatCount}
+    </span>
+  )}
+</button>
             <button type="button" aria-label="Notifikasi" onClick={() => alert("Tidak ada notifikasi baru.")} className={`${iconBase} ${pill}`}>
               <Bell size={19} strokeWidth={2} />
             </button>
@@ -126,6 +135,7 @@ export default function SellerNavbar() {
       </ScrollAwareHeader>
 
       <ProfilePopover isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
+        <ChatPopover isOpen={chatOpen} onClose={() => setChatOpen(false)} />
     </>
   );
 }

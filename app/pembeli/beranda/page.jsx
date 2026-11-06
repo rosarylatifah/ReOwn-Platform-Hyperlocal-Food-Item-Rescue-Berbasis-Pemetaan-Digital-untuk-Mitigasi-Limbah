@@ -179,7 +179,7 @@ export default function BuyerDashboard() {
               </p>
             </div>
           ) : (
-            <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="mt-8 grid grid-cols-2 gap-x-2.5 gap-y-4 md:mt-10 md:grid-cols-3 md:gap-x-6 md:gap-y-8 lg:grid-cols-4 xl:grid-cols-5">
               {promoProducts.map((item) => (
                 <ProductCard
                   key={item.id}

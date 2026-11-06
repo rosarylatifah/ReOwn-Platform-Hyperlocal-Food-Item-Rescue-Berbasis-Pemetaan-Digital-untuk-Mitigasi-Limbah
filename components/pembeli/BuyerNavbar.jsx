@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
@@ -68,10 +68,15 @@ export default function BuyerNavbar() {
   const [activePopover, setActivePopover] = useState(null); // 'notif' | 'chat' | 'profile' | null
 
   const { totalCartItems } = useCart();
-  const { unreadChatCount } = useChat();
+  const { unreadChatCount, pendingChatId } = useChat();
   const { unreadCount } = useNotification();
   const { open: openCart } = useCartDrawer();
   const pathname = usePathname();
+
+  // Buka popover chat otomatis saat tombol "Hubungi Penjual" ditekan
+  useEffect(() => {
+    if (pendingChatId) setActivePopover("chat");
+  }, [pendingChatId]);
 
   const togglePopover = (name) => {
     setMenuOpen(false);
@@ -86,16 +91,16 @@ export default function BuyerNavbar() {
     openCart();
   };
 
-const scrollToFooter = () => {
-  setMenuOpen(false);
-  setActivePopover(null);
-  // Tunggu menu tertutup, lalu cari footer (id, tag <footer>, atau paling bawah halaman)
-  setTimeout(() => {
-    const el = document.getElementById("footer") || document.querySelector("footer");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "end" });
-    else window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
-  }, 50);
-};
+  const scrollToFooter = () => {
+    setMenuOpen(false);
+    setActivePopover(null);
+    // Tunggu menu tertutup, lalu cari footer (id, tag <footer>, atau paling bawah halaman)
+    setTimeout(() => {
+      const el = document.getElementById("footer") || document.querySelector("footer");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "end" });
+      else window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+    }, 50);
+  };
 
   const quickActions = [
     { id: "chat", label: "Chat", Icon: MessageSquare, count: unreadChatCount },
@@ -114,15 +119,15 @@ const scrollToFooter = () => {
           {/* Menu tengah (desktop) */}
           <ul className={`${delaGothic.className} hidden items-center gap-3 lg:flex`}>
             {NAV_ITEMS.map((item) => {
-if (item.footer) {
-  return (
-    <li key={item.id}>
-      <button type="button" onClick={scrollToFooter} className={`${pillBase} ${pill}`}>
-        {item.label}
-      </button>
-    </li>
-  );
-}
+              if (item.footer) {
+                return (
+                  <li key={item.id}>
+                    <button type="button" onClick={scrollToFooter} className={`${pillBase} ${pill}`}>
+                      {item.label}
+                    </button>
+                  </li>
+                );
+              }
 
               const isActive = pathname === item.path;
               return (
@@ -194,29 +199,29 @@ if (item.footer) {
                   <div className="fixed inset-0 -z-10" onClick={() => setMenuOpen(false)} aria-hidden />
                   <div className="absolute right-0 mt-3 w-64 rounded-2xl bg-white p-3 shadow-xl">
                     {NAV_ITEMS.map((item) =>
-  item.footer ? (
-    <button
-      key={item.id}
-      type="button"
-      onClick={scrollToFooter}
-      className="block w-full rounded-xl px-4 py-3 text-left text-base font-medium text-stone-800 hover:bg-orange-50"
-    >
-      {item.label}
-    </button>
-  ) : (
-    <Link
-      key={item.id}
-      href={item.path}
-      onClick={() => setMenuOpen(false)}
-      aria-current={pathname === item.path ? "page" : undefined}
-      className={`block rounded-xl px-4 py-3 text-base font-medium hover:bg-orange-50 ${
-        pathname === item.path ? "bg-[#95F57C]/40 text-stone-900" : "text-stone-800"
-      }`}
-    >
-      {item.label}
-    </Link>
-  )
-)}
+                      item.footer ? (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={scrollToFooter}
+                          className="block w-full rounded-xl px-4 py-3 text-left text-base font-medium text-stone-800 hover:bg-orange-50"
+                        >
+                          {item.label}
+                        </button>
+                      ) : (
+                        <Link
+                          key={item.id}
+                          href={item.path}
+                          onClick={() => setMenuOpen(false)}
+                          aria-current={pathname === item.path ? "page" : undefined}
+                          className={`block rounded-xl px-4 py-3 text-base font-medium hover:bg-orange-50 ${
+                            pathname === item.path ? "bg-[#95F57C]/40 text-stone-900" : "text-stone-800"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      )
+                    )}
                     <div className="mt-2 flex flex-col gap-1 border-t border-stone-100 pt-3">
                       {quickActions.map(({ id, label, Icon, count }) => (
                         <button
