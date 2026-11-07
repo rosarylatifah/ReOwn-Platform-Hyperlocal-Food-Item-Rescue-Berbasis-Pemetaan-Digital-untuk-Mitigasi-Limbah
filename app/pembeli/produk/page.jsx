@@ -1,9 +1,9 @@
 // app/pembeli/produk/page.jsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Store } from 'lucide-react';
+import { Search, Store, ChevronDown } from 'lucide-react';
 import { useUserLocation } from '@/lib/locationStore';
 import { useBuyerProducts } from '@/app/pembeli/hooks/useBuyerProducts';
 import ProductGrid from '@/components/pembeli/ProductGrid';
@@ -16,10 +16,87 @@ import { fraunces } from '@/lib/fonts';
 const batamCenterPos = [1.1186, 104.0487];
 
 const chipBase =
-  "rounded-full border-[1.5px] px-5 py-2.5 text-[13px] font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
+  "shrink-0 whitespace-nowrap rounded-full border-[1.5px] px-5 py-2.5 text-[13px] font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
 const chipSelected = "border-[#D85834] bg-[#D85834] text-white hover:bg-[#C24A28]";
 const chipIdle =
   "border-stone-200 bg-white text-stone-900 hover:border-[#D85834] hover:bg-[#FBE9E2] hover:text-[#D85834]";
+
+const urgencyOptions = [
+  { value: 'Semua', label: 'Urgensi: Semua' },
+  { value: 'Mendesak', label: 'Mendesak' },
+  { value: 'Segera', label: 'Segera' },
+  { value: 'Normal', label: 'Normal' },
+];
+
+// Dropdown urgensi KHUSUS MOBILE (desktop tetap memakai <select> asli)
+function UrgencyDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const close = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('touchstart', close);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('touchstart', close);
+    };
+  }, []);
+
+  const current = urgencyOptions.find((o) => o.value === value) || urgencyOptions[0];
+
+  return (
+    <div ref={ref} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Filter urgensi"
+        className={`flex w-full items-center justify-between gap-3 rounded-full border-[1.5px] bg-white py-2.5 pl-5 pr-4 text-[13px] font-semibold text-stone-900 outline-none transition-all duration-200 hover:border-[#D85834] ${
+          open ? 'border-[#D85834]' : 'border-stone-200'
+        }`}
+      >
+        <span>{current.label}</span>
+        <ChevronDown
+          size={16}
+          className={`shrink-0 text-stone-500 transition-transform duration-200 ${open ? 'rotate-180 text-[#D85834]' : ''}`}
+        />
+      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-2xl border border-stone-100 bg-white py-1.5 shadow-[0_20px_44px_rgba(120,70,30,0.15)]"
+        >
+          {urgencyOptions.map((opt) => {
+            const isActive = opt.value === value;
+            return (
+              <li key={opt.value} role="option" aria-selected={isActive}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.value);
+                    setOpen(false);
+                  }}
+                  className={`w-full px-5 py-2.5 text-left text-[13px] font-semibold transition-colors duration-150 ${
+                    isActive
+                      ? 'bg-[#FBE9E2] text-[#D85834]'
+                      : 'text-stone-900 hover:bg-[#FBE9E2] hover:text-[#D85834]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function BuyerProducts() {
   const { addToCart } = useCart();
@@ -44,6 +121,16 @@ export default function BuyerProducts() {
   } = useBuyerProducts();
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Placeholder pendek hanya di mobile
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   // Rumus Haversine untuk jarak
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -85,8 +172,8 @@ const displayedProducts = React.useMemo(() => {
       </div>
 
       {/* SEARCH, KATEGORI & URGENSI */}
-      <section className="relative z-20 mx-auto mb-8 mt-8 flex max-w-[1280px] flex-wrap items-center justify-between gap-4 px-4 md:px-6">
-        <div className="group relative min-w-[280px] flex-1">
+      <section className="relative z-20 mx-auto mb-6 mt-6 flex max-w-[1280px] flex-col items-stretch gap-3 px-4 md:mb-8 md:mt-8 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-4 md:px-6">
+        <div className="group relative w-full md:w-auto md:min-w-[280px] md:flex-1">
           <Search
             size={18}
             className={`pointer-events-none absolute left-4 top-1/2 z-[2] -translate-y-1/2 transition-colors duration-200 group-hover:text-[#D85834] ${
@@ -95,12 +182,16 @@ const displayedProducts = React.useMemo(() => {
           />
           <input
             type="text"
-            placeholder="Cari makanan, barang rescue, atau nama toko/penjual..."
+            placeholder={
+              isMobile
+                ? "Cari makanan, barang, atau toko..."
+                : "Cari makanan, barang rescue, atau nama toko/penjual..."
+            }
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-            className="w-full rounded-full border-[1.5px] border-stone-200 bg-white py-3 pl-12 pr-4 text-sm text-stone-900 outline-none transition-all duration-200 placeholder:text-stone-400 hover:border-[#D85834]/50 focus:-translate-y-px focus:border-[#D85834] focus:shadow-[0_10px_30px_rgba(120,70,30,0.12)]"
+            className="w-full rounded-full border-[1.5px] border-stone-200 bg-white py-3 pl-12 pr-4 text-base text-stone-900 outline-none transition-all duration-200 placeholder:text-stone-400 hover:border-[#D85834]/50 focus:-translate-y-px focus:border-[#D85834] focus:shadow-[0_10px_30px_rgba(120,70,30,0.12)] md:text-sm"
           />
 
           {isSearchFocused && searchTerm.trim() !== '' && products.filter(p => {
@@ -142,8 +233,8 @@ const displayedProducts = React.useMemo(() => {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:flex-wrap md:items-center">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:py-0">
             {['Semua', 'Makanan', 'Barang', 'Terdekat'].map((cat) => {
               const isSelected = selectedCategory === cat;
               return (
@@ -160,11 +251,17 @@ const displayedProducts = React.useMemo(() => {
             })}
           </div>
 
+          {/* MOBILE: dropdown buatan sendiri */}
+          <div className="md:hidden">
+            <UrgencyDropdown value={selectedUrgency} onChange={setSelectedUrgency} />
+          </div>
+
+          {/* DESKTOP: select asli (tidak diubah) */}
           <select
             value={selectedUrgency}
             onChange={(e) => setSelectedUrgency(e.target.value)}
             aria-label="Filter urgensi"
-            className="cursor-pointer rounded-full border-[1.5px] border-stone-200 bg-white px-5 py-2.5 text-[13px] font-semibold text-stone-900 outline-none transition-all duration-200 hover:border-[#D85834] focus:border-[#D85834]"
+            className="hidden cursor-pointer rounded-full border-[1.5px] border-stone-200 bg-white px-5 py-2.5 text-[13px] font-semibold text-stone-900 outline-none transition-all duration-200 hover:border-[#D85834] focus:border-[#D85834] md:block"
           >
             <option value="Semua">Urgensi: Semua</option>
             <option value="Mendesak">Mendesak</option>

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChatProvider } from "@/app/pembeli/context/chat";
+import { ChatProvider } from "@/lib/chatStore";
 import { ProfileDrawerProvider } from "@/lib/ProfileDrawer";
 import ProfileDrawer from "@/components/profil/ProfileDrawer"; // sesuaikan path jika berbeda
 import { NotificationProvider } from '@/app/context/notification';

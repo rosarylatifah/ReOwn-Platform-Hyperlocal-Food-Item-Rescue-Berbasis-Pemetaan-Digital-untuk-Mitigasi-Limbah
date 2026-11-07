@@ -9,9 +9,10 @@ import Logo from "@/components/common/Logo";
 import ScrollAwareHeader from "@/components/common/ScrollAwareHeader";
 import ProfilePopover from "@/components/profil/ProfilePopover";
 import SellerNotificationPopover from "@/components/penjual/NotificationPopover";
-import ChatPopover from "@/components/penjual/ChatPopover"; // 👈 1. Import komponen chat penjual
+import ChatPopover from "@/components/penjual/ChatPopover"; // 👈 Cukup import sekali dari folder penjual
+
 import { useNotification } from "@/app/context/notification";
-import { useChat } from "@/app/pembeli/context/chat"; // 👈 2. Import useChat context
+import { useChat } from "@/lib/chatStore"; // 👈 Gunakan chatStore yang seragam
 import { delaGothic } from "@/lib/fonts";
 import { styles, pillBase } from "@/lib/navStyles";
 
@@ -32,15 +33,13 @@ export default function SellerNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false); // 👈 State buat buka-tutup popover chat
+  const [chatOpen, setChatOpen] = useState(false);
   const pathname = usePathname();
 
   const { notifications } = useNotification();
-  const { chats } = useChat(); // 👈 Ambil data chats untuk hitung unread penjual
+  const { chats } = useChat(); 
   
   const sellerUnreadCount = notifications.filter(item => item.role === 'penjual' && item.unread).length;
-  
-  // Hitung jumlah chat masuk yang belum dibaca dari sisi penjual (jika ada chat dengan unread)
   const sellerUnreadChatCount = chats.filter(c => c.unread).length;
 
   return (
@@ -69,7 +68,7 @@ export default function SellerNavbar() {
 
           {/* Aksi kanan (desktop) */}
           <div className="hidden items-center gap-2.5 xl:flex">
-            {/* Tombol Chat Desktop dengan Badge Unread */}
+            {/* Tombol Chat Desktop */}
             <button 
               type="button" 
               aria-label="Chat" 
@@ -84,7 +83,7 @@ export default function SellerNavbar() {
               )}
             </button>
             
-            {/* Tombol Notifikasi Desktop dengan Badge Warna Hijau */}
+            {/* Tombol Notifikasi Desktop */}
             <button 
               type="button" 
               aria-label="Notifikasi" 
@@ -157,7 +156,7 @@ export default function SellerNavbar() {
                       )}
                     </button>
                     
-                    {/* Tombol Notifikasi Mobile dengan Badge Warna Hijau */}
+                    {/* Tombol Notifikasi Mobile */}
                     <button
                       type="button"
                       onClick={() => { setMenuOpen(false); setNotifOpen(true); }}
@@ -191,7 +190,7 @@ export default function SellerNavbar() {
       {/* Popover Profil, Notifikasi, & Chat Seller */}
       <ProfilePopover isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
       <SellerNotificationPopover isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
-      <ChatPopover isOpen={chatOpen} onClose={() => setChatOpen(false)} storeName="Rayya Store" />
+      <ChatPopover isOpen={chatOpen} onClose={() => setChatOpen(false)} />
     </>
   );
 }

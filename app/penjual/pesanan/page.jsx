@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { MapPin, Clock, User, PackageCheck, Eye, CheckCircle2, Check, X } from "lucide-react";
 
 import SellerNavbar from "@/components/penjual/SellerNavbar";
+import SellerOrderModal from "@/components/penjual/SellerOrderModal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { fraunces } from "@/lib/fonts";
 import { useOrders } from "@/lib/ordersStore";
@@ -60,6 +61,7 @@ export default function SellerOrders() {
   const tabParam = searchParams.get("tab");
 
   const [activeTab, setActiveTab] = React.useState("Menunggu Konfirmasi");
+  const [detail, setDetail] = React.useState(null);
 
   useEffect(() => {
     if (tabParam) {
@@ -156,11 +158,23 @@ export default function SellerOrders() {
     }
   };
 
-  const handleLihatDetail = (item) => {
-    alert(
-      `Detail Pesanan:\nProduk: ${item.name}\nJumlah: ${item.quantity || 1}\nPembeli: ${item.buyer}\nPengantaran: ${item.deliveryOption || "-"}\nStatus: ${item.status}\nWaktu: ${item.date}\nHarga: ${item.price}`
-    );
+const handleLihatDetail = (item) => {
+  const fmt = (d) => {
+    if (!d) return "-";
+    const t = new Date(d);
+    return isNaN(t)
+      ? d
+      : t.toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   };
+  setDetail({
+    ...item,
+    buyerName: item.buyer,
+    totalPrice: item.price,
+    orderDate: item.date,
+    sellerAddress: item.sellerAddress || item.pickupLocation || item.location,
+    confirmDate: fmt(item.confirmDate),
+  });
+};
 
   return (
     <>
@@ -304,6 +318,7 @@ export default function SellerOrders() {
           </div>
         </main>
       </div>
+      <SellerOrderModal order={detail} onClose={() => setDetail(null)} />
     </>
   );
 }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Search, ArrowLeft, Send, Paperclip } from 'lucide-react';
 import { useChat } from '@/app/pembeli/context/chat';
 import ChatList from '@/components/ChatList'; // 👈 Menggunakan komponen ChatList
+import { useChat } from '@/lib/chatStore';
 
 export default function ChatPanelSeller({ isOpen, onClose, storeName }) {
   const { chats, allMessages, sendMessage, markChatAsRead } = useChat();
