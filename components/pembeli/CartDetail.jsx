@@ -2,214 +2,114 @@
 
 import React from 'react';
 import { X, MessageCircle, Clock, Package, MapPin } from 'lucide-react';
+import { fraunces } from '@/lib/fonts';
+
+const labelClass = "mb-1 block text-xs font-semibold text-stone-600";
+const fieldClass =
+  "w-full rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-[13px] font-medium text-stone-900";
 
 export default function CartDetail({ order, onClose }) {
   if (!order) return null;
 
   return (
-    <div 
+    <div
       onClick={onClose}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '20px'
-      }}
+      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/40 p-5 backdrop-blur-sm"
     >
-      {/* STYLE EFEK HOVER & INTERAKTIF */}
-      <style jsx>{`
-        .btn-action:hover {
-          opacity: 0.9;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-        }
-        .btn-action:active {
-          transform: scale(0.98);
-        }
-
-        .btn-close:hover {
-          background-color: #E5E7EB !important;
-          color: #1A1A1A !important;
-        }
-      `}</style>
-
-      <div 
+      <div
+        role="dialog"
+        aria-modal="true"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          backgroundColor: '#FFF',
-          borderRadius: '20px',
-          width: '100%',
-          maxWidth: '680px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          padding: '28px',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-          position: 'relative',
-          fontFamily: 'Inter, sans-serif'
-        }}
+        className="relative max-h-[90vh] w-full max-w-[680px] overflow-y-auto rounded-[26px] border border-stone-100 bg-white p-7 shadow-[0_20px_44px_rgba(120,70,30,0.15)]"
       >
         {/* Tombol Close '✕' */}
-        <button 
+        <button
+          type="button"
           onClick={onClose}
-          className="btn-close"
-          style={{
-            position: 'absolute',
-            top: '18px',
-            right: '18px',
-            border: 'none',
-            backgroundColor: '#F3F4F6',
-            borderRadius: '50%',
-            width: '32px',
-            height: '32px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            color: '#666',
-            transition: 'all 0.2s ease'
-          }}
+          aria-label="Tutup"
+          className="absolute right-[18px] top-[18px] grid h-8 w-8 place-items-center rounded-full bg-stone-100 text-stone-600 transition-colors duration-200 hover:bg-stone-200 hover:text-stone-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]"
         >
           <X size={18} />
         </button>
 
-        <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '20px', color: '#1A1A1A', marginTop: 0, marginBottom: '20px' }}>
+        <h3 className={`${fraunces.className} mb-5 pr-10 text-xl font-extrabold leading-tight text-stone-900`}>
           Detail Item: {order.name}
         </h3>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start' }}>
-          
+        <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
           {/* SISI KIRI: Informasi Toko, Alamat, Kuantitas, & Expired */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            
+          <div className="flex flex-col gap-3.5">
             {/* Nama Penjual */}
             <div>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555', display: 'block', marginBottom: '4px' }}>
-                Nama Penjual / Toko:
-              </label>
-              <div style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: '#F9FAFB', fontSize: '13px', color: '#1A1A1A', fontWeight: '500', boxSizing: 'border-box' }}>
+              <label className={labelClass}>Nama Penjual / Toko:</label>
+              <div className={fieldClass}>
                 {order.store || order.sellerName || 'Toko Rescue Batam'}
               </div>
             </div>
 
             {/* Alamat Penjual */}
             <div>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555', display: 'block', marginBottom: '4px' }}>
-                Alamat / Lokasi Toko:
-              </label>
-              <div style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: '#F9FAFB', fontSize: '12px', color: '#555', lineHeight: '1.4', boxSizing: 'border-box', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                <MapPin size={14} color="#D95A36" style={{ marginTop: '2px', flexShrink: 0 }} />
+              <label className={labelClass}>Alamat / Lokasi Toko:</label>
+              <div className={`${fieldClass} flex items-start gap-1.5 text-xs leading-snug text-stone-600`}>
+                <MapPin size={14} className="mt-0.5 shrink-0 text-[#D85834]" />
                 <span>{order.location || order.sellerAddress || 'Jl. Ahmad Yani, Batam Center, Batam'}</span>
               </div>
             </div>
 
             {/* Kuantitas & Batas Waktu / Expired */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#555', display: 'block', marginBottom: '4px' }}>
-                  Jumlah Rescue:
-                </label>
-                <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: '#F9FAFB', fontSize: '13px', fontWeight: 'bold', color: '#1A1A1A', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Package size={14} color="#D95A36" /> {order.quantity || 1} Porsi
+                <label className={labelClass}>Jumlah Rescue:</label>
+                <div className={`${fieldClass} flex items-center gap-1.5 font-bold`}>
+                  <Package size={14} className="shrink-0 text-[#D85834]" /> {order.quantity || 1} Porsi
                 </div>
               </div>
 
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#555', display: 'block', marginBottom: '4px' }}>
-                  Batas Ambil / Exp:
-                </label>
-                <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: '#F9FAFB', fontSize: '12px', fontWeight: 'bold', color: '#DC2626', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Clock size={14} /> {order.expiryTime || 'Hari ini, 21:00'}
+                <label className={labelClass}>Batas Ambil / Exp:</label>
+                <div className={`${fieldClass} flex items-center gap-1.5 text-xs font-bold text-red-600`}>
+                  <Clock size={14} className="shrink-0" /> {order.expiryTime || 'Hari ini, 21:00'}
                 </div>
               </div>
             </div>
 
             {/* Total Pembayaran */}
             <div>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555', display: 'block', marginBottom: '4px' }}>
-                Total Harga:
-              </label>
-              <div style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #FFDBCC', backgroundColor: '#FFF3ED', fontSize: '14px', fontWeight: 'bold', color: '#D95A36', boxSizing: 'border-box' }}>
+              <label className={labelClass}>Total Harga:</label>
+              <div className={`${fraunces.className} w-full rounded-xl border border-[#D85834]/20 bg-[#FBE9E2] px-3.5 py-2.5 text-base font-extrabold text-[#D85834]`}>
                 {order.price || order.totalPrice}
               </div>
             </div>
-
           </div>
 
           {/* SISI KANAN: Gambar, Deskripsi, & Tombol Hubungi Penjual */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            
+          <div className="flex flex-col gap-3.5">
             {/* Gambar Produk */}
-            <div style={{
-              width: '100%',
-              height: '140px',
-              borderRadius: '12px',
-              border: '1px solid #E5E7EB',
-              overflow: 'hidden',
-              backgroundColor: '#F9FAFB'
-            }}>
-              <img 
-                src={order.image} 
-                alt={order.name} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            <div className="h-[140px] w-full overflow-hidden rounded-2xl border border-stone-100 bg-gradient-to-br from-amber-100 to-orange-200">
+              <img
+                src={order.image}
+                alt={order.name}
+                className="h-full w-full object-cover"
               />
             </div>
 
             {/* Deskripsi */}
             <div>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555', display: 'block', marginBottom: '4px' }}>
-                Deskripsi Produk:
-              </label>
-              <div style={{
-                width: '100%',
-                minHeight: '95px',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                border: '1px solid #E5E7EB',
-                backgroundColor: '#F9FAFB',
-                fontSize: '12px',
-                color: '#555',
-                lineHeight: '1.4',
-                boxSizing: 'border-box'
-              }}>
+              <label className={labelClass}>Deskripsi Produk:</label>
+              <div className="min-h-[95px] w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-xs leading-relaxed text-stone-600">
                 {order.description || `${order.name} adalah produk makanan berlebih berkualitas tinggi yang siap diselamatkan dari toko ${order.store || 'merchant'}.`}
               </div>
             </div>
 
             {/* Tombol Hubungi Penjual */}
-            <button 
+            <button
+              type="button"
               onClick={() => alert(`Menghubungi penjual ${order.store || order.sellerName || 'Toko'} terkait produk ${order.name}`)}
-              className="btn-action"
-              style={{
-                marginTop: '10px',
-                padding: '12px',
-                borderRadius: '10px',
-                border: '1px solid #D1D5DB',
-                backgroundColor: '#FFF',
-                color: '#333',
-                fontSize: '13px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-                transition: 'all 0.2s ease'
-              }}
+              className="mt-2.5 inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-stone-800 px-4 py-3 text-sm font-semibold text-stone-900 transition-all duration-200 hover:-translate-y-0.5 hover:bg-stone-900 hover:text-[#FFF7E9] hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]"
             >
-              <MessageCircle size={16} color="#D95A36" /> Hubungi Penjual
+              <MessageCircle size={16} /> Hubungi Penjual
             </button>
-
           </div>
-
         </div>
       </div>
     </div>

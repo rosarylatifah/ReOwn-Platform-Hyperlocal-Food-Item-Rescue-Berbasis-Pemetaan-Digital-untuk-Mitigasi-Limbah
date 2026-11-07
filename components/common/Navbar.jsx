@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import ScrollAwareHeader from "./ScrollAwareHeader";
+import NavbarAuth from "./NavbarAuth";
 import CartButton from "@/components/cart/CartButton";
 import { delaGothic } from "@/lib/fonts";
 import { NAV_LINKS } from "@/lib/navigation";
@@ -20,9 +21,14 @@ const styles = {
   },
 };
 
+const pillAnim =
+  "inline-flex items-center rounded-full border-[1.5px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
+
 // Kapsul outline (menu & "Masuk")
-const pillBase =
-  "inline-flex items-center rounded-full border-[1.5px] px-6 py-2 text-[15px] leading-[22px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
+const pillBase = `${pillAnim} px-6 py-2 text-[15px] leading-[22px]`;
+
+// Kapsul kecil ("Kembali ke dashboard")
+const pillSmall = `${pillAnim} px-4 py-1.5 text-[13px] leading-[20px]`;
 
 // Tombol utama hijau; hover: berubah gelap dengan teks hijau
 const ctaClass =
@@ -55,6 +61,15 @@ export default function Navbar({
 }) {
   const s = styles[variant];
 
+  const authProps = {
+    pillClass: `${pillBase} ${s.pill}`,
+    smallPillClass: `${pillSmall} ${s.pill}`,
+    ctaClass,
+    loginHref,
+    cta,
+    arrow: <ArrowIcon />,
+  };
+
   return (
     <ScrollAwareHeader variant={variant}>
       <nav aria-label="Navigasi utama" className="flex w-full items-center justify-between gap-6 px-7 py-3.5">
@@ -73,13 +88,7 @@ export default function Navbar({
 
         <div className={`${delaGothic.className} hidden items-center gap-2.5 md:flex`}>
           <CartButton className={s.pill} />
-          <Link href={loginHref} className={`${pillBase} ${s.pill}`}>
-            Masuk
-          </Link>
-          <Link href={cta.href} className={ctaClass}>
-            {cta.label}
-            <ArrowIcon />
-          </Link>
+          <NavbarAuth {...authProps} />
         </div>
 
         {/* Mobile: keranjang + menu burger */}
@@ -100,15 +109,7 @@ export default function Navbar({
                   {l.label}
                 </Link>
               ))}
-              <div className="mt-2 flex flex-col gap-2 border-t border-stone-100 pt-3">
-                <Link href={loginHref} className="rounded-full border-[1.5px] border-stone-800 px-4 py-2.5 text-center text-base font-medium text-stone-900">
-                  Masuk
-                </Link>
-                <Link href={cta.href} className={`${ctaClass} justify-center`}>
-                  {cta.label}
-                  <ArrowIcon />
-                </Link>
-              </div>
+              <NavbarAuth mobile {...authProps} />
             </div>
           </details>
         </div>

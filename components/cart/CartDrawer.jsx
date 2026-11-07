@@ -7,13 +7,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { fraunces } from "@/lib/fonts";
 import { useCart } from "@/lib/cart";
 
-type Confirm = { kind: "item"; id: string; name: string } | { kind: "all" } | null;
-
 export default function CartDrawer() {
   const { items, isOpen, close, remove, clear } = useCart();
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const cancelRef = useRef<HTMLButtonElement>(null);
-  const [confirm, setConfirm] = useState<Confirm>(null);
+const closeRef = useRef(null);
+const cancelRef = useRef(null);
+const [confirm, setConfirm] = useState(null);
 
   // Ref supaya handler Esc selalu tahu status dialog tanpa memicu ulang efek kunci-scroll
   const confirmOpenRef = useRef(false);
@@ -29,7 +27,7 @@ export default function CartDrawer() {
     if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
     closeRef.current?.focus();
 
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e) => {
       if (e.key !== "Escape") return;
       if (confirmOpenRef.current) setConfirm(null);
       else close();

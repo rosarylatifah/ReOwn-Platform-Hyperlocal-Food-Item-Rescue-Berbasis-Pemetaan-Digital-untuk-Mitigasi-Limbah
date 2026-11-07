@@ -2,7 +2,7 @@ import AuthForm from "@/components/auth/AuthForm";
 
 export const metadata = {
   title: "Masuk | ReOwn",
-  description: "Masuk ke akun ReOwn-mu.",
+  description: "Masuk ke ReOwn dan lanjutkan aksi menyelamatkan barang di sekitarmu.",
 };
 
 export default function MasukPage() {

@@ -1,95 +1,57 @@
 "use client";
 
-import { useState } from "react";
-import { fmtDateTime } from "@/lib/admin/format";
-import { ADMIN } from "@/lib/admin/store";
-import {
-  KIND_LABEL, replyTo, setMessageStatus, useMessages,
-} from "@/lib/contact";
-import Modal from "./Modal";
-import StatusChip from "./StatusChip";
-import UserCell from "./UserCell";
+/** Baris alat di atas tabel (pencarian, filter). */
+export function Toolbar({ children }) {
+  return <div className="adm-tb">{children}</div>;
+}
 
-export const KIND_TONE = { pertanyaan: "info", saran: "ok", kendala: "warn" };
-export const STATUS_TONE = { baru: "warn", dibaca: "muted", dibalas: "ok", selesai: "muted" };
-export const ADMIN_STATUS_LABEL = {
-  baru: "Baru", dibaca: "Dibaca", dibalas: "Dibalas", selesai: "Selesai",
-};
-
-/** Detail satu pesan: isi, balasan admin (tampil ke pengguna di halaman Hubungi), dan penutupan. */
-export default function MessageDetailModal({ messageId, onClose }) {
-  const { messages } = useMessages();
-  const [text, setText] = useState("");
-  const [error, setError] = useState("");
-
-  const m = messages.find((x) => x.id === messageId);
-  if (!m) return null;
-  const closed = m.status === "selesai";
-
-  const send = () => {
-    if (text.trim().length < 3) {
-      setError("Tulis balasan terlebih dahulu.");
-      return;
-    }
-    replyTo(m.id, text, ADMIN.name);
-    setText("");
-    setError("");
-  };
-
+/** Kolom pencarian. onChange menerima string, bukan event. */
+export function SearchInput({ value, onChange, placeholder = "Cari…", label = "Cari" }) {
   return (
-    <Modal
-      title="Detail pesan"
-      onClose={onClose}
-      wide
-      footer={
-        closed ? (
-          <>
-            <button type="button" className="adm-btn" onClick={onClose}>Tutup</button>
-            <button type="button" className="adm-btn" onClick={() => setMessageStatus(m.id, m.reply ? "dibalas" : "dibaca")}>Buka kembali</button>
-          </>
-        ) : (
-          <>
-            <button type="button" className="adm-btn" onClick={() => { setMessageStatus(m.id, "selesai"); onClose(); }}>Tandai selesai</button>
-            <button type="button" className="adm-btn adm-btn--primary" onClick={send}>
-              {m.reply ? "Kirim balasan lagi" : "Kirim balasan"}
-            </button>
-          </>
-        )
-      }
+    <label className="adm-tb-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3.5-3.5" />
+      </svg>
+      <input
+        type="text"
+        value={value}
+        placeholder={placeholder}
+        aria-label={label}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </label>
+  );
+}
+
+/** Dropdown filter. options: [{ value, label }]. onChange menerima string. */
+export function SelectFilter({ value, onChange, options = [], label = "Filter" }) {
+  return (
+    <select
+      className="adm-tb-select"
+      value={value}
+      aria-label={label}
+      onChange={(e) => onChange(e.target.value)}
     >
-      <dl className="adm-dl">
-        <dt>Nomor pesan</dt><dd>{m.id}</dd>
-        <dt>Waktu</dt><dd>{fmtDateTime(m.createdAt)} WIB</dd>
-        <dt>Pengirim</dt><dd><UserCell username={m.userName} email={m.userEmail} /></dd>
-        <dt>Jenis</dt><dd><StatusChip tone={KIND_TONE[m.kind]}>{KIND_LABEL[m.kind]}</StatusChip></dd>
-        <dt>Status</dt><dd><StatusChip tone={STATUS_TONE[m.status]}>{ADMIN_STATUS_LABEL[m.status]}</StatusChip></dd>
-        <dt>Subjek</dt><dd>{m.subject}</dd>
-      </dl>
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 
-      <section className="adm-sec">
-        <h3>Isi pesan</h3>
-        <p className="adm-msgbody">{m.body}</p>
-      </section>
-
-      {m.reply && (
-        <section className="adm-sec">
-          <h3>Balasan terakhir ({m.reply.by}, {fmtDateTime(m.reply.at)} WIB)</h3>
-          <p className="adm-msgbody">{m.reply.text}</p>
-        </section>
-      )}
-
-      {!closed && (
-        <div className="adm-field">
-          <label htmlFor="adm-reply">Balasan untuk pengguna</label>
-          <textarea
-            id="adm-reply" rows={4} value={text}
-            placeholder="Tulis balasan. Pengguna akan melihatnya di halaman Hubungi."
-            aria-invalid={error ? true : undefined}
-            onChange={(e) => { setText(e.target.value); setError(""); }}
-          />
-          {error && <div className="adm-err" role="alert">{error}</div>}
-        </div>
-      )}
-    </Modal>
+/** Filter tanggal. value berformat "YYYY-MM-DD". onChange menerima string. */
+export function DateFilter({ label, value, onChange }) {
+  return (
+    <label className="adm-tb-date">
+      <span>{label}</span>
+      <input
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </label>
   );
 }

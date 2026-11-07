@@ -1,300 +1,197 @@
 "use client";
 
-import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { Home, Package, CheckSquare, Inbox, History, MessageSquare, Bell, User } from 'lucide-react';
-import Link from 'next/link';
-import ProfilePopover from '@/components/profil/ProfilePopover';
-import SellerChatPopover from '@/components/penjual/SellerChatPopover'; // 👈 1. Import SellerChatPopover
+import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Bell, MessageSquare, User } from "lucide-react";
+
+import Logo from "@/components/common/Logo";
+import ScrollAwareHeader from "@/components/common/ScrollAwareHeader";
+import ProfilePopover from "@/components/profil/ProfilePopover";
+import SellerNotificationPopover from "@/components/penjual/NotificationPopover";
+import ChatPopover from "@/components/penjual/ChatPopover"; // 👈 1. Import komponen chat penjual
+import { useNotification } from "@/app/context/notification";
+import { useChat } from "@/app/pembeli/context/chat"; // 👈 2. Import useChat context
+import { delaGothic } from "@/lib/fonts";
+import { styles, pillBase } from "@/lib/navStyles";
+
+const s = styles.overlay;
+const pill = s.pill;
+const pillActive = "border-white bg-white text-[#F24827] focus-visible:outline-white";
+
+const iconBase =
+  "relative grid h-11 w-11 shrink-0 place-items-center rounded-full border-[1.5px] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 md:h-[41px] md:w-[41px]";
+
+const NAV_ITEMS = [
+  { id: "beranda", path: "/penjual/beranda", label: "Beranda" },
+  { id: "kelola-produk", path: "/penjual/kelola-produk", label: "Kelola Produk" },
+  { id: "pesanan", path: "/penjual/pesanan", label: "Pesanan" },
+];
 
 export default function SellerNavbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [hoveredNav, setHoveredNav] = useState(null);
-  const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const [hoveredIcon, setHoveredIcon] = useState(null);
-
-  // State untuk mengontrol buka/tutup popover profil & chat
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false); // 👈 2. State untuk buka/tutup chat popover
-
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false); // 👈 State buat buka-tutup popover chat
   const pathname = usePathname();
 
-  // Daftar menu navigasi lengkap dengan path rutenya masing-masing
-  const navItems = [
-    { id: 'beranda', path: '/penjual/beranda', label: 'BERANDA', icon: Home },
-    { id: 'kelola-produk', path: '/penjual/kelola-produk', label: 'KELOLA PRODUK', icon: Package },
-    { id: 'konfirmasi-pesanan', path: '/penjual/konfirmasi-pesanan', label: 'KONFIRMASI PESANAN', icon: CheckSquare },
-    { id: 'pesanan-masuk', path: '/penjual/pesanan-masuk', label: 'PESANAN MASUK', icon: Inbox },
-    { id: 'riwayat-pesanan', path: '/penjual/riwayat', label: 'RIWAYAT PESANAN', icon: History },
-  ];
+  const { notifications } = useNotification();
+  const { chats } = useChat(); // 👈 Ambil data chats untuk hitung unread penjual
+  
+  const sellerUnreadCount = notifications.filter(item => item.role === 'penjual' && item.unread).length;
+  
+  // Hitung jumlah chat masuk yang belum dibaca dari sisi penjual (jika ada chat dengan unread)
+  const sellerUnreadChatCount = chats.filter(c => c.unread).length;
 
   return (
     <>
-      <style jsx>{`
-        @media (max-width: 900px) {
-          .hamburger-btn {
-            display: flex !important;
-          }
-          .nav-menu {
-            position: fixed;
-            top: 80px;
-            left: 30px;
-            flex-direction: column;
-            align-items: flex-start !important;
-            gap: 10px !important;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            transform: translateY(-20px);
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s ease;
-          }
-          .nav-menu.open {
-            transform: translateY(0);
-            opacity: 1;
-            pointer-events: auto;
-          }
-          .nav-menu a {
-            width: 100%;
-            justify-content: flex-start;
-          }
-        }
+      <ScrollAwareHeader variant="overlay">
+        <nav aria-label="Navigasi penjual" className="flex w-full items-center justify-between gap-6 bg-[#F24827] px-7 py-3.5">
+          <Logo tone={s.logo} />
 
-        @media (max-width: 600px) {
-          nav {
-            padding: 10px 14px !important;
-          }
-          .logo-btn {
-            padding: 6px 14px !important;
-          }
-          .logo-btn h2 {
-            font-size: 16px !important;
-          }
-          .action-icons-group {
-            gap: 5px !important;
-          }
-          .action-icons-group button,
-          .action-icons-group a {
-            width: 32px !important;
-            height: 32px !important;
-          }
-        }
-      `}</style>
+          {/* Menu tengah (desktop) */}
+          <ul className={`${delaGothic.className} hidden items-center gap-2.5 xl:flex`}>
+            {NAV_ITEMS.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <li key={item.id}>
+                  <Link
+                    href={item.path}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`${pillBase} ${isActive ? pillActive : pill}`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
 
-      {/* Backdrop Gelap saat Menu Mobile Dibuka */}
-      {isOpen && (
-        <div 
-          onClick={() => setIsOpen(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 998,
-          }}
-        />
-      )}
+          {/* Aksi kanan (desktop) */}
+          <div className="hidden items-center gap-2.5 xl:flex">
+            {/* Tombol Chat Desktop dengan Badge Unread */}
+            <button 
+              type="button" 
+              aria-label="Chat" 
+              onClick={() => setChatOpen(true)} 
+              className={`${iconBase} ${chatOpen ? pillActive : pill}`}
+            >
+              <MessageSquare size={19} strokeWidth={2} />
+              {sellerUnreadChatCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#4ADE80] text-[11px] font-bold text-stone-900 shadow-md border-[1.5px] border-black">
+                  {sellerUnreadChatCount}
+                </span>
+              )}
+            </button>
+            
+            {/* Tombol Notifikasi Desktop dengan Badge Warna Hijau */}
+            <button 
+              type="button" 
+              aria-label="Notifikasi" 
+              onClick={() => setNotifOpen(true)} 
+              className={`${iconBase} ${notifOpen ? pillActive : pill}`}
+            >
+              <Bell size={19} strokeWidth={2} />
+              {sellerUnreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#4ADE80] text-[11px] font-bold text-stone-900 shadow-md border-[1.5px] border-black">
+                  {sellerUnreadCount}
+                </span>
+              )}
+            </button>
 
-      {/* NAVBAR SELLER */}
-      <nav style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0,
-        width: '100%', 
-        zIndex: 1000,
-        backgroundColor: 'rgba(250, 240, 236, 0.75)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(217, 90, 54, 0.1)',
-        padding: '14px 30px', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        boxSizing: 'border-box',
-        transition: 'all 0.3s ease'
-      }}>
-        {/* Kiri: Hamburger Button & Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button 
-            onClick={() => setIsOpen(!isOpen)}
-            className="hamburger-btn"
-            style={{ 
-              display: 'none', 
-              backgroundColor: '#D95A36', 
-              color: '#FFF', 
-              border: 'none', 
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%', 
-              cursor: 'pointer',
-              fontSize: '18px',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'transform 0.2s ease'
-            }}
-          >
-            {isOpen ? '✕' : '☰'}
-          </button>
+            <button
+              type="button"
+              aria-label="Profil"
+              onClick={() => setProfileOpen(true)}
+              className={`${iconBase} ${profileOpen ? pillActive : pill}`}
+            >
+              <User size={19} strokeWidth={2} />
+            </button>
+          </div>
 
-          {/* LOGO REOWN */}
-          <Link 
-            href="/penjual/beranda"
-            className="logo-btn"
-            onMouseEnter={() => setIsLogoHovered(true)}
-            onMouseLeave={() => setIsLogoHovered(false)}
-            style={{ 
-              textDecoration: 'none',
-              backgroundColor: '#D95A36', 
-              padding: '8px 20px', 
-              borderRadius: '20px', 
-              boxShadow: isLogoHovered ? '0 8px 20px rgba(217, 90, 54, 0.4)' : '0 4px 10px rgba(0,0,0,0.15)',
-              display: 'flex', 
-              alignItems: 'center',
-              cursor: 'pointer',
-              transform: isLogoHovered ? 'scale(1.05) translateY(-2px)' : 'scale(1)',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-            }} 
-          >
-            <h2 style={{ fontFamily: 'Fraunces, serif', color: '#FFF', margin: 0, fontSize: '20px', letterSpacing: '0.5px' }}>
-              Re<span style={{ color: '#86efac' }}>O</span>wn
-            </h2>
-          </Link>
-        </div>
+          {/* Mobile: burger */}
+          <div className="relative xl:hidden">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label={menuOpen ? "Tutup menu" : "Buka menu"}
+              aria-expanded={menuOpen}
+              className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[1.5px] ${s.burger}`}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                {menuOpen ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+              </svg>
+            </button>
 
-        {/* Tengah: Tombol Navigasi Utama Seller */}
-        <div className={`nav-menu ${isOpen ? 'open' : ''}`} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {navItems.map((item) => {
-            const isActive = pathname === item.path;
-            const isHovered = hoveredNav === item.id;
-            const IconComponent = item.icon;
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 -z-10" onClick={() => setMenuOpen(false)} aria-hidden />
+                <div className="absolute right-0 mt-3 w-64 rounded-2xl bg-white p-3 shadow-xl">
+                  {NAV_ITEMS.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.path}
+                      onClick={() => setMenuOpen(false)}
+                      aria-current={pathname === item.path ? "page" : undefined}
+                      className={`block rounded-xl px-4 py-3 text-base font-medium hover:bg-orange-50 ${
+                        pathname === item.path ? "bg-[#95F57C]/40 text-stone-900" : "text-stone-800"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <div className="mt-2 flex flex-col gap-1 border-t border-stone-100 pt-3">
+                    {/* Tombol Chat Mobile */}
+                    <button
+                      type="button"
+                      onClick={() => { setMenuOpen(false); setChatOpen(true); }}
+                      className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium text-stone-800 hover:bg-orange-50 w-full"
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <MessageSquare size={18} /> Chat
+                      </span>
+                      {sellerUnreadChatCount > 0 && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#4ADE80] text-[11px] font-bold text-stone-900 border border-black">
+                          {sellerUnreadChatCount}
+                        </span>
+                      )}
+                    </button>
+                    
+                    {/* Tombol Notifikasi Mobile dengan Badge Warna Hijau */}
+                    <button
+                      type="button"
+                      onClick={() => { setMenuOpen(false); setNotifOpen(true); }}
+                      className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium text-stone-800 hover:bg-orange-50 w-full"
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Bell size={18} /> Notifikasi
+                      </span>
+                      {sellerUnreadCount > 0 && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#4ADE80] text-[11px] font-bold text-stone-900 border border-black">
+                          {sellerUnreadCount}
+                        </span>
+                      )}
+                    </button>
 
-            return (
-              <Link
-                key={item.id}
-                href={item.path}
-                onClick={() => setIsOpen(false)}
-                onMouseEnter={() => setHoveredNav(item.id)}
-                onMouseLeave={() => setHoveredNav(null)}
-                style={{
-                  textDecoration: 'none',
-                  fontFamily: 'Inter, sans-serif',
-                  border: isActive ? '2px solid #FFF' : 'none',
-                  cursor: 'pointer',
-                  backgroundColor: isActive ? '#C54E2D' : isHovered ? '#E87A5D' : '#D95A36',
-                  color: '#FFF',
-                  padding: '8px 18px',
-                  borderRadius: '20px',
-                  fontSize: '13px',
-                  fontWeight: isActive ? 'bold' : '600',
-                  boxShadow: isHovered || isActive ? '0 6px 14px rgba(217, 90, 54, 0.4)' : '0 4px 10px rgba(0,0,0,0.15)',
-                  transform: isHovered ? 'translateY(-2px) scale(1.05)' : isActive ? 'scale(1.02)' : 'scale(1)',
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  outline: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                {IconComponent && <IconComponent size={15} />}
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
+                    <button
+                      type="button"
+                      onClick={() => { setMenuOpen(false); setProfileOpen(true); }}
+                      className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-medium text-stone-800 hover:bg-orange-50"
+                    >
+                      <User size={18} /> Profil
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </nav>
+      </ScrollAwareHeader>
 
-        {/* Kanan: Ikon Akses Cepat Seller */}
-        <div className="action-icons-group" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          
-          {/* TOMBOL CHAT (Memicu SellerChatPopover) */}
-          <button 
-            onClick={() => setIsChatOpen(true)} // 👈 3. Buka SellerChatPopover saat diklik
-            onMouseEnter={() => setHoveredIcon('chat')}
-            onMouseLeave={() => setHoveredIcon(null)}
-            style={{ 
-              width: '38px', 
-              height: '38px', 
-              borderRadius: '50%', 
-              border: 'none', 
-              backgroundColor: hoveredIcon === 'chat' ? '#E87A5D' : '#D95A36', 
-              boxShadow: hoveredIcon === 'chat' ? '0 6px 14px rgba(217, 90, 54, 0.45)' : '0 4px 10px rgba(0,0,0,0.15)', 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              transform: hoveredIcon === 'chat' ? 'translateY(-2px) scale(1.08)' : 'scale(1)',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            <MessageSquare size={18} color="#FFF" />
-          </button>
-
-          {/* TOMBOL NOTIFIKASI */}
-          <button 
-            onClick={() => alert('Tidak ada notifikasi baru.')}
-            onMouseEnter={() => setHoveredIcon('bell')}
-            onMouseLeave={() => setHoveredIcon(null)}
-            style={{ 
-              width: '38px', 
-              height: '38px', 
-              borderRadius: '50%', 
-              border: 'none', 
-              backgroundColor: hoveredIcon === 'bell' ? '#E87A5D' : '#D95A36', 
-              boxShadow: hoveredIcon === 'bell' ? '0 6px 14px rgba(217, 90, 54, 0.45)' : '0 4px 10px rgba(0,0,0,0.15)', 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              transform: hoveredIcon === 'bell' ? 'translateY(-2px) scale(1.08)' : 'scale(1)',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            <Bell size={18} color="#FFF" />
-          </button>
-
-          {/* TOMBOL PROFIL */}
-          <button 
-            onClick={() => setIsProfileOpen(true)}
-            onMouseEnter={() => setHoveredIcon('profile')}
-            onMouseLeave={() => setHoveredIcon(null)}
-            style={{ 
-              width: '38px', 
-              height: '38px', 
-              borderRadius: '50%', 
-              border: 'none', 
-              backgroundColor: hoveredIcon === 'profile' ? '#E87A5D' : '#D95A36', 
-              boxShadow: hoveredIcon === 'profile' ? '0 6px 14px rgba(217, 90, 54, 0.45)' : '0 4px 10px rgba(0,0,0,0.15)', 
-              cursor: 'pointer', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              transform: hoveredIcon === 'profile' ? 'translateY(-2px) scale(1.08)' : 'scale(1)',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            <User size={18} color="#FFF" />
-          </button>
-
-        </div>
-      </nav>
-
-      {/* RENDER POPOVER PROFIL & CHAT */}
-      <ProfilePopover 
-        isOpen={isProfileOpen} 
-        onClose={() => setIsProfileOpen(false)} 
-      />
-
-      <SellerChatPopover 
-        isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)} 
-      />
+      {/* Popover Profil, Notifikasi, & Chat Seller */}
+      <ProfilePopover isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
+      <SellerNotificationPopover isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
+      <ChatPopover isOpen={chatOpen} onClose={() => setChatOpen(false)} storeName="Rayya Store" />
     </>
   );
 }

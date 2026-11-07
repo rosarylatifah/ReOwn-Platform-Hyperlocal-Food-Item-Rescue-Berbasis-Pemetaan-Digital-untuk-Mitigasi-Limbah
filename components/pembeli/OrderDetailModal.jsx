@@ -3,10 +3,20 @@
 import React from 'react';
 import { X, MessageCircle, Ban, MapPin, Calendar, Clock, ShoppingBag, Package } from 'lucide-react';
 import { useOrderDetail } from '@/app/pembeli/hooks/useOrderDetail';
+import { fraunces } from '@/lib/fonts';
+
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
+
+const labelClass = "mb-1 block text-[11px] font-bold uppercase text-stone-500";
+const fieldClass =
+  "box-border w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-[9px] text-[13px] text-stone-900";
+const accentFieldClass =
+  "box-border flex w-full items-center gap-1.5 rounded-xl border border-[#D85834]/25 bg-[#FBE9E2] px-3 py-[9px] font-semibold text-[#D85834]";
 
 export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
   const details = useOrderDetail(order, onClose, onCancelOrder);
-  
+
   if (!order || !details) return null;
 
   const {
@@ -27,157 +37,75 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
   } = details;
 
   return (
-    <div 
+    <div
       onClick={onClose}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.45)',
-        backdropFilter: 'blur(5px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1100,
-        padding: '20px',
-        boxSizing: 'border-box'
-      }}
+      className="fixed left-0 top-0 z-[1100] box-border flex h-screen w-screen items-center justify-center bg-black/45 p-5 backdrop-blur-[5px]"
     >
-      <style jsx>{`
-        .btn-chat {
-          border: 1.5px solid #D95A36 !important;
-          background-color: #FFF !important;
-          color: #D95A36 !important;
-        }
-        .btn-chat:hover {
-          background-color: #D95A36 !important;
-          color: #FFF !important;
-          box-shadow: 0 4px 14px rgba(217, 90, 54, 0.25) !important;
-          transform: translateY(-1px);
-        }
-        .btn-chat:active {
-          transform: scale(0.98);
-        }
-
-        .btn-cancel:hover {
-          background-color: #FEE2E2 !important;
-          border-color: #DC2626 !important;
-          color: #B91C1C !important;
-          transform: translateY(-1px);
-        }
-        .btn-cancel:active {
-          transform: scale(0.98);
-        }
-
-        .btn-close:hover {
-          background-color: #E5E7EB !important;
-          color: #1A1A1A !important;
-        }
-      `}</style>
-
-      <div 
+      <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          backgroundColor: '#FFF',
-          borderRadius: '24px',
-          width: '100%',
-          maxWidth: '720px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          padding: '28px',
-          boxShadow: '0 24px 48px rgba(0,0,0,0.18)',
-          position: 'relative',
-          fontFamily: 'Inter, sans-serif'
-        }}
+        className="relative max-h-[90vh] w-full max-w-[720px] overflow-y-auto rounded-[22px] bg-white p-5 shadow-[0_24px_50px_rgba(120,70,30,0.22)] ring-1 ring-stone-100 sm:p-7"
       >
         {/* Header Title & Close Button */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #F0F0F0', paddingBottom: '12px' }}>
+        <div className="mb-5 flex items-center justify-between border-b border-stone-200 pb-3">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#D95A36', textTransform: 'uppercase' }}>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase text-[#D85834]">
                 ID: {order.id || 'REQ-000'}
               </span>
-              <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', backgroundColor: '#FFF3ED', color: '#D95A36' }}>
+              <span className="rounded-full bg-[#FBE9E2] px-2.5 py-0.5 text-[10px] font-bold text-[#D85834]">
                 {currentStatus}
               </span>
             </div>
-            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '21px', color: '#1A1A1A', margin: '2px 0 0 0', fontWeight: 'bold' }}>
+            <h3 className={`${fraunces.className} mt-0.5 text-xl font-extrabold text-stone-900 sm:text-[21px]`}>
               Rincian Detail Pesanan
             </h3>
           </div>
 
-          <button 
+          <button
+            type="button"
             onClick={onClose}
-            className="btn-close"
-            style={{
-              border: 'none',
-              backgroundColor: '#F3F4F6',
-              borderRadius: '50%',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: '#555',
-              transition: 'all 0.2s ease'
-            }}
+            aria-label="Tutup"
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border-[1.5px] border-stone-900 text-stone-900 transition-colors duration-200 hover:bg-stone-900 hover:text-white ${focusRing}`}
           >
-            <X size={18} />
+            <X size={18} aria-hidden />
           </button>
         </div>
 
-        {/* MAIN GRID: 2 KOLOM RAPI & SEJAJAR */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'stretch' }}>
-          
+        {/* MAIN GRID: 2 KOLOM (mobile: 1 kolom) */}
+        <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2">
+
           {/* SISI KIRI: Detail Info Utama */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="flex flex-col gap-2.5">
             <div>
-              <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Nama Produk
-              </label>
-              <div style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid #E5E7EB', backgroundColor: '#FAFAFA', fontSize: '13px', fontWeight: 'bold', color: '#1A1A1A', boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Package size={14} color="#D95A36" />
+              <label className={labelClass}>Nama Produk</label>
+              <div className={`${fieldClass} flex items-center gap-1.5 font-bold`}>
+                <Package size={14} className="text-[#D85834]" aria-hidden />
                 <span>{productName}</span>
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Nama Pembeli
-              </label>
-              <div style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid #E5E7EB', backgroundColor: '#FAFAFA', fontSize: '13px', color: '#1A1A1A', boxSizing: 'border-box' }}>
-                {buyerName}
-              </div>
+              <label className={labelClass}>Nama Pembeli</label>
+              <div className={fieldClass}>{buyerName}</div>
             </div>
 
             <div>
-              <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Nama Penjual / Toko
-              </label>
-              <div style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid #E5E7EB', backgroundColor: '#FAFAFA', fontSize: '13px', color: '#1A1A1A', fontWeight: '600', boxSizing: 'border-box' }}>
-                {sellerName}
-              </div>
+              <label className={labelClass}>Nama Penjual / Toko</label>
+              <div className={`${fieldClass} font-semibold`}>{sellerName}</div>
             </div>
 
             <div>
-              <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Alamat Penjual
-              </label>
-              <div style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid #E5E7EB', backgroundColor: '#FAFAFA', fontSize: '12px', color: '#555', lineHeight: '1.4', boxSizing: 'border-box', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                <MapPin size={14} color="#D95A36" style={{ marginTop: '2px', flexShrink: 0 }} />
+              <label className={labelClass}>Alamat Penjual</label>
+              <div className={`${fieldClass} flex items-start gap-1.5 text-xs leading-snug text-stone-600`}>
+                <MapPin size={14} className="mt-0.5 shrink-0 text-[#D85834]" aria-hidden />
                 <span>{sellerAddress}</span>
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Tanggal Pemesanan
-              </label>
-              <div style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid #E5E7EB', backgroundColor: '#FAFAFA', fontSize: '12px', color: '#1A1A1A', boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Calendar size={14} color="#666" />
+              <label className={labelClass}>Tanggal Pemesanan</label>
+              <div className={`${fieldClass} flex items-center gap-1.5 text-xs`}>
+                <Calendar size={14} className="text-stone-500" aria-hidden />
                 <span>{orderDate}</span>
               </div>
             </div>
@@ -185,125 +113,68 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
             {/* Tanggal Konfirmasi Penjual (HANYA MUNCUL DI STATUS DALAM PROSES) */}
             {(order.confirmDate || currentStatus === 'Dalam Proses') && (
               <div>
-                <label style={{ fontSize: '11px', fontWeight: '700', color: '#D95A36', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                  Tanggal Konfirmasi Penjual
-                </label>
-                <div style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid #FFDBCC', backgroundColor: '#FFF3ED', fontSize: '12px', color: '#D95A36', fontWeight: '600', boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Clock size={14} color="#D95A36" />
+                <label className={`${labelClass} text-[#D85834]`}>Tanggal Konfirmasi Penjual</label>
+                <div className={`${accentFieldClass} text-xs`}>
+                  <Clock size={14} aria-hidden />
                   <span>{confirmDate}</span>
                 </div>
               </div>
             )}
 
-            <div style={{ marginTop: 'auto' }}>
-              <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Total Pembayaran
-              </label>
-              <div style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #FFDBCC', backgroundColor: '#FFF3ED', fontSize: '15px', fontWeight: 'bold', color: '#D95A36', boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ShoppingBag size={16} color="#D95A36" />
+            <div className="mt-auto">
+              <label className={labelClass}>Total Pembayaran</label>
+              <div className={`${accentFieldClass} px-3.5 py-2.5 text-[15px] font-bold`}>
+                <ShoppingBag size={16} aria-hidden />
                 <span>{totalPrice}</span>
               </div>
             </div>
           </div>
 
-          {/* SISI KANAN: Gambar Utuh, Deskripsi, Pengantaran & Aksi */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', justifyContent: 'space-between' }}>
-            
-            {/* Gambar Produk Utuh */}
-            <div style={{
-              width: '100%',
-              height: '130px',
-              borderRadius: '12px',
-              border: '1px solid #E5E7EB',
-              overflow: 'hidden',
-              backgroundColor: '#F9FAFB',
-              flexShrink: 0
-            }}>
-              <img 
-                src={productImage} 
-                alt={productName} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          {/* SISI KANAN: Gambar, Deskripsi, Pengantaran & Aksi */}
+          <div className="flex flex-col justify-between gap-2.5">
+
+            {/* Gambar Produk */}
+            <div className="h-[130px] w-full shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-amber-100 to-orange-200 ring-1 ring-stone-100">
+              <img
+                src={productImage}
+                alt={productName}
+                className="h-full w-full object-cover"
               />
             </div>
 
             {/* Deskripsi Produk */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Deskripsi Produk
-              </label>
-              <div style={{
-                width: '100%',
-                flex: 1,
-                minHeight: '70px',
-                padding: '10px 12px',
-                borderRadius: '10px',
-                border: '1px solid #E5E7EB',
-                backgroundColor: '#FAFAFA',
-                fontSize: '12px',
-                color: '#555',
-                lineHeight: '1.45',
-                boxSizing: 'border-box'
-              }}>
+            <div className="flex flex-1 flex-col">
+              <label className={labelClass}>Deskripsi Produk</label>
+              <div className={`${fieldClass} min-h-[70px] flex-1 py-2.5 text-xs leading-relaxed text-stone-600`}>
                 {description}
               </div>
             </div>
 
             {/* Opsi Pengantaran */}
             <div>
-              <label style={{ fontSize: '11px', fontWeight: '700', color: '#666', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Opsi Pengantaran
-              </label>
-              <div style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid #E5E7EB', backgroundColor: '#FAFAFA', fontSize: '12px', color: '#1A1A1A', fontWeight: '600', boxSizing: 'border-box' }}>
-                {deliveryOption}
-              </div>
+              <label className={labelClass}>Opsi Pengantaran</label>
+              <div className={`${fieldClass} text-xs font-semibold`}>{deliveryOption}</div>
             </div>
 
             {/* AREA TOMBOL AKSI */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-              
-              <button 
+            <div className="mt-1 flex flex-col gap-2">
+
+              <button
+                type="button"
                 onClick={handleContactSeller}
-                className="btn-chat"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center', // Benerin properti flexbox dari justify ke justifyContent
-                  gap: '8px',
-                  transition: 'all 0.2s ease'
-                }}
+                className={`flex w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-[#D85834] bg-white px-4 py-2.5 text-[13px] font-bold text-[#D85834] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#D85834] hover:text-white hover:shadow-md active:translate-y-0 active:scale-95 ${focusRing}`}
               >
-                <MessageCircle size={16} /> Hubungi Penjual
+                <MessageCircle size={16} aria-hidden /> Hubungi Penjual
               </button>
 
               {/* HANYA MUNCUL JIKA STATUS 'Menunggu Konfirmasi' / BISA DICANCEL */}
               {isCancelable && (
-                <button 
+                <button
+                  type="button"
                   onClick={handleCancel}
-                  className="btn-cancel"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '10px',
-                    border: '1px solid #FCA5A5',
-                    backgroundColor: '#FEF2F2',
-                    color: '#DC2626',
-                    fontSize: '13px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center', // Benerin properti flexbox dari justify ke justifyContent
-                    gap: '8px',
-                    transition: 'all 0.2s ease'
-                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-red-300 bg-red-50 px-4 py-2.5 text-[13px] font-bold text-red-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-red-600 hover:bg-red-100 hover:text-red-700 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                 >
-                  <Ban size={16} /> Batalkan Pesanan
+                  <Ban size={16} aria-hidden /> Batalkan Pesanan
                 </button>
               )}
 

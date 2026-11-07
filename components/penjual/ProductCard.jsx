@@ -4,85 +4,58 @@ import React from 'react';
 import { MapPin, Edit2, Trash2, Clock, Package } from 'lucide-react';
 
 export default function ProductCard({ item, isHovered, onHover, onLeave, onEdit, onDelete }) {
-  const checkStatus = (deadlineString) => {
-    if (!deadlineString) return { status: 'Available', color: '#2E7D32', text: 'Tersedia' };
-    const now = new Date();
-    const deadline = new Date(deadlineString);
-    const diffHours = (deadline - now) / (1000 * 60 * 60);
-
-    if (diffHours <= 0) {
-      return { status: 'Expired', color: '#DC2626', text: 'Expired' };
-    } else if (diffHours <= 6) {
-      return { status: 'Last Chance', color: '#D95A36', text: 'Last Chance' };
-    } else {
-      return { status: 'Available', color: '#2E7D32', text: 'Tersedia' };
-    }
-  };
-
-  const statusInfo = checkStatus(item.deadline);
+  const isFood = String(item.category || '').toLowerCase() === 'makanan';
 
   return (
-    <div 
+    <div
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
-      style={{ 
-        backgroundColor: '#FFF', 
-        borderRadius: '20px', 
-        overflow: 'hidden', 
-        border: isHovered ? '1.5px solid #D95A36' : '1px solid rgba(0,0,0,0.06)',
-        boxShadow: isHovered ? '0 15px 35px rgba(217, 90, 54, 0.15)' : '0 6px 18px rgba(0,0,0,0.05)',
-        transform: isHovered ? 'translateY(-6px)' : 'translateY(0)',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
+      className="group relative flex flex-col overflow-hidden rounded-[22px] bg-white shadow-[4px_6px_8px_-2px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[8px_10px_8px_-2px_rgba(0,0,0,0.3)]"
     >
-      <div style={{ position: 'relative', width: '100%', height: '180px', backgroundColor: '#F9F9F9', overflow: 'hidden' }}>
-        <img 
-          src={item.image} 
-          alt={item.name} 
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'cover',
-            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-            transition: 'transform 0.3s ease'
-          }} 
+      <div className="relative h-[180px] w-full overflow-hidden bg-[#FFF7E9]">
+        <img
+          src={item.image}
+          alt={item.name}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <span style={{ 
-          position: 'absolute', top: '12px', left: '12px', 
-          backgroundColor: item.category === 'Makanan' ? '#D95A36' : '#2563EB', 
-          color: '#FFF', padding: '5px 12px', borderRadius: '15px', 
-          fontSize: '11px', fontWeight: 'bold', boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-        }}>
+        <span
+          className={`absolute left-3 top-3 rounded-full border-2 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide capitalize shadow-sm ${
+            isFood ? 'border-[#F23A10] text-[#E0452A]' : 'border-[#16A34A] text-[#15803D]'
+          }`}
+        >
           {item.category}
         </span>
       </div>
 
-      <div style={{ padding: '20px', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div className="flex grow flex-col justify-between p-5">
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-            <h4 style={{ 
-              margin: 0, fontSize: '16px', color: isHovered ? '#D95A36' : '#1A1A1A', 
-              fontWeight: '700', lineHeight: '1.3', maxWidth: '75%',
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-            }}>
+          <div className="mb-2 flex items-start justify-between">
+            <h4 className="m-0 max-w-[75%] truncate text-base font-bold leading-snug text-stone-900 transition-colors group-hover:text-[#F23A10]">
               {item.name}
             </h4>
-            
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <button onClick={() => onEdit(item)} title="Edit" style={{ background: 'none', border: '1px solid #E5E5E5', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex' }}>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => onEdit(item)}
+                title="Edit Produk"
+                aria-label="Edit Produk"
+                className="flex rounded-lg border-2 border-stone-200 bg-white p-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#95F57C] hover:bg-[#95F57C]"
+              >
                 <Edit2 size={14} color="#444" />
               </button>
-              <button onClick={() => onDelete(item.id, item.name)} title="Hapus" style={{ background: 'none', border: '1px solid #E5E5E5', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex' }}>
+              <button
+                onClick={() => onDelete(item.id, item.name)}
+                title="Hapus Produk"
+                aria-label="Hapus Produk"
+                className="flex rounded-lg border-2 border-stone-200 bg-white p-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#F23A10] hover:bg-[#F23A10]/10"
+              >
                 <Trash2 size={14} color="#D93025" />
               </button>
             </div>
           </div>
-          
-          <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <MapPin size={13} color="#D95A36" /> {item.location}
+
+          <p className="mb-3.5 mt-0 flex items-center gap-1 text-xs text-stone-600">
+            <MapPin size={13} color="#F23A10" /> {item.location}
           </p>
 
           <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#444', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -96,15 +69,15 @@ export default function ProductCard({ item, isHovered, onHover, onLeave, onEdit,
           )}
         </div>
 
-        <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="flex items-center justify-between border-t border-stone-100 pt-3">
           <div>
-            <span style={{ fontSize: '10px', color: '#888', display: 'block' }}>Harga</span>
-            <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#D95A36' }}>Rp {item.price || '0'}</span>
+            <span className="block text-[10px] uppercase tracking-wide text-stone-500">Harga</span>
+            <span className="text-[15px] font-bold text-[#F23A10]">{item.price}</span>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ fontSize: '10px', color: '#888', display: 'block' }}>Status</span>
-            <span style={{ fontSize: '11px', fontWeight: 'bold', color: statusInfo.color }}>
-              {statusInfo.text}
+          <div className="text-right">
+            <span className="block text-[10px] uppercase tracking-wide text-stone-500">Status</span>
+            <span className="rounded-full bg-[#16A34A]/10 px-2.5 py-0.5 text-[11px] font-bold text-[#15803D]">
+              {item.status}
             </span>
           </div>
         </div>

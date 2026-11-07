@@ -5,7 +5,7 @@ import AppealDetailModal from "@/components/admin/AppealDetailModal";
 import EmptyState from "@/components/admin/EmptyState";
 import EvidenceGallery from "@/components/admin/EvidenceGallery";
 import EvidenceThumb from "@/components/admin/EvidenceThumb";
-import { SearchInput, Toolbar } from "@/components/admin/Filters";
+import { DateFilter, SearchInput, Toolbar } from "@/components/admin/Filters";
 import Pagination, { usePaged } from "@/components/admin/Pagination";
 import ReportDetailModal from "@/components/admin/ReportDetailModal";
 import StatusChip from "@/components/admin/StatusChip";
@@ -13,10 +13,15 @@ import Tabs from "@/components/admin/Tabs";
 import { fmtDateTime } from "@/lib/admin/format";
 import { useAdmin } from "@/lib/admin/store";
 
+const startOf = (d) => (d ? new Date(d + "T00:00:00").getTime() : null);
+const endOf = (d) => (d ? new Date(d + "T23:59:59.999").getTime() : null);
+
 export default function LaporanPage() {
   const { reports, appeals, counts, getUser, getProduct, startReview } = useAdmin();
   const [tab, setTab] = useState("baru");
   const [query, setQuery] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [openReport, setOpenReport] = useState(null);
   const [openAppeal, setOpenAppeal] = useState(null);
 
@@ -28,6 +33,15 @@ export default function LaporanPage() {
     !q || parts.some((p) => p?.toLowerCase().includes(q));
   const productName = (id) => (id ? getProduct(id)?.name : undefined);
 
+  const inRange = (at) => {
+    const f = startOf(from);
+    const t = endOf(to);
+    if (!f && !t) return true;
+    if (!at) return false;
+    const ts = new Date(at).getTime();
+    return (f === null || ts >= f) && (t === null || ts <= t);
+  };
+
   const open = reports
     .filter((r) => r.status !== "selesai")
     .filter((r) =>
@@ -36,11 +50,13 @@ export default function LaporanPage() {
         productName(r.productId), r.status === "baru" ? "baru" : "diproses",
       ),
     )
+    .filter((r) => inRange(r.createdAt))
     .sort((a, b) => byDateDesc(a.createdAt, b.createdAt));
 
   const pendingAppeals = appeals
     .filter((a) => a.status === "menunggu")
     .filter((a) => match(name(a.userId), a.message, productName(a.productId), a.productId ? undefined : "sanksi akun"))
+    .filter((a) => inRange(a.createdAt))
     .sort((a, b) => byDateDesc(a.createdAt, b.createdAt));
 
   const doneAll = [
@@ -54,23 +70,35 @@ export default function LaporanPage() {
     })),
   ].sort((a, b) => byDateDesc(a.at, b.at));
 
-  const done = doneAll.filter((d) =>
-    match(d.parties, d.summary, d.kind, d.accepted ? "diterima" : "ditolak"),
-  );
+  const done = doneAll
+    .filter((d) => match(d.parties, d.summary, d.kind, d.accepted ? "diterima" : "ditolak"))
+    .filter((d) => inRange(d.at));
 
   const pOpen = usePaged(open);
   const pAppeal = usePaged(pendingAppeals);
   const pDone = usePaged(done);
 
-  const onSearch = (v) => {
-    setQuery(v);
+  const resetPages = () => {
     pOpen.setPage(1);
     pAppeal.setPage(1);
     pDone.setPage(1);
   };
 
-  const emptyTitle = (fallback) => (q ? `Tidak ada hasil untuk “${query.trim()}”` : fallback);
-  const emptyHint = (fallback) => (q ? "Coba kata kunci lain atau pindah ke tab lain." : fallback);
+  const onSearch = (v) => {
+    setQuery(v);
+    resetPages();
+  };
+
+  const hasFilter = q || from || to;
+  const clearFilters = () => {
+    setQuery("");
+    setFrom("");
+    setTo("");
+    resetPages();
+  };
+
+  const emptyTitle = (fallback) => (hasFilter ? "Tidak ada hasil untuk filter ini" : fallback);
+  const emptyHint = (fallback) => (hasFilter ? "Ubah kata kunci, rentang tanggal, atau pindah ke tab lain." : fallback);
 
   return (
     <>
@@ -90,6 +118,13 @@ export default function LaporanPage() {
           onChange={onSearch}
           placeholder="Cari pelapor, terlapor, alasan, atau produk…"
         />
+        <DateFilter label="Dari" value={from} onChange={(v) => { setFrom(v); resetPages(); }} />
+        <DateFilter label="Sampai" value={to} onChange={(v) => { setTo(v); resetPages(); }} />
+        {hasFilter && (
+          <button type="button" className="adm-tb-clear" onClick={clearFilters}>
+            Reset
+          </button>
+        )}
       </Toolbar>
 
       <section className="adm-panel">
@@ -116,9 +151,11 @@ export default function LaporanPage() {
                         <td><EvidenceThumb url={r.evidenceUrl} label={r.category} /></td>
                         <td><StatusChip tone={r.status === "baru" ? "warn" : "info"}>{r.status === "baru" ? "Baru" : "Diproses"}</StatusChip></td>
                         <td>
-                          <button type="button" className="adm-btn adm-btn--sm adm-btn--primary" onClick={() => { startReview(r.id); setOpenReport(r.id); }}>
-                            Tinjau
-                          </button>
+                          <div className="adm-actcol">
+                            <button type="button" className="adm-act adm-act--main" onClick={() => { startReview(r.id); setOpenReport(r.id); }}>
+                              Tinjau
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -152,7 +189,11 @@ export default function LaporanPage() {
                         <td className="adm-clamp">{a.message}</td>
                         <td><EvidenceGallery urls={a.evidence ?? []} label="Bukti banding" /></td>
                         <td>
-                          <button type="button" className="adm-btn adm-btn--sm adm-btn--primary" onClick={() => setOpenAppeal(a.id)}>Tinjau</button>
+                          <div className="adm-actcol">
+                            <button type="button" className="adm-act adm-act--main" onClick={() => setOpenAppeal(a.id)}>
+                              Tinjau
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -186,7 +227,11 @@ export default function LaporanPage() {
                         <td>{d.summary}</td>
                         <td><StatusChip tone={d.accepted ? "ok" : "muted"}>{d.accepted ? "Diterima" : "Ditolak"}</StatusChip></td>
                         <td>
-                          <button type="button" className="adm-btn adm-btn--sm" onClick={() => (d.kind === "laporan" ? setOpenReport(d.id) : setOpenAppeal(d.id))}>Lihat</button>
+                          <div className="adm-actcol">
+                            <button type="button" className="adm-act adm-act--ghost" onClick={() => (d.kind === "laporan" ? setOpenReport(d.id) : setOpenAppeal(d.id))}>
+                              Lihat
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

@@ -1,45 +1,34 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, ChevronRight } from 'lucide-react';
+import { fraunces } from '@/lib/fonts';
 
 export default function AvailableItemsCard({ isSelected, onClick, value = "24", change = "Aktif di etalase" }) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
     <div
       onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        backgroundColor: isSelected ? '#FFF3ED' : '#FFF',
-        borderRadius: '16px',
-        padding: '18px',
-        boxShadow: isSelected || isHovered ? '0 8px 20px rgba(217, 90, 54, 0.2)' : '0 2px 10px rgba(0,0,0,0.04)',
-        cursor: 'pointer',
-        border: isSelected ? '2px solid #D95A36' : '1px solid rgba(0,0,0,0.05)',
-        transform: isHovered || isSelected ? 'translateY(-4px)' : 'translateY(0)',
-        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between'
-      }}
+      className={`flex cursor-pointer flex-col justify-between rounded-[22px] p-[18px] transition-all duration-200 hover:-translate-y-1 hover:shadow-[6px_8px_8px_-2px_rgba(0,0,0,0.3)] ${
+        isSelected
+          ? '-translate-y-1 border-2 border-[#16A34A] bg-[#F0FDF4] shadow-[6px_8px_8px_-2px_rgba(0,0,0,0.3)]'
+          : 'border-2 border-transparent bg-white shadow-[4px_6px_8px_-2px_rgba(0,0,0,0.2)]'
+      }`}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <span style={{ fontSize: '11px', fontWeight: '600', color: '#666', lineHeight: '1.3' }}>
+      <div className="flex items-start justify-between">
+        <span className="text-[11px] font-semibold uppercase leading-tight tracking-wide text-stone-600">
           Barang Tersedia
         </span>
-        <div style={{ backgroundColor: '#F59E0B15', padding: '6px', borderRadius: '10px', color: '#F59E0B' }}>
+        <div className="rounded-xl bg-[#16A34A]/10 p-1.5 text-[#16A34A]">
           <Box size={16} />
         </div>
       </div>
 
       <div>
-        <h4 style={{ fontFamily: 'Fraunces, serif', fontSize: '28px', fontWeight: 'bold', color: '#1A1A1A', margin: '8px 0 2px 0' }}>
+        <h4 className={`${fraunces.className} mb-0.5 mt-2 text-[28px] font-extrabold text-stone-900`}>
           {value}
         </h4>
-        <span style={{ fontSize: '10px', color: '#888', display: 'flex', alignItems: 'center', gap: '2px' }}>
-          {change} <ChevronRight size={12} color="#D95A36" />
+        <span className="flex items-center gap-0.5 text-[11px] text-stone-500">
+          {change} <ChevronRight size={12} color="#16A34A" />
         </span>
       </div>
     </div>

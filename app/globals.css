@@ -100,3 +100,8 @@ body {
     animation: none;
   }
 }
+
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}

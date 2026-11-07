@@ -1,119 +1,76 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Plus, MapPin, AlertCircle, Store } from 'lucide-react';
+import React from 'react';
+import { Plus, MapPin, Store } from 'lucide-react';
 import StorePopover from '../profil/StorePopover';
+import { fraunces } from '@/lib/fonts';
 
-export default function ProductGrid({ 
-  products, 
-  activeStorePopover, 
-  setActiveStorePopover, 
-  onAddToCart, 
-  onSelectDetail, 
-  onReport 
+const focusRing =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
+
+export default function ProductGrid({
+  products,
+  activeStorePopover,
+  setActiveStorePopover,
+  onAddToCart,
+  onSelectDetail,
+  onReport
 }) {
-  const [hoveredCard, setHoveredCard] = useState(null);
-  const [hoveredPlusBtn, setHoveredPlusBtn] = useState(null);
-  const [hoveredDetailBtn, setHoveredDetailBtn] = useState(null);
-  const [hoveredReportBtn, setHoveredReportBtn] = useState(null);
-
   if (products.length === 0) {
     return (
-      <div style={{ 
-        backgroundColor: '#FFF', 
-        borderRadius: '20px', 
-        padding: '60px 20px', 
-        textAlign: 'center', 
-        border: '2px dashed #E5E7EB',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{
-          width: '48px', height: '48px', borderRadius: '50%',
-          backgroundColor: '#FFF3ED', color: '#D95A36',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginBottom: '12px'
-        }}>
+      <div className="flex flex-col items-center justify-center rounded-[26px] border-2 border-dashed border-[#E4CFB2] bg-white px-5 py-16 text-center shadow-[0_10px_30px_rgba(120,70,30,0.08)]">
+        <div className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#FBE9E2] text-[#D85834]">
           <Store size={24} />
         </div>
-        <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 6px 0', color: '#1A1A1A' }}>Belum Ada Produk</h3>
-        <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>Belum ada produk yang diposting oleh penjual.</p>
+        <h3 className={`${fraunces.className} text-xl font-extrabold text-stone-900`}>
+          Belum Ada Produk
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-stone-600">
+          Belum ada produk yang diposting oleh penjual.
+        </p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '22px' }}>
+    <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {products.map((item) => {
-        const isCardHovered = hoveredCard === item.id;
-        const isPlusHovered = hoveredPlusBtn === item.id;
-        const isDetailHovered = hoveredDetailBtn === item.id;
-        const isReportHovered = hoveredReportBtn === item.id;
         const storeName = item.sellerName || item.store || 'Toko Penjual';
 
         return (
-          <div 
-            key={item.id} 
-            onMouseEnter={() => setHoveredCard(item.id)}
-            onMouseLeave={() => setHoveredCard(null)}
-            style={{ 
-              backgroundColor: '#FFF', 
-              borderRadius: '16px', 
-              border: isCardHovered ? '1.5px solid #D95A36' : '1px solid rgba(0,0,0,0.05)',
-              boxShadow: isCardHovered ? '0 14px 32px rgba(217, 90, 54, 0.18)' : '0 4px 12px rgba(0,0,0,0.04)',
-              transform: isCardHovered ? 'translateY(-6px)' : 'translateY(0)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              position: 'relative',
-              zIndex: activeStorePopover === item.id ? 30 : 1 
-            }}
+          <div
+            key={item.id}
+            className={`group relative rounded-[22px] border border-stone-100 bg-white shadow-[0_10px_30px_rgba(120,70,30,0.08)] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#D85834]/40 hover:shadow-[0_20px_44px_rgba(120,70,30,0.15)] ${
+              activeStorePopover === item.id ? 'z-30' : 'z-[1]'
+            }`}
           >
-            <button
-              onClick={(e) => { e.stopPropagation(); onReport(item); }}
-              onMouseEnter={() => setHoveredReportBtn(item.id)}
-              onMouseLeave={() => setHoveredReportBtn(null)}
-              title="Laporkan produk"
-              style={{
-                position: 'absolute', top: '10px', right: '10px',
-                backgroundColor: isReportHovered ? '#DC2626' : 'rgba(255, 255, 255, 0.9)',
-                color: isReportHovered ? '#FFF' : '#666',
-                border: 'none', borderRadius: '50%', width: '28px', height: '28px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', zIndex: 2, boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                transform: isReportHovered ? 'scale(1.1)' : 'scale(1)',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <AlertCircle size={16} />
-            </button>
 
-            <div style={{ position: 'relative', height: '150px', overflow: 'hidden', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', backgroundColor: '#F9F9F9' }}>
-              <img 
-                src={item.image} 
-                alt={item.name} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover', transform: isCardHovered ? 'scale(1.08)' : 'scale(1)', transition: 'transform 0.4s ease' }} 
+            <div className="relative h-[150px] overflow-hidden rounded-t-[22px] bg-gradient-to-br from-amber-100 to-orange-200">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.08]"
               />
-              <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(0,0,0,0.7)', color: '#FFF', padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+              <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-stone-900 shadow-md backdrop-blur">
                 {item.distance || '1.2 km'}
               </span>
             </div>
 
-            <div style={{ padding: '16px' }}>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '600', color: isCardHovered ? '#D95A36' : '#1A1A1A' }}>
+            <div className="p-4">
+              <h4 className={`${fraunces.className} mb-1 truncate text-base font-extrabold leading-tight text-stone-900 transition-colors duration-200 group-hover:text-[#D85834]`}>
                 {item.name}
               </h4>
 
-              <div style={{ position: 'relative', marginBottom: '8px', display: 'inline-block' }}>
-                <span 
+              <div className="relative mb-2 inline-block">
+                <span
                   onClick={(e) => { e.stopPropagation(); setActiveStorePopover(activeStorePopover === item.id ? null : item.id); }}
-                  style={{ fontSize: '12px', color: '#D95A36', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
+                  className="cursor-pointer text-xs font-bold text-[#D85834] underline underline-offset-2 transition-colors hover:text-[#B94524]"
                 >
                   {storeName}
                 </span>
 
                 {activeStorePopover === item.id && (
-                  <StorePopover 
+                  <StorePopover
                     store={{ name: storeName, location: item.location || 'Batam Centre', totalProducts: 5, logo: item.image }}
                     onClose={() => setActiveStorePopover(null)}
                     positionStyle={{ top: '24px', left: '0px' }}
@@ -121,33 +78,34 @@ export default function ProductGrid({
                 )}
               </div>
 
-              <p style={{ margin: '0 0 14px 0', fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <MapPin size={12} color="#D95A36" /> {item.location || 'Batam'}
+              <p className="mb-3.5 flex items-center gap-1 text-xs text-stone-600">
+                <MapPin size={12} className="shrink-0 text-[#D85834]" />
+                <span className="truncate">{item.location || 'Batam'}</span>
               </p>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#D95A36' }}>{item.price}</span>
+<div className="flex flex-col gap-2.5">
+  <span className={`${fraunces.className} text-base font-extrabold text-[#D85834]`}>{item.price}</span>
 
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); onAddToCart(item); }}
-                    onMouseEnter={() => setHoveredPlusBtn(item.id)}
-                    onMouseLeave={() => setHoveredPlusBtn(null)}
-                    style={{ backgroundColor: isPlusHovered ? '#D95A36' : '#1A1A1A', color: '#FFF', border: 'none', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <Plus size={16} />
-                  </button>
+  <div className="flex items-center gap-1.5">
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onAddToCart(item); }}
+      title="Tambah ke Keranjang"
+      aria-label="Tambah ke keranjang"
+      className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#D85834] hover:shadow-lg active:translate-y-0 active:scale-95 ${focusRing}`}
+    >
+      <Plus size={16} />
+    </button>
 
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); onSelectDetail(item); }}
-                    onMouseEnter={() => setHoveredDetailBtn(item.id)}
-                    onMouseLeave={() => setHoveredDetailBtn(null)}
-                    style={{ backgroundColor: isDetailHovered ? '#D95A36' : '#1A1A1A', color: '#FFF', border: 'none', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}
-                  >
-                    LIHAT DETAIL
-                  </button>
-                </div>
-              </div>
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onSelectDetail(item); }}
+      className={`flex-1 whitespace-nowrap rounded-xl bg-[#D85834] px-3 py-2 text-xs font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#C24A28] hover:shadow-lg active:translate-y-0 active:scale-95 ${focusRing}`}
+    >
+      Lihat Detail
+    </button>
+  </div>
+</div>
             </div>
           </div>
         );

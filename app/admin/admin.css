@@ -511,3 +511,203 @@ span[class*="warn"] {
 .adm-root .adm-mini thead th:last-child:empty::after {
   content: "Aksi";
 }
+
+/* ===== Toolbar, pencarian, dan dropdown filter ===== */
+.adm-tb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 16px;
+}
+
+.adm-tb-search {
+  display: flex;
+  flex: 1 1 280px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 16px;
+  background: #fff;
+  border: 1.5px solid #e7ddd0;
+  border-radius: 999px;
+  color: #8a7f73;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.adm-tb-search:hover { border-color: #d85834; }
+.adm-tb-search:focus-within {
+  border-color: #d85834;
+  box-shadow: 0 0 0 4px rgba(216, 88, 52, 0.12);
+  color: #d85834;
+}
+.adm-tb-search svg { flex-shrink: 0; }
+.adm-tb-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: #1c1917;
+}
+.adm-tb-search input::placeholder { color: #a39a8f; }
+
+.adm-tb-select {
+  flex: 0 0 auto;
+  height: 44px;
+  padding: 0 40px 0 18px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23d85834' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 16px center;
+  border: 1.5px solid #e7ddd0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1917;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.adm-tb-select:hover { border-color: #d85834; }
+.adm-tb-select:focus {
+  outline: 0;
+  border-color: #d85834;
+  box-shadow: 0 0 0 4px rgba(216, 88, 52, 0.12);
+}
+
+/* Matikan outline kotak pada input pencarian; fokusnya sudah ditandai kapsul */
+.adm-tb-search input,
+.adm-tb-search input:focus,
+.adm-tb-search input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  background: transparent !important;
+  border-radius: 0;
+}
+
+.adm-tb-date {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 16px;
+  background: #fff;
+  border: 1.5px solid #e7ddd0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b6258;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.adm-tb-date:hover { border-color: #d85834; }
+.adm-tb-date:focus-within {
+  border-color: #d85834;
+  box-shadow: 0 0 0 4px rgba(216, 88, 52, 0.12);
+}
+.adm-tb-date input {
+  border: 0;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent;
+  font: inherit;
+  font-weight: 500;
+  color: #1c1917;
+  cursor: pointer;
+}
+
+/* ===== Kolom aksi: tombol seragam, satu kolom ===== */
+.adm-actcol {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 150px;
+  margin-left: auto;
+}
+
+.adm-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.15s, background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.adm-act:hover { transform: translateY(-1px); }
+.adm-act:active { transform: translateY(0) scale(0.98); }
+
+/* Tinjau banding */
+.adm-act--appeal {
+  background: #fff1c9;
+  border-color: #f2d37a;
+  color: #7a5a00;
+}
+.adm-act--appeal:hover { background: #ffe9a8; }
+
+/* Lihat detail */
+.adm-act--ghost {
+  background: #fff;
+  border-color: #d9cfc2;
+  color: #1c1917;
+}
+.adm-act--ghost:hover {
+  background: #fff7e9;
+  border-color: #d85834;
+  color: #d85834;
+}
+
+/* Pulihkan */
+.adm-act--main {
+  background: rgb(255, 91, 65);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(216, 88, 52, 0.25);
+}
+.adm-act--main:hover {
+  background: #fff;
+  border-color: #d85834;
+  color: #d85834;
+  box-shadow: 0 6px 16px rgba(216, 88, 52, 0.22);
+}
+
+/* Turunkan */
+.adm-act--danger {
+  background: #fdecea;
+  border-color: #f3b8b2;
+  color: #b42318;
+}
+.adm-act--danger:hover {
+  background: #fff;
+  border-color: #b42318;
+  color: #b42318;
+  box-shadow: 0 6px 16px rgba(180, 35, 24, 0.18);
+}
+
+/* Tombol reset filter di toolbar */
+.adm-tb-clear {
+  height: 44px;
+  padding: 0 18px;
+  border: 0;
+  background: transparent;
+  color: #d85834;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.adm-tb-clear:hover { color: #c24a28; }

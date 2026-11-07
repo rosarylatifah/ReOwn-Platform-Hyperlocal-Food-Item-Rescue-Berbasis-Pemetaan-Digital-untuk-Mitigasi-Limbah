@@ -1,180 +1,148 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Plus, Image as ImageIcon } from 'lucide-react';
-import SellerNavbar from '@/components/penjual/SellerNavbar'; // Pastikan path import ini bener sesuai foldermu
+import SellerNavbar from '@/components/penjual/SellerNavbar';
 import ProductCard from '@/components/penjual/ProductCard';
-import ProductModal from '@/components/penjual/ProductModal';
+import AddProductModal from '@/components/penjual/AddProductModal';
+import StatusDot from '@/components/ui/StatusDot';
+import { fraunces, gochiHand } from '@/lib/fonts';
+import { useProductManager } from '@/app/penjual/hooks/useProductManager';
+import { useNotification } from '@/app/context/notification';
 
 export default function SellerProductsPage() {
-  const [myProducts, setMyProducts] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProductId, setEditingProductId] = useState(null);
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    category: 'Makanan',
-    price: '',
-    stock: '1',
-    location: '',
-    description: '',
-    deadline: '',
-    image: '',
-    status: 'Available'
-  });
+  const {
+    myProducts,
+    isModalOpen,
+    setIsModalOpen,
+    editingProductId,
+    formData,
+    setFormData,
+    hoveredCard,
+    setHoveredCard,
+    hoveredAddBtn,
+    setHoveredAddBtn,
+    handleOpenAddModal,
+    handleOpenEditModal,
+    handleDelete: originalHandleDelete,
+    handleSubmitProduct: originalHandleSubmit,
+  } = useProductManager();
 
-  const [hoveredCard, setHoveredCard] = useState(null);
+  const { addNotification } = useNotification();
 
-  useEffect(() => {
-    const saved = localStorage.getItem('reown_seller_products');
-    if (saved) {
-      setMyProducts(JSON.parse(saved));
-    } else {
-      const initialData = [
-        {
-          id: 1,
-          name: 'Roti Sisa Bakery Layak Konsumsi',
-          category: 'Makanan',
-          price: '10000',
-          stock: '5',
-          location: 'Batam Centre',
-          description: 'Roti sisa hari ini masih empuk dan layak dikonsumsi.',
-          deadline: '2026-11-01T20:00',
-          image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=500&q=60',
-          status: 'Available'
-        }
-      ];
-      setMyProducts(initialData);
-      localStorage.setItem('reown_seller_products', JSON.stringify(initialData));
-    }
-  }, []);
-
-  const saveToStorage = (data) => {
-    setMyProducts(data);
-    localStorage.setItem('reown_seller_products', JSON.stringify(data));
-  };
-
-  const handleOpenAddModal = () => {
-    setEditingProductId(null);
-    setFormData({ name: '', category: 'Makanan', price: '', stock: '1', location: '', description: '', deadline: '', image: '', status: 'Available' });
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEditModal = (product) => {
-    setEditingProductId(product.id);
-    setFormData({
-      name: product.name || '',
-      category: product.category || 'Makanan',
-      price: product.price || '',
-      stock: product.stock || '1',
-      location: product.location || '',
-      description: product.description || '',
-      deadline: product.deadline || '',
-      image: product.image || '',
-      status: product.status || 'Available'
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (id, name) => {
-    if (confirm(`Yakin ingin menghapus produk "${name}"?`)) {
-      const filtered = myProducts.filter(item => item.id !== id);
-      saveToStorage(filtered);
-    }
-  };
-
+  // 1. Wrapper untuk Tambah / Edit Produk
   const handleSubmitProduct = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.location || !formData.deadline || !formData.stock) {
-      alert("Mohon isi Nama Produk, Stok, Lokasi, dan Batas Waktu (Deadline)!");
-      return;
-    }
+    const isEditing = Boolean(editingProductId);
+    
+    // Jalankan fungsi simpan/edit asli
+    originalHandleSubmit(e);
 
-    if (editingProductId) {
-      const updated = myProducts.map(item => 
-        item.id === editingProductId ? { ...item, ...formData } : item
-      );
-      saveToStorage(updated);
+    // Kirim notifikasi ke Admin berdasarkan aksi
+    if (isEditing) {
+      addNotification({
+        role: 'admin',
+        title: 'Produk Diperbarui Penjual',
+        message: `Penjual memperbarui informasi pada produk "${formData.name}".`,
+        type: 'info',
+        link: '/admin/laporan'
+      });
     } else {
-      const newProduct = {
-        id: Date.now(),
-        ...formData,
-        image: formData.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=60',
-        status: 'Available'
-      };
-      saveToStorage([newProduct, ...myProducts]);
+      addNotification({
+        role: 'admin',
+        title: 'Produk Baru Ditambahkan!',
+        message: `Penjual menambahkan produk baru: "${formData.name}". Silakan tinjau etalase.`,
+        type: 'order',
+        link: '/admin/laporan'
+      });
     }
+  };
 
-    setIsModalOpen(false);
+  // 2. Wrapper untuk Hapus Produk
+  const handleDelete = (productId) => {
+    // Cari data produk dulu buat ambil namanya sebelum dihapus
+    const targetProduct = myProducts.find((p) => p.id === productId);
+    
+    // Jalankan fungsi hapus asli
+    originalHandleDelete(productId);
+
+    // Kirim notifikasi ke Admin
+    addNotification({
+      role: 'admin',
+      title: 'Produk Dihapus Penjual',
+      message: `Penjual telah menghapus produk "${targetProduct?.name || 'Produk'}".`,
+      type: 'warning',
+      link: '/admin/laporan'
+    });
   };
 
   return (
-    <div style={{ backgroundColor: '#FAF6F0', minHeight: '100vh', paddingBottom: '50px', fontFamily: 'Inter, sans-serif' }}>
-      
-      {/* 1. PEMANGGILAN SELLER NAVBAR DI SINI */}
+    <div className="min-h-screen bg-[#FFF7E9] pb-12">
       <SellerNavbar />
 
-      {/* Konten Utama dengan jarak atas (paddingTop) supaya tidak tertutup navbar */}
-      <div style={{ width: '100%', paddingTop: '100px', paddingBottom: '30px', paddingLeft: '40px', paddingRight: '40px', boxSizing: 'border-box' }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '2px solid #EAE0D5', paddingBottom: '16px' }}>
+      <div className="mx-auto max-w-[1280px] px-5 pb-12 pt-24 md:px-8">
+        {/* HEADER */}
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#F23A10]/15 pb-5">
           <div>
-            <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '28px', color: '#1A1A1A', margin: '0 0 4px 0', fontWeight: 'bold' }}>
-              Kelola Produk Penjual
+            <p className="inline-flex items-center gap-2 rounded-full border-2 border-[#F23A10] bg-white px-3.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#E0452A]">
+              <StatusDot />
+              Etalase toko
+            </p>
+            <h1 className={`${fraunces.className} mt-3 text-3xl font-extrabold uppercase leading-[1.05] tracking-tight text-stone-900 md:text-[2.6rem]`}>
+              Kelola Produk
             </h1>
-            <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
-              Atur dan publikasikan daftar makanan atau barang rescue kamu di ReOwn.
+            <p className={`${gochiHand.className} mt-2 text-base leading-relaxed text-stone-600`}>
+              Atur dan pantau daftar produk yang kamu jual di ReOwn.
             </p>
           </div>
 
-          <button 
+          <button
             onClick={handleOpenAddModal}
-            style={{ 
-              backgroundColor: '#1A1A1A', color: '#FFF', border: 'none', 
-              padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px', 
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}
+            onMouseEnter={() => setHoveredAddBtn(true)}
+            onMouseLeave={() => setHoveredAddBtn(false)}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#F23A10] px-6 py-3 text-[13px] font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#95F57C] hover:text-stone-900 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#16A34A]"
           >
             <Plus size={18} strokeWidth={3} /> Tambah Produk
           </button>
         </div>
 
         {myProducts.length === 0 ? (
-          <div style={{ backgroundColor: '#FFF', borderRadius: '20px', padding: '60px 20px', textAlign: 'center', border: '2px dashed #E5E7EB', marginTop: '20px' }}>
-            <div style={{ width: '60px', height: '60px', backgroundColor: '#FAF0EC', color: '#D95A36', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+          <div className="mt-5 rounded-[22px] border-2 border-dashed border-[#F23A10]/30 bg-white px-5 py-16 text-center shadow-[4px_6px_8px_-2px_rgba(0,0,0,0.15)]">
+            <div className="mx-auto mb-4 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#F23A10]/10 text-[#F23A10]">
               <ImageIcon size={28} />
             </div>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1A1A1A', margin: '0 0 6px 0' }}>Belum Ada Produk Ditambahkan</h3>
-            <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
-              Gunakan tombol <strong>"+ Tambah Produk"</strong> di atas untuk mulai memasukkan listing rescue kamu.
+            <h3 className={`${fraunces.className} mb-1.5 text-lg font-extrabold uppercase tracking-tight text-stone-900`}>
+              Belum Ada Produk Ditambahkan
+            </h3>
+            <p className="m-0 text-[13px] text-stone-600">
+              Toko kamu masih kosong. Silakan gunakan tombol <strong>"+ Tambah Produk"</strong> di bagian atas untuk mulai menambahkan produk rescue.
             </p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px', paddingTop: '10px' }}>
-            {myProducts.Item?.map || myProducts.map((item) => (
-              <ProductCard 
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 pt-2.5">
+            {myProducts.map((item) => (
+              <ProductCard
                 key={item.id}
                 item={item}
                 isHovered={hoveredCard === item.id}
                 onHover={() => setHoveredCard(item.id)}
                 onLeave={() => setHoveredCard(null)}
                 onEdit={handleOpenEditModal}
-                onDelete={handleDelete}
+                onDelete={handleDelete} // 👈 Menggunakan fungsi wrapper hapus bernotifikasi
               />
             ))}
           </div>
         )}
-
       </div>
 
-      <ProductModal 
+      {/* MODAL FORM TAMBAH/EDIT */}
+      <AddProductModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         editingProductId={editingProductId}
         formData={formData}
         setFormData={setFormData}
-        onSubmit={handleSubmitProduct}
+        onSubmit={handleSubmitProduct} // 👈 Menggunakan fungsi wrapper submit bernotifikasi (Tambah/Edit)
       />
     </div>
   );

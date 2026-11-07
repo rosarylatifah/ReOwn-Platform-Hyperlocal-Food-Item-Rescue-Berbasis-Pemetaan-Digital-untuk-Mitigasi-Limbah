@@ -2,9 +2,10 @@
 
 import { motion } from "motion/react";
 import { useCart } from "@/lib/cart";
+import React from "react";
 
 /** Tombol keranjang di navbar. `className` diisi warna/border sesuai variant navbar. */
-export default function CartButton({ className = "" }: { className?: string }) {
+export default function CartButton({ className = "" }) {
   const { count, open, hydrated } = useCart();
   const shown = hydrated ? count : 0;
 
