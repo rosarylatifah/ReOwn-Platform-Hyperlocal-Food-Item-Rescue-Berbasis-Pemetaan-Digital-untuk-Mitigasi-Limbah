@@ -13,8 +13,8 @@ const accentFieldClass =
   "box-border flex w-full items-center gap-1.5 rounded-xl border border-[#D85834]/25 bg-[#FBE9E2] px-3 py-[9px] font-semibold text-[#D85834]";
 
 const STATUS_CLS = {
-  completed: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
+  Selesai: "bg-green-100 text-green-700",
+  Dibatalkan: "bg-red-100 text-red-700",
 };
 
 function Field({ label, Icon, children, accent = false, className = "" }) {
