@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MapPin, ChevronRight, Package } from 'lucide-react';
 import { useProfile } from '@/lib/ProfileContext';
+import { approxLocation } from '@/lib/pembeli/locationPrivacy';
 
 export default function StorePopover({ store, onClose, positionStyle }) {
   const router = useRouter();
@@ -80,4 +81,9 @@ export default function StorePopover({ store, onClose, positionStyle }) {
       </div>
     </div>
   );
+}
+// "Jl. Ahmad Yani, Batam Centre" -> "Batam Centre"
+export function areaOf(address = "") {
+  const parts = String(address).split(",").map((s) => s.trim()).filter(Boolean);
+  return parts.length > 1 ? parts[parts.length - 1] : parts[0] || "Batam";
 }

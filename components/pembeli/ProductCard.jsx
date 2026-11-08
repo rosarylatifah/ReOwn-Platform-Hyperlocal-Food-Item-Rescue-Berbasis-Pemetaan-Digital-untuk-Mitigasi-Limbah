@@ -1,9 +1,10 @@
 "use client";
 
 import React from 'react';
-import { Plus, MapPin, Clock } from 'lucide-react';
+import { Plus, MapPin } from 'lucide-react';
 import StorePopover from '../profil/StorePopover';
 import { fraunces } from '@/lib/fonts';
+import { approxLocation } from '@/lib/pembeli/locationPrivacy';
 
 const focusRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
@@ -27,19 +28,9 @@ export default function ProductCard({
         activeStorePopover === item.id ? 'z-30' : 'z-[1]'
       }`}
     >
-      {/* BADGE PROMO TERBATAS */}
-      {isPromo && (
-        <div className="absolute left-1.5 top-1.5 z-[2] flex items-center gap-1 rounded-full bg-[#D85834] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-md md:left-3 md:top-3 md:px-3 md:py-1 md:text-[10px]">
-          <Clock size={10} /> Promo Terbatas
-        </div>
-      )}
-
-      {/* BADGE JARAK */}
-      {!isPromo && item.distance && (
-        <span className="absolute left-1.5 top-1.5 z-[2] rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-bold text-stone-900 shadow-md backdrop-blur md:left-3 md:top-3 md:px-3 md:py-1 md:text-[11px]">
-          {item.distance}
-        </span>
-      )}
+<span className="absolute left-1.5 top-1.5 z-[2] rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-bold text-stone-900 shadow-md backdrop-blur md:left-3 md:top-3 md:px-3 md:py-1 md:text-[11px]">
+  {item.distance || '1.2 km'}
+</span>
 
       {/* WADAH GAMBAR */}
       <div className="relative h-[100px] w-full overflow-hidden rounded-t-2xl bg-gradient-to-br from-amber-100 to-orange-200 md:h-[150px] md:rounded-t-[22px]">

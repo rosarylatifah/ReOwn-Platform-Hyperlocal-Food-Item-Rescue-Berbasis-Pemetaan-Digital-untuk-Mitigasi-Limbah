@@ -2,7 +2,7 @@
 
 import React from "react";
 import { X, MapPin, Calendar, Clock, ShoppingBag, Package, User, Truck, MessageCircle } from "lucide-react";
-
+import OrderExtraInfo from "@/components/common/OrderExtraInfo";
 import { fraunces } from "@/lib/fonts";
 
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
@@ -124,7 +124,8 @@ export default function SellerOrderModal({ order, onClose }) {
             </button>
           </div>
         </div>
-      </div>
-    </div>
-  );
+           <OrderExtraInfo order={order} />
+         </div>
+       </div>
+     );
 }

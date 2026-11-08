@@ -4,6 +4,7 @@ import React from 'react';
 import { X, MessageCircle, Ban, MapPin, Calendar, Clock, ShoppingBag, Package } from 'lucide-react';
 import { useOrderDetail } from '@/app/pembeli/hooks/useOrderDetail';
 import { fraunces } from '@/lib/fonts';
+import { createPortal } from 'react-dom';
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
@@ -36,7 +37,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
     handleCancel
   } = details;
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       className="fixed left-0 top-0 z-[1100] box-border flex h-screen w-screen items-center justify-center bg-black/45 p-5 backdrop-blur-[5px]"
@@ -184,6 +185,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
 
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

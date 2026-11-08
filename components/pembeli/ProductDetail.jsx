@@ -4,6 +4,7 @@ import { useChat } from '@/app/pembeli/context/chat';
 import React, { useState } from 'react';
 import { Plus, MapPin, X, Minus, ShoppingCart, AlertCircle } from 'lucide-react';
 import { useCart } from '@/app/pembeli/context/cart';
+import { approxLocation } from '@/lib/pembeli/locationPrivacy';
 
 export default function ProductDetail({ product, onClose, onAddToCart, onReport }) {
   const { getItemQuantityInCart, getProductStock, addToCart } = useCart();
@@ -279,4 +280,10 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
       </div>
     </div>
   );
+}
+
+// "Jl. Ahmad Yani, Batam Centre" -> "Batam Centre"
+export function areaOf(address = "") {
+  const parts = String(address).split(",").map((s) => s.trim()).filter(Boolean);
+  return parts.length > 1 ? parts[parts.length - 1] : parts[0] || "Batam";
 }

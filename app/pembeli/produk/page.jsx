@@ -1,7 +1,7 @@
 // app/pembeli/produk/page.jsx
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Store, ChevronDown } from 'lucide-react';
 import { useUserLocation } from '@/lib/locationStore';
@@ -12,6 +12,7 @@ import ReportModal from '@/components/pembeli/ReportModal';
 import BuyerMap from '@/components/pembeli/BuyerMap';
 import { useCart } from '@/app/pembeli/context/cart';
 import { fraunces } from '@/lib/fonts';
+import { approxLocation } from '@/lib/pembeli/locationPrivacy';
 
 const batamCenterPos = [1.1186, 104.0487];
 
@@ -145,14 +146,17 @@ export default function BuyerProducts() {
     return R * c;
   };
 
-const displayedProducts = React.useMemo(() => {
-  const withDistance = filteredProducts.map((p) => {
-    const d = calculateDistance(userLoc.lat, userLoc.lng, p.lat || 1.1186, p.lng || 104.0487);
-    return { ...p, distanceKm: d, distance: `${d.toFixed(1)} km` };
-  });
-  if (selectedCategory === 'Terdekat') withDistance.sort((a, b) => a.distanceKm - b.distanceKm);
-  return withDistance;
-}, [filteredProducts, selectedCategory, userLoc.lat, userLoc.lng]);
+  const displayedProducts = useMemo(() => {
+    const withDistance = filteredProducts.map((p) => {
+      const a = approxLocation({ ...p, lat: p.lat ?? 1.1186, lng: p.lng ?? 104.0487 });
+      const d = calculateDistance(userLoc.lat, userLoc.lng, a.lat, a.lng);
+      return { ...p, distanceKm: d, distance: `${d.toFixed(1)} km` };
+    });
+    if (selectedCategory === 'Terdekat') {
+      withDistance.sort((a, b) => a.distanceKm - b.distanceKm);
+    }
+    return withDistance;
+  }, [filteredProducts, selectedCategory, userLoc.lat, userLoc.lng]);
 
   return (
     <div className="relative min-h-screen overflow-x-clip pb-16 pt-[100px]">

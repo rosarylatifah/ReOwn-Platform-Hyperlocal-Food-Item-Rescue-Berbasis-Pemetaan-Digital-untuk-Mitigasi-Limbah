@@ -38,23 +38,30 @@ export function ChatProvider({ children, role = "buyer" }) {
     setData(next);
   }, []);
 
-  const openChat = useCallback((info) => {
-    const id = `chat_${info.storeId}`;
-    update((d) => {
-      if (d.chats.some((c) => c.id === id)) return d;
-      return {
-        ...d,
-        chats: [...d.chats, {
-          id, storeId: info.storeId,
-          storeName: info.storeName || "Toko",
-          buyerName: info.buyerName || "Pembeli",
-          storeAvatar: info.avatar || avatarFor(info.storeName),
-          lastMessage: "", lastTs: Date.now(), unread: { buyer: 0, seller: 0 },
-        }],
-      };
-    });
-    return id;
-  }, [update]);
+const openChat = useCallback((info) => {
+  const key = info.storeId ?? info.storeName ?? "toko";
+  const id = `chat_${key}`;
+  update((d) => {
+    const exist = d.chats.find((c) => c.id === id);
+    if (exist) {
+      if (info.buyerName && exist.buyerName !== info.buyerName) {
+        return { ...d, chats: d.chats.map((c) => (c.id === id ? { ...c, buyerName: info.buyerName } : c)) };
+      }
+      return d;
+    }
+    return {
+      ...d,
+      chats: [...d.chats, {
+        id, storeId: key,
+        storeName: info.storeName || "Toko",
+        buyerName: info.buyerName || "Pembeli",
+        storeAvatar: info.avatar || avatarFor(info.storeName),
+        lastMessage: "", lastTs: Date.now(), unread: { buyer: 0, seller: 0 },
+      }],
+    };
+  });
+  return id;
+}, [update]);
 
   // Dipakai tombol "Hubungi Penjual": buat chat lalu minta popover terbuka
   const requestOpenChat = useCallback((info) => setPendingChatId(openChat(info)), [openChat]);

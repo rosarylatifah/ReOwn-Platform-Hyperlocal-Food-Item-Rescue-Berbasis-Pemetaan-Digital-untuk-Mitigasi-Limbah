@@ -85,3 +85,9 @@ export default function ProductCard({ item, isHovered, onHover, onLeave, onEdit,
     </div>
   );
 }
+
+// "Jl. Ahmad Yani, Batam Centre" -> "Batam Centre"
+export function areaOf(address = "") {
+  const parts = String(address).split(",").map((s) => s.trim()).filter(Boolean);
+  return parts.length > 1 ? parts[parts.length - 1] : parts[0] || "Batam";
+}

@@ -3,10 +3,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { Navigation } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useUserLocation } from '@/lib/locationStore';
+import { approxLocation } from '@/lib/pembeli/locationPrivacy';
 
 const productIcon = typeof window !== 'undefined' ? new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -25,14 +26,15 @@ const userLocationIcon = typeof window !== 'undefined' ? new L.DivIcon({
   iconAnchor: [8, 8]
 }) : null;
 
-// Kelompokkan produk yang berada di koordinat yang sama
+// Kelompokkan produk berdasarkan titik PERKIRAAN (bukan koordinat asli toko).
+// Produk dari toko yang sama otomatis jatuh di titik yang sama.
 const groupByLocation = (products = []) =>
   Object.values(
     products.reduce((acc, item) => {
-      const lat = item.lat || 1.1186;
-      const lng = item.lng || 104.0487;
-      const key = `${lat},${lng}`;
-      (acc[key] = acc[key] || { lat, lng, items: [] }).items.push(item);
+      const base = { ...item, lat: item.lat ?? 1.1186, lng: item.lng ?? 104.0487 };
+      const a = approxLocation(base);
+      const key = `${a.lat.toFixed(5)},${a.lng.toFixed(5)}`;
+      (acc[key] = acc[key] || { lat: a.lat, lng: a.lng, radius: a.radius, items: [] }).items.push(item);
       return acc;
     }, {})
   );
@@ -137,7 +139,7 @@ export default function BuyerMap({ products = [], onSelectProduct }) {
               Peta Lokasi Rescue Terdekat
             </h2>
             <p className="bm-sub" style={{ fontSize: '13px', color: '#666', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Navigation size={14} color="#D95A36" /> Titik lokasi kamu & barang rescue di sekitarmu
+              <Navigation size={14} color="#D95A36" /> Titik lokasi kamu & area barang rescue di sekitarmu
             </p>
           </div>
 
@@ -233,11 +235,25 @@ export default function BuyerMap({ products = [], onSelectProduct }) {
               </Marker>
             )}
 
+            {/* Area perkiraan toko (lingkaran) */}
+            {groupByLocation(products).map((group) => (
+              <Circle
+                key={`area-${group.lat},${group.lng}`}
+                center={[group.lat, group.lng]}
+                radius={group.radius}
+                interactive={false}
+                pathOptions={{ color: '#D85834', fillColor: '#D85834', fillOpacity: 0.15, weight: 1.5 }}
+              />
+            ))}
+
             {productIcon &&
               groupByLocation(products).map((group) => (
                 <Marker key={`${group.lat},${group.lng}`} position={[group.lat, group.lng]} icon={productIcon}>
                   <Popup>
                     <div style={{ fontFamily: 'Inter, sans-serif', maxHeight: '180px', overflowY: 'auto', minWidth: '180px' }}>
+                      <div style={{ fontSize: '11px', color: '#777', paddingBottom: '4px', borderBottom: '1px solid #eee' }}>
+                        📍 Lokasi perkiraan (±{group.radius} m)
+                      </div>
                       {group.items.map((item) => (
                         <div key={item.id} style={{ padding: '6px 0', borderBottom: '1px solid #eee' }}>
                           <b style={{ color: '#D95A36' }}>{item.name}</b><br />

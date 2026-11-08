@@ -4,6 +4,7 @@ import React from 'react';
 import { Plus, MapPin, Store } from 'lucide-react';
 import StorePopover from '../profil/StorePopover';
 import { fraunces } from '@/lib/fonts';
+import { approxLocation } from '@/lib/pembeli/locationPrivacy';
 
 const focusRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
@@ -112,4 +113,10 @@ export default function ProductGrid({
       })}
     </div>
   );
+}
+
+// "Jl. Ahmad Yani, Batam Centre" -> "Batam Centre"
+export function areaOf(address = "") {
+  const parts = String(address).split(",").map((s) => s.trim()).filter(Boolean);
+  return parts.length > 1 ? parts[parts.length - 1] : parts[0] || "Batam";
 }
