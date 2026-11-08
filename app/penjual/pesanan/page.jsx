@@ -40,7 +40,9 @@ const btnPrimary =
   "flex items-center gap-1.5 rounded-full bg-[#D95A36] px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#C44A28] hover:shadow-lg";
 
 const toView = (o) => {
-  const status = o.status || "Menunggu Konfirmasi";
+  const raw = o.status || "Menunggu Konfirmasi";
+  // Bagi penjual, pesanan yang sudah diserahkan dianggap selesai
+  const status = raw === "Dalam Proses" && o.handedOver ? "Selesai" : raw;
   return {
     ...o,
     status,
@@ -106,24 +108,24 @@ export default function SellerOrders() {
   };
 
   const handleSelesai = (item) => {
-    if (confirm(`Apakah kamu yakin ingin menyelesaikan pesanan "${item.name}"?`)) {
+    if (confirm(`Konfirmasi bahwa produk "${item.name}" sudah diserahkan ke pembeli?`)) {
       updateOrder(item.id, {
-        status: "Selesai",
-        statusType: "success",
-        completedAt: new Date().toLocaleString("id-ID", {
-          day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-        }),
+        handedOver: true,
+        handedOverAt: new Date().toISOString(),
       });
 
       addNotification({
         role: 'pembeli',
-        title: 'Penyelamatan Berhasil!',
-        message: `Pesanan ${item.name} telah selesai diserahterimakan. Terima kasih sudah mengurangi limbah!`,
-        type: 'success',
-        link: '/pembeli/pesanan?tab=selesai'
+        title: 'Pesanan Berhasil Diserahkan',
+        message: `Pesanan ${item.name} sudah diserahkan oleh penjual. Mohon konfirmasi pesanan selesai.`,
+        type: 'order',
+        link: '/pembeli/pesanan?tab=proses'
       });
+      
+      setActiveTab("Selesai");
     }
   };
+
 
 const handleLihatDetail = (item) => {
   const fmt = (d) => {
