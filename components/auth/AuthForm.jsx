@@ -1,11 +1,12 @@
 // components/auth/AuthForm.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthShell, { Highlight } from "./AuthShell";
 import { useAuth } from "@/lib/auth";
+
 
 const inputBase =
   "w-full rounded-xl border bg-[#FBF9F7] px-3.5 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 transition-shadow focus:outline-none focus:ring-2";
@@ -28,10 +29,10 @@ function strength(pw) {
 /**
  * Mengarahkan ke path khusus pembeli beranda
  */
-function nextPath() {
+function nextPath(role) {
   const n = new URLSearchParams(window.location.search).get("next");
   if (n && n.startsWith("/") && !n.startsWith("//")) return n;
-  return "/pembeli/beranda"; // 👈 Langsung diarahkan ke beranda pembeli
+  return role === "penjual" ? "/penjual/beranda" : "/pembeli/beranda";
 }
 
 function Field({ id, label, error, children }) {
@@ -128,12 +129,19 @@ function ArrowIcon() {
 
 export default function AuthForm({ mode }) {
   const router = useRouter();
-  const { register, login } = useAuth();
+  const { register, login, logout } = useAuth();
   const isRegister = mode === "daftar";
 
   const [form, setForm] = useState({ nama: "", telepon: "", email: "", password: "", konfirmasi: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (!isRegister && new URLSearchParams(window.location.search).get("registered") === "1") {
+      setNotice("Akun berhasil dibuat. Silakan masuk.");
+    }
+  }, [isRegister]);
 
   const bind = (k) => ({
     value: form[k],
@@ -172,38 +180,52 @@ export default function AuthForm({ mode }) {
     setErrors({});
     setLoading(true);
     try {
-      const res = isRegister
-        ? await register({ nama: form.nama, telepon: form.telepon, email: form.email, password: form.password })
-        : await login({ email: form.email, password: form.password });
-
-      if (res.ok || res) {
-        // 💾 SIMPAN DATA AKUN SEMENTARA KE LOCALSTORAGE UNTUK PROFILE POPOVER
-        const currentUserData = {
-          name: isRegister ? form.nama : (res.user?.nama || form.email.split('@')[0] || "User ReOwn"),
+      if (isRegister) {
+        const res = await register({
+          nama: form.nama,
+          telepon: form.telepon,
           email: form.email,
-          role: "pembeli"
-        };
-        localStorage.setItem('reown:current_user:v1', JSON.stringify(currentUserData));
-
-        // 🚀 LANGSUNG ARAHKAN KE BERANDA PEMBELI
-        router.push(nextPath());
-        router.refresh();
+          password: form.password,
+        });
+        if (!res.ok) {
+          setErrors({ form: res.error });
+          return;
+        }
+        router.push("/masuk?registered=1");
         return;
       }
-      setErrors({ form: res.error || "Login gagal. Cek kembali email/password kamu." });
-    } catch {
-      // Fallback lokal jika backend/auth hook belum aktif penuh
-      const fallbackUserData = {
-        name: isRegister ? form.nama : (form.email.split('@')[0] || "User ReOwn"),
-        email: form.email,
-        role: "pembeli"
-      };
-      localStorage.setItem('reown:current_user:v1', JSON.stringify(fallbackUserData));
-      
-      router.push('/pembeli/beranda');
+
+      const res = await login({ email: form.email, password: form.password });
+      if (!res.ok) {
+        setErrors(res.field ? { [res.field]: res.error } : { form: res.error });
+        return;
+      }
+      if (res.role === "admin") {
+        logout();
+        setErrors({ form: "Akun admin masuk lewat halaman login admin." });
+        return;
+      }
+
+      localStorage.setItem(
+        "reown:current_user:v1",
+        JSON.stringify({
+          name: res.user?.nama || form.email.split("@")[0],
+          email: res.user?.email || form.email,
+          role: res.role || "pembeli",
+        })
+      );
+      router.push(nextPath(res.role));
       router.refresh();
+    } catch (err) {
+      console.error("Login error:", err);
+      setErrors({
+        form: window.crypto?.subtle
+          ? "Terjadi kesalahan pada sistem. Coba lagi sebentar."
+          : "Browser memblokir enkripsi. Buka lewat http://localhost:3000, bukan alamat IP.",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -245,6 +267,11 @@ export default function AuthForm({ mode }) {
               />
             </Field>
           </div>
+        )}
+        {notice && (
+          <p role="status" className="rounded-xl bg-green-50 px-3.5 py-2 text-sm font-medium text-green-700">
+            {notice}
+          </p>
         )}
 
         <Field id="email" label="Alamat Email" error={errors.email}>

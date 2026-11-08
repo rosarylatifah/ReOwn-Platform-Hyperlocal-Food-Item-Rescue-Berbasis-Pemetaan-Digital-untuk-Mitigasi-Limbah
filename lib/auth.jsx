@@ -63,7 +63,7 @@ export function AuthProvider({ children }) {
     setUser(u);
   };
 
-  const register = useCallback(async ({ nama, telepon, email, password }) => {
+const register = useCallback(async ({ nama, telepon, email, password }) => {
     const mail = email.trim().toLowerCase();
     const users = readUsers();
     if (users.some((u) => u.email === mail)) {
@@ -75,17 +75,11 @@ export function AuthProvider({ children }) {
       telepon: telepon.trim(),
       email: mail,
       passwordHash,
-      storeName: `${nama.trim()}'s Store`, // Default nama toko untuk penjual
-      role: 'pembeli', // Default role awal
+      storeName: `${nama.trim()}'s Store`,
+      role: 'pembeli', // registrasi publik tidak boleh membuat admin
     };
     localStorage.setItem(USERS_KEY, JSON.stringify([...users, created]));
-    startSession({ 
-      nama: created.nama, 
-      email: created.email, 
-      telepon: created.telepon, 
-      storeName: created.storeName, 
-      role: created.role 
-    });
+    // Sengaja TIDAK startSession: user harus login dulu setelah daftar
     return { ok: true };
   }, []);
 
@@ -93,22 +87,28 @@ export function AuthProvider({ children }) {
     const mail = email.trim().toLowerCase();
     const users = readUsers();
     const found = users.find((u) => u.email === mail);
-    const passwordHash = await hash(password);
-    if (!found || found.passwordHash !== passwordHash) {
-      return { ok: false, error: "Email atau kata sandi salah." };
+    if (!found) {
+      return { ok: false, field: "email", error: "Email ini belum terdaftar. Periksa penulisannya atau daftar dulu." };
     }
-    startSession({ 
-      nama: found.nama, 
-      email: found.email, 
+    const passwordHash = await hash(password);
+    if (found.passwordHash !== passwordHash) {
+      return { ok: false, field: "password", error: "Kata sandi salah. Coba lagi." };
+    }
+
+    const session = {
+      nama: found.nama,
+      email: found.email,
       telepon: found.telepon,
       storeName: found.storeName || `${found.nama}'s Store`,
-      role: found.role || 'pembeli'
-    });
-    return { ok: true };
+      role: found.role || 'pembeli',
+    };
+    startSession(session);
+    return { ok: true, role: session.role, user: session };
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('reown:current_user:v1');
     setUser(null);
   }, []);
 
