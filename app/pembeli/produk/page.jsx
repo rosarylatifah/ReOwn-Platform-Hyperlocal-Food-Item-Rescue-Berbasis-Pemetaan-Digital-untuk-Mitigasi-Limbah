@@ -152,7 +152,10 @@ export default function BuyerProducts() {
       const d = calculateDistance(userLoc.lat, userLoc.lng, a.lat, a.lng);
       return { ...p, distanceKm: d, distance: `${d.toFixed(1)} km` };
     });
-    if (selectedCategory === 'Terdekat') withDistance.sort((a, b) => a.distanceKm - b.distanceKm);
+    const rank = (p) => (p.urgency === 'Mendesak' ? 0 : 1);
+withDistance.sort(
+  (a, b) => rank(a) - rank(b) || (selectedCategory === 'Terdekat' ? a.distanceKm - b.distanceKm : 0)
+);
     return withDistance;
   }, [filteredProducts, selectedCategory, userLoc.lat, userLoc.lng]);
 
@@ -170,7 +173,7 @@ export default function BuyerProducts() {
 
       {/* PETA */}
       <div className="relative">
-        <BuyerMap products={products} onSelectProduct={setSelectedProduct} />
+        <BuyerMap products={products} onSelectProduct={(p) => setSelectedProduct(displayedProducts.find((x) => x.id === p.id) || p)} />
       </div>
 
       {/* SEARCH, KATEGORI & URGENSI */}

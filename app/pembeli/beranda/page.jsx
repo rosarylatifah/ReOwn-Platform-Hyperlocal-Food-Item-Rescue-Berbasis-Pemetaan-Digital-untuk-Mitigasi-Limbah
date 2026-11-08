@@ -107,7 +107,7 @@ export default function BuyerDashboard() {
             </p>
 
             <Link href="/pembeli/produk" className={heroButton}>
-              Jelajahi Sekarang
+              Lihat Apa yang di Sekitarmu
               <ChevronRight size={18} />
             </Link>
           </div>

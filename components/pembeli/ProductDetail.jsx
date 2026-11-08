@@ -5,6 +5,7 @@ import { Plus, MapPin, X, Minus, ShoppingCart, AlertCircle } from 'lucide-react'
 import { useCart } from '@/app/pembeli/context/cart';
 import { useChat } from '@/app/pembeli/context/chat';
 import { areaOf } from '@/lib/pembeli/locationPrivacy';
+import { ProductBadges, PriceBlock, ProductFacts } from './ProductExtras';
 
 export default function ProductDetail({ product, onClose, onAddToCart, onReport }) {
   // Semua hook harus berada SEBELUM early return
@@ -87,63 +88,56 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
         }
 
         /* ===== KHUSUS MOBILE (desktop tidak terpengaruh) ===== */
-        @media (max-width: 767px) {
-          .pd-card {
-            max-width: 420px !important;
-            max-height: 82dvh !important;
-            grid-template-columns: 1fr !important;
-            gap: 12px !important;
-            padding: 16px !important;
-            align-items: start !important;
-          }
-          .pd-image {
-            height: 160px !important;
-          }
-          .pd-info {
-            padding-top: 0 !important;
-            gap: 10px !important;
-          }
-          .pd-close {
-            top: 24px !important;
-            right: 24px !important;
-            width: 36px !important;
-            height: 36px !important;
-            background-color: rgba(255, 255, 255, 0.95) !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-          }
-          .pd-report {
-            top: 24px !important;
-            right: 68px !important;
-            height: 36px !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-          }
-          .pd-title {
-            font-size: 20px !important;
-          }
-          .pd-desc {
-            font-size: 14px !important;
-            line-height: 1.6 !important;
-          }
-          .btn-qty {
-            width: 40px !important;
-            height: 40px !important;
-          }
-          .pd-cart {
-            padding: 14px !important;
-            font-size: 14px !important;
-          }
-        }
+@media (max-width: 767px) {
+  .pd-card {
+    max-width: 420px !important;
+    max-height: 86dvh !important;
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+  .pd-image {
+    height: 190px !important;
+  }
+  .pd-info {
+    gap: 10px !important;
+  }
+  .pd-close {
+    top: 26px !important;
+    right: 26px !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .pd-report {
+    top: 26px !important;
+    right: 70px !important;
+    height: 36px !important;
+  }
+  .pd-title {
+    font-size: 20px !important;
+  }
+  .pd-desc {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+  .btn-qty {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .pd-cart {
+    padding: 14px !important;
+    font-size: 14px !important;
+  }
+}
       `}</style>
 
       <div
         className="pd-card"
-        style={{
-          backgroundColor: '#FFF', borderRadius: '24px', width: '100%', maxWidth: '750px',
-          maxHeight: '100%', overflowY: 'auto',
-          padding: '30px', position: 'relative', boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
-          display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: '24px', alignItems: 'center',
-          fontFamily: 'Inter, sans-serif'
-        }}
+style={{
+  backgroundColor: '#FFF', borderRadius: '24px', width: '100%', maxWidth: '480px',
+  maxHeight: '90vh', overflowY: 'auto', padding: '20px', position: 'relative',
+  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
+  display: 'flex', flexDirection: 'column', gap: '16px', fontFamily: 'Inter, sans-serif'
+}}
       >
         {/* TOMBOL TUTUP (X) */}
         <button
@@ -151,11 +145,12 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
           className="btn-close pd-close"
           aria-label="Tutup"
           style={{
-            position: 'absolute', top: '20px', right: '20px', backgroundColor: '#E5E7EB',
-            border: 'none', borderRadius: '50%', width: '32px', height: '32px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#4B5563',
-            transition: 'all 0.2s ease'
-          }}
+  position: 'absolute', top: '30px', right: '30px', zIndex: 2,
+  backgroundColor: 'rgba(255,255,255,0.95)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+  border: 'none', borderRadius: '50%', width: '32px', height: '32px',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#4B5563',
+  transition: 'all 0.2s ease'
+}}
         >
           <X size={16} />
         </button>
@@ -167,7 +162,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
             onClick={onReport}
             title="Laporkan produk"
             aria-label="Laporkan produk"
-            className="pd-report absolute right-[60px] top-5 inline-flex h-8 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-xs font-semibold text-stone-600 transition-colors hover:border-red-600 hover:bg-red-600 hover:text-white"
+            className="pd-report absolute right-[72px] top-[30px] z-[2] shadow-md inline-flex h-8 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-xs font-semibold text-stone-600 transition-colors hover:border-red-600 hover:bg-red-600 hover:text-white"
           >
             <AlertCircle size={14} /> Laporkan
           </button>
@@ -176,10 +171,11 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
         {/* KOLOM KIRI: GAMBAR PRODUK */}
         <div
           className="pd-image"
-          style={{
-            width: '100%', height: '320px', backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB',
-            borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
-          }}
+style={{
+  width: '100%', height: '240px', flexShrink: 0, backgroundColor: '#F9FAFB',
+  border: '1px solid #E5E7EB', borderRadius: '16px', overflow: 'hidden',
+  display: 'flex', alignItems: 'center', justifyContent: 'center'
+}}
         >
           {product.image ? (
             <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -189,7 +185,8 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
         </div>
 
         {/* KOLOM KANAN: DETAIL INFORMASI */}
-        <div className="pd-info" style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingTop: onReport ? '28px' : 0 }}>
+        <div className="pd-info" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <ProductBadges product={product} />
           <h2 className="pd-title" style={{ fontFamily: 'Fraunces, serif', fontSize: '22px', fontWeight: 'bold', color: '#1A1A1A', margin: 0 }}>
             {product.name}
           </h2>
@@ -208,9 +205,8 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
             <span>{areaOf(product.location || "Batam")}</span>
           </div>
 
-          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#D95A36', fontFamily: 'Fraunces, serif', marginTop: '4px' }}>
-            {product.price}
-          </div>
+<PriceBlock product={product} />
+<ProductFacts product={product} />
 
           <div style={{ fontSize: '12px', fontWeight: '600', color: availableStock > 0 ? '#16A34A' : '#DC2626' }}>
             {availableStock > 0
