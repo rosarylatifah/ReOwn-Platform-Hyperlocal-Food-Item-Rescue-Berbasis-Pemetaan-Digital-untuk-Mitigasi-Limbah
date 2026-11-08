@@ -4,16 +4,15 @@ import React from 'react';
 import { Plus, MapPin } from 'lucide-react';
 import StorePopover from '../profil/StorePopover';
 import { fraunces } from '@/lib/fonts';
-import { approxLocation } from '@/lib/pembeli/locationPrivacy';
+import { areaOf } from '@/lib/pembeli/locationPrivacy';
 
 const focusRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
 
 export default function ProductCard({
   item,
-  isPromo = false,
   showStoreInfo = true, // Control muncul/tidaknya nama toko
-  showLocation = true,  // Control muncul/tidaknya alamat toko
+  showLocation = true,  // Control muncul/tidaknya area toko
   activeStorePopover,
   setActiveStorePopover,
   onAddToCart,
@@ -28,9 +27,10 @@ export default function ProductCard({
         activeStorePopover === item.id ? 'z-30' : 'z-[1]'
       }`}
     >
-<span className="absolute left-1.5 top-1.5 z-[2] rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-bold text-stone-900 shadow-md backdrop-blur md:left-3 md:top-3 md:px-3 md:py-1 md:text-[11px]">
-  {item.distance || '1.2 km'}
-</span>
+      {/* BADGE JARAK (sama dengan halaman produk) */}
+      <span className="absolute left-1.5 top-1.5 z-[2] rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-bold text-stone-900 shadow-md backdrop-blur md:left-3 md:top-3 md:px-3 md:py-1 md:text-[11px]">
+        {item.distance || '1.2 km'}
+      </span>
 
       {/* WADAH GAMBAR */}
       <div className="relative h-[100px] w-full overflow-hidden rounded-t-2xl bg-gradient-to-br from-amber-100 to-orange-200 md:h-[150px] md:rounded-t-[22px]">
@@ -86,11 +86,11 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* ALAMAT (Muncul jika showLocation = true) */}
+        {/* AREA (Muncul jika showLocation = true) */}
         {showLocation && (
           <p className="mb-2 flex items-center gap-1 truncate text-[10px] text-stone-600 md:mb-3.5 md:text-xs">
             <MapPin size={12} className="shrink-0 text-[#D85834]" />
-            <span className="truncate">{item.location || item.address || "Batam"}</span>
+            <span className="truncate">{areaOf(item.location || item.address || "Batam")}</span>
           </p>
         )}
 

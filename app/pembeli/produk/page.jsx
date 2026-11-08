@@ -1,20 +1,18 @@
 // app/pembeli/produk/page.jsx
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Store, ChevronDown } from 'lucide-react';
 import { useUserLocation } from '@/lib/locationStore';
 import { useBuyerProducts } from '@/app/pembeli/hooks/useBuyerProducts';
+import { approxLocation } from '@/lib/pembeli/locationPrivacy';
 import ProductGrid from '@/components/pembeli/ProductGrid';
 import ProductDetail from '@/components/pembeli/ProductDetail';
 import ReportModal from '@/components/pembeli/ReportModal';
 import BuyerMap from '@/components/pembeli/BuyerMap';
 import { useCart } from '@/app/pembeli/context/cart';
 import { fraunces } from '@/lib/fonts';
-import { approxLocation } from '@/lib/pembeli/locationPrivacy';
-
-const batamCenterPos = [1.1186, 104.0487];
 
 const chipBase =
   "shrink-0 whitespace-nowrap rounded-full border-[1.5px] px-5 py-2.5 text-[13px] font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
@@ -99,6 +97,19 @@ function UrgencyDropdown({ value, onChange }) {
   );
 }
 
+// Rumus Haversine untuk jarak (km)
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 export default function BuyerProducts() {
   const { addToCart } = useCart();
 
@@ -133,28 +144,15 @@ export default function BuyerProducts() {
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // Rumus Haversine untuk jarak
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  const displayedProducts = useMemo(() => {
+  // Jarak dihitung dari titik PERKIRAAN toko (sama dengan lingkaran di peta),
+  // bukan dari koordinat asli, supaya lokasi persis toko tidak bisa ditebak.
+  const displayedProducts = React.useMemo(() => {
     const withDistance = filteredProducts.map((p) => {
       const a = approxLocation({ ...p, lat: p.lat ?? 1.1186, lng: p.lng ?? 104.0487 });
       const d = calculateDistance(userLoc.lat, userLoc.lng, a.lat, a.lng);
       return { ...p, distanceKm: d, distance: `${d.toFixed(1)} km` };
     });
-    if (selectedCategory === 'Terdekat') {
-      withDistance.sort((a, b) => a.distanceKm - b.distanceKm);
-    }
+    if (selectedCategory === 'Terdekat') withDistance.sort((a, b) => a.distanceKm - b.distanceKm);
     return withDistance;
   }, [filteredProducts, selectedCategory, userLoc.lat, userLoc.lng]);
 

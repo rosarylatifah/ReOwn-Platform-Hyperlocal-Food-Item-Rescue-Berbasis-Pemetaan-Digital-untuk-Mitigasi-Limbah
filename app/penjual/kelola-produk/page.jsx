@@ -34,7 +34,7 @@ export default function SellerProductsPage() {
   const handleSubmitProduct = (e) => {
     e.preventDefault();
     const isEditing = Boolean(editingProductId);
-    
+
     // Jalankan fungsi simpan/edit asli
     originalHandleSubmit(e);
 
@@ -58,15 +58,15 @@ export default function SellerProductsPage() {
     }
   };
 
-  // 2. Wrapper untuk Hapus Produk
+  // 2. Wrapper untuk Hapus Produk (notifikasi hanya terkirim kalau benar-benar dihapus)
   const handleDelete = (productId) => {
-    // Cari data produk dulu buat ambil namanya sebelum dihapus
+    // Ambil nama produk dulu sebelum dihapus
     const targetProduct = myProducts.find((p) => p.id === productId);
-    
-    // Jalankan fungsi hapus asli
-    originalHandleDelete(productId);
 
-    // Kirim notifikasi ke Admin
+    // Jalankan fungsi hapus asli; false = penjual menekan Batal
+    const deleted = originalHandleDelete(productId);
+    if (!deleted) return;
+
     addNotification({
       role: 'admin',
       title: 'Produk Dihapus Penjual',
@@ -128,7 +128,7 @@ export default function SellerProductsPage() {
                 onHover={() => setHoveredCard(item.id)}
                 onLeave={() => setHoveredCard(null)}
                 onEdit={handleOpenEditModal}
-                onDelete={handleDelete} // 👈 Menggunakan fungsi wrapper hapus bernotifikasi
+                onDelete={handleDelete}
               />
             ))}
           </div>
@@ -142,7 +142,7 @@ export default function SellerProductsPage() {
         editingProductId={editingProductId}
         formData={formData}
         setFormData={setFormData}
-        onSubmit={handleSubmitProduct} // 👈 Menggunakan fungsi wrapper submit bernotifikasi (Tambah/Edit)
+        onSubmit={handleSubmitProduct}
       />
     </div>
   );

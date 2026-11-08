@@ -8,7 +8,7 @@ const EMPTY_FORM = {
   name: '',
   category: 'Makanan',
   price: '',
-  discountPrice: '', // 💡 Tambahan field harga diskon
+  discountPrice: '', // field harga diskon
   location: 'Batam Centre',
   image: '',
   status: 'Aktif',
@@ -71,10 +71,14 @@ export function useProductManager() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id, name) => {
-    if (confirm(`Apakah kamu yakin ingin menghapus "${name}"?`)) {
+  // Mengembalikan true jika produk benar-benar dihapus (false jika penjual menekan Batal)
+  const handleDelete = (id) => {
+    const target = myProducts.find((p) => p.id === id);
+    if (confirm(`Apakah kamu yakin ingin menghapus "${target?.name || 'produk ini'}"?`)) {
       setMyProducts((prev) => prev.filter((item) => item.id !== id));
+      return true;
     }
+    return false;
   };
 
   const handleSubmitProduct = (e) => {
@@ -101,7 +105,7 @@ export function useProductManager() {
       const expiryTime = new Date(formData.expiryAt);
       const urgencySoonTime = formData.urgencyAt ? new Date(formData.urgencyAt) : null;
 
-      // Fase Mendesak: Sisa waktu 2 jam terakhir sebelum expired atau melewati urgencyAt
+      // Fase Mendesak: sisa waktu 2 jam terakhir sebelum expired atau melewati urgencyAt
       const isUrgentPhase = urgencySoonTime && now >= urgencySoonTime;
       const isAlmostExpired = expiryTime.getTime() - now.getTime() <= 2 * 3600000; // <= 2 jam
 
@@ -112,13 +116,19 @@ export function useProductManager() {
         calculatedUrgency = 'Mendesak';
         finalPrice = 'Gratis';
       } else if (urgencySoonTime && now >= new Date(urgencySoonTime.getTime() - 12 * 3600000)) {
-        // Fase Segera: Masuk harga diskon
+        // Fase Segera: masuk harga diskon
         calculatedUrgency = 'Segera';
         finalPrice = formatPrice(discountVal);
       }
     } else {
       calculatedUrgency = formData.urgency;
     }
+
+    // Titik lokasi persis toko (diambil penjual lewat GPS di form), ikut disimpan di produk.
+    // Pembeli TIDAK melihat titik ini: peta dan jarak memakai titik perkiraan.
+    const storeLat = profile?.storeLat ?? null;
+    const storeLng = profile?.storeLng ?? null;
+    const storeId = profile?.email || profile?.storeName || 'toko';
 
     if (editingProductId) {
       setMyProducts((prev) =>
@@ -140,6 +150,9 @@ export function useProductManager() {
                 urgencyAt: formData.urgencyAt,
                 deadline: formData.expiryAt,
                 description: formData.description || `${formData.name} dari ${profile?.storeName || 'Toko Rescue'}.`,
+                lat: storeLat ?? item.lat,
+                lng: storeLng ?? item.lng,
+                storeId: item.storeId ?? storeId,
               }
             : item
         )
@@ -158,16 +171,15 @@ export function useProductManager() {
           'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=400',
         status: formData.status,
         store: profile?.storeName || 'Toko Rescue',
+        storeId,
         stock: parseInt(formData.stock, 10) || 1,
         urgency: calculatedUrgency,
         expiryAt: formData.expiryAt,
         urgencyAt: formData.urgencyAt,
         deadline: formData.expiryAt,
         description: formData.description || `${formData.name} dari ${profile?.storeName || 'Toko Rescue'}.`,
-        lat: 1.1186,
-        lng: 104.0487,
-        distanceKm: 1,
-        distance: '1 km',
+        lat: storeLat ?? 1.1186,
+        lng: storeLng ?? 104.0487,
         isSeller: true,
       };
       setMyProducts((prev) => [newProduct, ...prev]);

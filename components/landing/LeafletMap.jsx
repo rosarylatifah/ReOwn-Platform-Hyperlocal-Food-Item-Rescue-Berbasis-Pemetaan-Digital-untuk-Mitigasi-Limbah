@@ -1,6 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import ProductAreaLayer from "@/components/landing/ProductAreaLayer";
 import L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 import { AttributionControl, MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
@@ -68,6 +69,7 @@ export default function LeafletMap() {
       {/* Atribusi OSM wajib ditampilkan (syarat lisensi), dibuat kecil di pojok kanan bawah */}
       <AttributionControl position="bottomright" prefix={false} />
       <ZoomButtons />
+      <ProductAreaLayer />
     </MapContainer>
   );
 }

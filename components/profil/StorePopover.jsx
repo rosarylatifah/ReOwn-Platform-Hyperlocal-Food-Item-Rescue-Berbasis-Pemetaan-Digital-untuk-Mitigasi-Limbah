@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MapPin, ChevronRight, Package } from 'lucide-react';
 import { useProfile } from '@/lib/ProfileContext';
-import { approxLocation } from '@/lib/pembeli/locationPrivacy';
+import { areaOf } from '@/lib/pembeli/locationPrivacy';
 
 export default function StorePopover({ store, onClose, positionStyle }) {
   const router = useRouter();
@@ -71,8 +71,9 @@ export default function StorePopover({ store, onClose, positionStyle }) {
           <ChevronRight size={16} color="#D95A36" />
         </div>
 
+        {/* Hanya nama area, bukan alamat lengkap */}
         <p style={{ margin: 0, fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          <MapPin size={12} color="#D95A36" /> {activeStore.address || activeStore.location}
+          <MapPin size={12} color="#D95A36" /> {areaOf(activeStore.address || activeStore.location)}
         </p>
 
         <span style={{ fontSize: '12px', color: '#777', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
@@ -81,9 +82,4 @@ export default function StorePopover({ store, onClose, positionStyle }) {
       </div>
     </div>
   );
-}
-// "Jl. Ahmad Yani, Batam Centre" -> "Batam Centre"
-export function areaOf(address = "") {
-  const parts = String(address).split(",").map((s) => s.trim()).filter(Boolean);
-  return parts.length > 1 ? parts[parts.length - 1] : parts[0] || "Batam";
 }

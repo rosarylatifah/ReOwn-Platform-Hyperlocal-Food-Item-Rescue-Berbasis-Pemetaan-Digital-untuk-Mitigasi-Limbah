@@ -1,23 +1,25 @@
-// components/pembeli/BuyerMap.jsx
 "use client";
 
 import React, { useEffect, useState } from 'react';
 import { Navigation } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useUserLocation } from '@/lib/locationStore';
-import { approxLocation } from '@/lib/pembeli/locationPrivacy';
+import { approxLocation, PRIVACY_RADIUS_M } from '@/lib/pembeli/locationPrivacy';
+import { MapContainer, TileLayer, Marker, Popup, Circle, AttributionControl, useMap, useMapEvents } from 'react-leaflet';
+import MapZoomButtons from '@/components/common/MapZoomButtons';
+import { groupByLocation, AREA_STYLE } from '@/lib/pembeli/mapAreas';
 
-const productIcon = typeof window !== 'undefined' ? new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-}) : null;
+const badgeIcon = (count) =>
+  typeof window !== 'undefined'
+    ? new L.DivIcon({
+        className: 'reown-badge',
+        html: `<div style="display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#2563EB;color:#fff;font:700 13px Inter,sans-serif;border:3px solid #fff;box-shadow:0 4px 12px rgba(37,99,235,0.45;">${count}</div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+        popupAnchor: [0, -18],
+      })
+    : null;
 
 const userLocationIcon = typeof window !== 'undefined' ? new L.DivIcon({
   className: 'user-marker',
@@ -26,18 +28,11 @@ const userLocationIcon = typeof window !== 'undefined' ? new L.DivIcon({
   iconAnchor: [8, 8]
 }) : null;
 
-// Kelompokkan produk berdasarkan titik PERKIRAAN (bukan koordinat asli toko).
-// Produk dari toko yang sama otomatis jatuh di titik yang sama.
-const groupByLocation = (products = []) =>
-  Object.values(
-    products.reduce((acc, item) => {
-      const base = { ...item, lat: item.lat ?? 1.1186, lng: item.lng ?? 104.0487 };
-      const a = approxLocation(base);
-      const key = `${a.lat.toFixed(5)},${a.lng.toFixed(5)}`;
-      (acc[key] = acc[key] || { lat: a.lat, lng: a.lng, radius: a.radius, items: [] }).items.push(item);
-      return acc;
-    }, {})
-  );
+// Jarak dua titik (meter), cukup akurat untuk skala kota
+const metersBetween = (aLat, aLng, bLat, bLng) =>
+  Math.hypot((aLat - bLat) * 111320, (aLng - bLng) * 111320 * Math.cos((aLat * Math.PI) / 180));
+
+const MERGE_M = 700; // toko yang lebih dekat dari ini digabung jadi satu area
 
 // Pindahkan tampilan peta saat lokasi berubah
 function FlyTo({ lat, lng }) {
@@ -210,8 +205,12 @@ export default function BuyerMap({ products = [], onSelectProduct }) {
             </div>
           )}
 
-          <MapContainer center={[location.lat, location.lng]} zoom={14} scrollWheelZoom={false} style={{ width: '100%', height: '100%' }}>
-            <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <MapContainer center={[location.lat, location.lng]} zoom={14} scrollWheelZoom={false} zoomControl={false} attributionControl={false} style={{ width: '100%', height: '100%' }}>
+            <TileLayer
+  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
+  <AttributionControl position="bottomright" prefix={false} />
+<MapZoomButtons />
             <FlyTo lat={location.lat} lng={location.lng} />
             <PickHandler active={picking} onPick={handlePick} />
 
@@ -235,24 +234,23 @@ export default function BuyerMap({ products = [], onSelectProduct }) {
               </Marker>
             )}
 
-            {/* Area perkiraan toko (lingkaran) */}
+            {/* Area perkiraan toko (toko berdekatan menyatu) */}
             {groupByLocation(products).map((group) => (
               <Circle
                 key={`area-${group.lat},${group.lng}`}
                 center={[group.lat, group.lng]}
                 radius={group.radius}
                 interactive={false}
-                pathOptions={{ color: '#D85834', fillColor: '#D85834', fillOpacity: 0.15, weight: 1.5 }}
+                pathOptions={AREA_STYLE}
               />
             ))}
 
-            {productIcon &&
-              groupByLocation(products).map((group) => (
-                <Marker key={`${group.lat},${group.lng}`} position={[group.lat, group.lng]} icon={productIcon}>
+            {groupByLocation(products).map((group) => (
+                <Marker key={`${group.lat},${group.lng}`} position={[group.lat, group.lng]} icon={badgeIcon(group.items.length)}>
                   <Popup>
                     <div style={{ fontFamily: 'Inter, sans-serif', maxHeight: '180px', overflowY: 'auto', minWidth: '180px' }}>
                       <div style={{ fontSize: '11px', color: '#777', paddingBottom: '4px', borderBottom: '1px solid #eee' }}>
-                        📍 Lokasi perkiraan (±{group.radius} m)
+                        📍 Area perkiraan (±{Math.round(group.radius)} m) · {group.items.length} produk
                       </div>
                       {group.items.map((item) => (
                         <div key={item.id} style={{ padding: '6px 0', borderBottom: '1px solid #eee' }}>

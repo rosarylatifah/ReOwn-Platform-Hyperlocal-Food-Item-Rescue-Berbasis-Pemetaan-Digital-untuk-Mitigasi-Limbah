@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import StatusDot from "@/components/ui/StatusDot";
 import { fraunces } from "@/lib/fonts";
+import { useNearbyCount } from "@/lib/pembeli/useNearbyCount";
 
 // TODO: ganti dengan data asli (mis. getMonthlyRescuedCount / hitungan harian)
 const RESCUED_TODAY = 42;
@@ -62,6 +63,7 @@ function Backdrop() {
 
 function Quote() {
   const reduced = useReducedMotion();
+  const nearby = useNearbyCount();
   const [i, setI] = useState(0);
 
   useEffect(() => {
@@ -95,6 +97,7 @@ function Quote() {
 
 export default function AuthShell({ heading, desc, switchText, switchLabel, switchHref, children }) {
   const reduced = useReducedMotion();
+  const nearby = useNearbyCount();
 
   return (
     <div className="relative flex min-h-[100svh] flex-col overflow-x-hidden lg:h-[100svh] lg:overflow-hidden">
@@ -123,11 +126,12 @@ export default function AuthShell({ heading, desc, switchText, switchLabel, swit
               <span className="inline-block transition-transform group-hover:-translate-x-0.5">←</span> kembali
             </Link>
           </div>
-
-          <p className="mt-2.5 inline-flex items-center gap-2 rounded-full border-[1.5px] border-[#F23A10] bg-white px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#E0452A] [@media(max-height:700px)]:hidden">
-            <StatusDot />
-            {RESCUED_TODAY} barang sudah diselamatkan hari ini
-          </p>
+{nearby > 0 && (
+  <p className="mt-2.5 inline-flex items-center gap-2 rounded-full border-[1.5px] border-[#F23A10] bg-white px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#E0452A] [@media(max-height:700px)]:hidden">
+    <StatusDot />
+    {nearby} produk menunggu diselamatkan di sekitarmu
+  </p>
+)}
 
           <p className="mt-2 max-w-md text-sm leading-relaxed text-stone-600 [@media(max-height:760px)]:hidden">
             {desc}

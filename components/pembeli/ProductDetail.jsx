@@ -1,12 +1,13 @@
 "use client";
 
-import { useChat } from '@/app/pembeli/context/chat';
 import React, { useState } from 'react';
 import { Plus, MapPin, X, Minus, ShoppingCart, AlertCircle } from 'lucide-react';
 import { useCart } from '@/app/pembeli/context/cart';
-import { approxLocation } from '@/lib/pembeli/locationPrivacy';
+import { useChat } from '@/app/pembeli/context/chat';
+import { areaOf } from '@/lib/pembeli/locationPrivacy';
 
 export default function ProductDetail({ product, onClose, onAddToCart, onReport }) {
+  // Semua hook harus berada SEBELUM early return
   const { getItemQuantityInCart, getProductStock, addToCart } = useCart();
   const { requestOpenChat } = useChat();
   const [quantity, setQuantity] = useState(1);
@@ -42,6 +43,14 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
       addToCart(product, quantity);
     }
 
+    if (onClose) onClose();
+  };
+
+  const handleContactSeller = () => {
+    requestOpenChat({
+      storeId: product.storeId ?? product.sellerId ?? product.sellerName ?? product.store ?? product.merchant,
+      storeName: product.sellerName || product.store || product.merchant,
+    });
     if (onClose) onClose();
   };
 
@@ -190,12 +199,13 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
           </p>
 
           <span style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A1A', marginTop: '2px' }}>
-            {product.store || product.merchant || 'Nama Toko'}
+            {product.sellerName || product.store || product.merchant || 'Nama Toko'}
           </span>
 
+          {/* Hanya nama area, bukan alamat lengkap */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#666' }}>
             <MapPin size={14} color="#D95A36" />
-            <span>{product.location || "Batam"}</span>
+            <span>{areaOf(product.location || "Batam")}</span>
           </div>
 
           <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#D95A36', fontFamily: 'Fraunces, serif', marginTop: '4px' }}>
@@ -250,29 +260,28 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
             disabled={availableStock <= 0}
             className="btn-cart pd-cart"
             style={{
-  marginTop: '10px', width: '100%', padding: '12px', borderRadius: '14px',
-  border: '1.5px solid transparent',
-  backgroundColor: availableStock <= 0 ? '#9CA3AF' : '#1A1A1A',
-  color: '#FFF', fontSize: '13px', fontWeight: '600',
-  cursor: availableStock <= 0 ? 'not-allowed' : 'pointer',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-  transition: 'all 0.2s ease'
-}}
+              marginTop: '10px', width: '100%', padding: '12px', borderRadius: '14px',
+              border: '1.5px solid transparent',
+              backgroundColor: availableStock <= 0 ? '#9CA3AF' : '#1A1A1A',
+              color: '#FFF', fontSize: '13px', fontWeight: '600',
+              cursor: availableStock <= 0 ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              transition: 'all 0.2s ease'
+            }}
           >
             <ShoppingCart size={16} />
             {availableStock <= 0 ? 'Stok Tidak Mencukupi' : '+ Tambah ke Keranjang'}
           </button>
 
+          {/* TOMBOL HUBUNGI PENJUAL (di luar tombol keranjang) */}
           <button
             type="button"
-            onClick={() => {
-              requestOpenChat({
-                storeId: product.storeId ?? product.store ?? product.merchant,
-                storeName: product.store || product.merchant,
-              });
-              if (onClose) onClose();
+            onClick={handleContactSeller}
+            style={{
+              marginTop: '8px', width: '100%', padding: '12px', borderRadius: '14px',
+              border: '1.5px solid #D95A36', backgroundColor: '#FFF', color: '#D95A36',
+              fontSize: '13px', fontWeight: '600', cursor: 'pointer'
             }}
-            style={{ width: '100%', padding: '12px', borderRadius: '14px', border: '1.5px solid #D95A36', backgroundColor: '#FFF', color: '#D95A36', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
           >
             Hubungi Penjual
           </button>
@@ -280,10 +289,4 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
       </div>
     </div>
   );
-}
-
-// "Jl. Ahmad Yani, Batam Centre" -> "Batam Centre"
-export function areaOf(address = "") {
-  const parts = String(address).split(",").map((s) => s.trim()).filter(Boolean);
-  return parts.length > 1 ? parts[parts.length - 1] : parts[0] || "Batam";
 }

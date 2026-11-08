@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useProfile } from '@/lib/ProfileContext';
 import { X } from 'lucide-react';
 import { fraunces } from '@/lib/fonts';
+import { useProfile } from '@/lib/ProfileContext';
 import { compressImage } from '@/lib/pembeli/productHelper';
 import { URGENCY_MIN_HOURS, validateExpiry } from '@/lib/pembeli/productExpiry';
-
 
 const labelClass = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-600';
 const fieldClass =
@@ -21,6 +20,27 @@ export default function ProductModal({
   setFormData,
   onSubmit
 }) {
+  // Hook harus berada SEBELUM early return
+  const { profile, updateProfile } = useProfile();
+  const [gpsMsg, setGpsMsg] = useState('');
+  const hasPoint = profile?.storeLat != null && profile?.storeLng != null;
+
+  const takeGps = () => {
+    if (!navigator.geolocation) {
+      setGpsMsg('Browser tidak mendukung GPS.');
+      return;
+    }
+    setGpsMsg('Mengambil lokasi...');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        updateProfile({ storeLat: pos.coords.latitude, storeLng: pos.coords.longitude });
+        setGpsMsg('Titik lokasi toko tersimpan.');
+      },
+      () => setGpsMsg('Gagal mengambil GPS. Pastikan izin lokasi aktif.'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   if (!isOpen) return null;
 
   const isFood = formData.category === 'Makanan';
@@ -96,7 +116,7 @@ export default function ProductModal({
             </div>
           </div>
 
-          {/* 💡 TAMBAHAN: Input Harga Diskon untuk fase Segera */}
+          {/* Input Harga Diskon untuk fase Segera */}
           {isFood && (
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -200,6 +220,29 @@ export default function ProductModal({
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               className={fieldClass}
             />
+          </div>
+
+          {/* TITIK LOKASI PERSIS (hanya terlihat penjual; pembeli melihat area perkiraan) */}
+          <div>
+            <label className={labelClass}>Titik Lokasi Persis</label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={takeGps}
+                className="rounded-xl border-2 border-stone-200 bg-white px-3 py-2 text-[13px] font-semibold text-stone-800 transition-colors hover:border-[#F23A10]"
+              >
+                📡 Ambil dari GPS
+              </button>
+              <span className="text-xs text-stone-600">
+                {hasPoint
+                  ? `Tersimpan (${Number(profile.storeLat).toFixed(4)}, ${Number(profile.storeLng).toFixed(4)})`
+                  : 'Belum diatur'}
+              </span>
+            </div>
+            {gpsMsg && <p className="mt-1 text-xs text-stone-600">{gpsMsg}</p>}
+            <p className="mt-1 text-xs text-stone-600">
+              Lakukan saat kamu berada di toko. Titik ini hanya terlihat olehmu. Pembeli hanya melihat area perkiraan dan nama area.
+            </p>
           </div>
 
           <div>
