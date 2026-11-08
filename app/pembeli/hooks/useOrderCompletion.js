@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useCart } from '@/app/pembeli/context/cart';
+import { useNotification } from '@/app/context/notification';
 
 // Batas waktu konfirmasi otomatis (dalam milidetik)
 // Misal: 24 jam = 24 * 60 * 60 * 1000 ms (bisa disesuaikan, misal 12 jam atau 2 jam untuk testing)
@@ -7,6 +8,7 @@ const AUTO_COMPLETE_LIMIT_MS = 24 * 60 * 60 * 1000;
 
 export function useOrderCompletion() {
   const { orders, saveOrdersToStorage } = useCart();
+  const { addNotification } = useNotification();
 
   // 1. Logika Otomatis (Auto-Complete Timer Check)
   useEffect(() => {
@@ -51,6 +53,8 @@ export function useOrderCompletion() {
   // 2. Logika Manual (Klik Tombol "Pesanan Diterima")
   const handleConfirmCompletion = (orderId, productName) => {
     if (window.confirm(`Konfirmasi bahwa kamu telah menerima pesanan "${productName}"?`)) {
+      const target = orders.find((o) => o.id === orderId);
+
       const updatedOrders = orders.map((order) => {
         if (order.id === orderId) {
           return {
@@ -73,8 +77,16 @@ export function useOrderCompletion() {
         saveOrdersToStorage(updatedOrders);
       } else {
         localStorage.setItem('reown_orders', JSON.stringify(updatedOrders));
-        window.location.reload(); // Refresh ringan jika belum di-bind context
+        window.location.reload();
       }
+
+      addNotification({
+        role: 'penjual',
+        title: 'Pesanan Selesai!',
+        message: `${target?.buyerName || 'Pembeli'} telah mengonfirmasi penerimaan ${productName}.`,
+        type: 'success',
+        link: '/penjual/pesanan?tab=Selesai'
+      });
 
       alert(`Terima kasih! Pesanan ${productName} telah diselesaikan.`);
     }

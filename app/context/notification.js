@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Package, Store, ShieldAlert, AlertTriangle, CheckCircle, Clock, Tag } from 'lucide-react';
 
 const NotificationContext = createContext(null);
-const NOTIF_STORAGE_KEY = 'reown:notifications:v4'; // Update versi key biar fresh
+const NOTIF_STORAGE_KEY = 'reown:notifications:v5'; // Update versi key biar fresh
 
 const iconMap = {
   Package: Package,
@@ -38,6 +38,25 @@ export function NotificationProvider({ children }) {
       console.error(e);
       setNotifications([]);
     }
+  }, []);
+
+    useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key !== NOTIF_STORAGE_KEY) return;
+      try {
+        const parsed = e.newValue ? JSON.parse(e.newValue) : [];
+        setNotifications(
+          (Array.isArray(parsed) ? parsed : []).map((n) => ({
+            ...n,
+            icon: iconMap[n.iconName] || Store,
+          }))
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   // 🛠️ PERBAIKAN: Gunakan callback updater (prev) agar data tidak saling tumpang tindih

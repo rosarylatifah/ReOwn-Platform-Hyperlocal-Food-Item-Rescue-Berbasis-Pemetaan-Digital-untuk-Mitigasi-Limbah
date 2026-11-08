@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useOrders } from '@/lib/ordersStore';
 import { useProfile } from '@/lib/ProfileContext';
+import { useNotification } from '@/app/context/notification';
 
 const CartContext = createContext();
 
@@ -10,6 +11,17 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
   const { orders, setOrders, addOrder, cancelOrder: cancelOrderInStore, productStocks, setProductStocks } = useOrders();
   const { profile } = useProfile();
+  const { addNotification } = useNotification();
+
+const notifySeller = (order) => {
+  addNotification({
+    role: 'penjual',
+    title: 'Pesanan Baru Masuk!',
+    message: `${order.buyerName} mengajukan permintaan rescue untuk ${order.productName}.`,
+    type: 'order',
+    link: '/penjual/pesanan?tab=Menunggu+Konfirmasi'
+  });
+};
 
   // Keranjang tetap lokal milik pembeli
   useEffect(() => {
@@ -111,6 +123,7 @@ export function CartProvider({ children }) {
 
     const newOrder = buildOrder(item);
     addOrder(newOrder);
+    notifySeller(newOrder);
     if (onSendRequestCallback) onSendRequestCallback(newOrder);
     alert(`Permintaan rescue untuk ${item.name} BERHASIL dikirim dan stok toko telah diperbarui!`);
   };
@@ -121,10 +134,11 @@ export function CartProvider({ children }) {
     if (!window.confirm(`Kirim ${items.length} permintaan rescue sekaligus?`)) return false;
 
     const stocks = { ...productStocks };
-    items.forEach((item) => {
-      const id = String(item.id);
-      const current = stocks[id] !== undefined ? stocks[id] : item.stock || 5;
-      stocks[id] = Math.max(0, current - (item.quantity || 1));
+    items.forEach((item, idx) => {
+      const order = buildOrder(item, idx);
+      addOrder(order);
+      notifySeller(order);
+      if (onSendRequestCallback) onSendRequestCallback(order);
     });
     setProductStocks(stocks);
 
@@ -144,7 +158,16 @@ export function CartProvider({ children }) {
   // Batalkan oleh pembeli: tetap tampil di tab "Pesanan Dibatalkan"
   const cancelOrder = (orderId) => {
     const done = cancelOrderInStore(orderId);
-    if (done) alert(`Pesanan ${done.productName || 'produk'} berhasil dibatalkan.`);
+    if (done) {
+      addNotification({
+        role: 'penjual',
+        title: 'Pesanan Dibatalkan Pembeli',
+        message: `Pembeli membatalkan pesanan ${done.productName || 'produk'}.`,
+        type: 'cancel',
+        link: '/penjual/pesanan?tab=Dibatalkan'
+      });
+      alert(`Pesanan ${done.productName || 'produk'} berhasil dibatalkan.`);
+    }
   };
 
   const totalCartItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);

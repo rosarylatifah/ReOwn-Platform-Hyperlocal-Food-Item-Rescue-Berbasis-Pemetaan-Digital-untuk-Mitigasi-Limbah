@@ -73,7 +73,6 @@ export default function SellerOrders() {
   const countOf = (s) => items.filter((o) => o.status === s).length;
   const visible = items.filter((o) => o.status === activeTab);
 
-  // 🔔 1. Aksi Terima Pesanan (Kirim Notif ke Pembeli & Penjual)
   const handleTerima = (item) => {
     if (confirm(`Terima pesanan "${item.name}" dan lanjutkan ke proses pengiriman/penjemputan?`)) {
       updateOrder(item.id, {
@@ -82,7 +81,6 @@ export default function SellerOrders() {
         confirmDate: new Date().toISOString(),
       });
 
-      // Notifikasi untuk Pembeli
       addNotification({
         role: 'pembeli',
         title: 'Pesanan Diproses!',
@@ -90,24 +88,13 @@ export default function SellerOrders() {
         type: 'order',
         link: '/pembeli/pesanan?tab=proses'
       });
-
-      // 👈 Notifikasi untuk Penjual (Toko)
-      addNotification({
-        role: 'penjual',
-        title: 'Pesanan Diterima',
-        message: `Kamu telah menerima pesanan ${item.name}. Segera siapkan barang untuk pembeli.`,
-        type: 'order',
-        link: '/penjual/pesanan?tab=Dalam+Proses'
-      });
     }
   };
 
-  // 🔔 2. Aksi Tolak Pesanan (Kirim Notif ke Pembeli & Penjual)
   const handleTolak = (item) => {
     if (confirm(`Apakah kamu yakin ingin menolak pesanan "${item.name}"?`)) {
       cancelOrder(item.id);
 
-      // Notifikasi untuk Pembeli
       addNotification({
         role: 'pembeli',
         title: 'Pesanan Ditolak',
@@ -115,19 +102,9 @@ export default function SellerOrders() {
         type: 'expired',
         link: '/pembeli/pesanan?tab=batal'
       });
-
-      // 👈 Notifikasi untuk Penjual (Toko)
-      addNotification({
-        role: 'penjual',
-        title: 'Pesanan Ditolak',
-        message: `Kamu telah menolak pesanan ${item.name}.`,
-        type: 'expired',
-        link: '/penjual/pesanan?tab=Dibatalkan'
-      });
     }
   };
 
-  // 🔔 3. Aksi Selesaikan Pesanan (Kirim Notif ke Pembeli & Penjual)
   const handleSelesai = (item) => {
     if (confirm(`Apakah kamu yakin ingin menyelesaikan pesanan "${item.name}"?`)) {
       updateOrder(item.id, {
@@ -138,22 +115,12 @@ export default function SellerOrders() {
         }),
       });
 
-      // Notifikasi untuk Pembeli
       addNotification({
         role: 'pembeli',
         title: 'Penyelamatan Berhasil!',
         message: `Pesanan ${item.name} telah selesai diserahterimakan. Terima kasih sudah mengurangi limbah!`,
         type: 'success',
         link: '/pembeli/pesanan?tab=selesai'
-      });
-
-      // Notifikasi untuk Penjual
-      addNotification({
-        role: 'penjual',
-        title: 'Pesanan Selesai!',
-        message: `Produk ${item.name} berhasil diserahkan ke pembeli.`,
-        type: 'success',
-        link: '/penjual/pesanan?tab=Selesai'
       });
     }
   };

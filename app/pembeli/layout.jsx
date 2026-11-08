@@ -6,7 +6,7 @@ import { CartProvider } from "@/app/pembeli/context/cart";
 import { CartDrawerProvider } from "@/app/pembeli/context/cartDrawer";
 import { ChatProvider } from "@/app/pembeli/context/chat";
 import { ReportProvider } from "@/app/pembeli/context/report";
-import { NotificationProvider } from "@/app//context/notification";
+import { NotificationProvider } from "@/app/context/notification";
 import { ProfileDrawerProvider } from "@/lib/ProfileDrawer";
 import { LocationProvider } from "@/lib/locationStore";
 import BuyerNavbar from "@/components/pembeli/BuyerNavbar";

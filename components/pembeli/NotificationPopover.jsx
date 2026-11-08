@@ -7,7 +7,7 @@ import NotificationList from '@/components/NotificationList';
 
 export default function NotificationPopover({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('semua');
-  const { notifications, markAllAsRead, handleNotificationClick } = useNotification();
+  const { notifications, markAllAsReadByRole, handleNotificationClick } = useNotification();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -96,7 +96,7 @@ export default function NotificationPopover({ isOpen, onClose }) {
 
             {buyerUnreadCount > 0 && (
               <button 
-                onClick={markAllAsRead} // Memanggil fungsi markAllAsRead yang baru saja kita perbarui
+                onClick={() => markAllAsReadByRole('pembeli')}
                 style={{ border: 'none', background: 'none', color: '#D95A36', fontSize: '11px', fontWeight: '600', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}
               >
                 Tandai dibaca
