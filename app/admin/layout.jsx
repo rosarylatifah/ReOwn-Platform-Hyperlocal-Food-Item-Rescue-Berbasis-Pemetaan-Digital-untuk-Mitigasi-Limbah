@@ -1,6 +1,6 @@
-import AdminShell from "@/components/admin/AdminShell";
+import AdminFrame from "@/components/admin/AdminFrame";
 import { AdminProvider } from "@/lib/admin/store";
-import { NotificationProvider } from "@/app/context/notification"; // 👈 1. Import NotificationProvider kamu
+import { NotificationProvider } from "@/app/context/notification";
 import "./admin.css";
 
 export const metadata = {
@@ -10,9 +10,9 @@ export const metadata = {
 
 export default function AdminLayout({ children }) {
   return (
-    <NotificationProvider> {/* 👈 2. Bungkus paling luar di dalam AdminLayout */}
+    <NotificationProvider>
       <AdminProvider>
-        <AdminShell>{children}</AdminShell>
+        <AdminFrame>{children}</AdminFrame>
       </AdminProvider>
     </NotificationProvider>
   );

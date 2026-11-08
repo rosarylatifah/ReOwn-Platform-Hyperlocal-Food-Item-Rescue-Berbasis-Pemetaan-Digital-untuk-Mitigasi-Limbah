@@ -43,6 +43,33 @@ function readSession() {
   }
 }
 
+const ADMIN_SEED = {
+  nama: "Admin ReOwn",
+  email: "admin@reown.org",
+  password: "admin12345", // DUMMY: ganti sesuai keinginan
+};
+
+// Buat akun admin sekali saja kalau belum ada
+async function ensureAdmin() {
+  const users = readUsers();
+  if (users.some((u) => u.role === "admin")) return;
+  const passwordHash = await hash(ADMIN_SEED.password);
+  localStorage.setItem(
+    USERS_KEY,
+    JSON.stringify([
+      ...users,
+      {
+        nama: ADMIN_SEED.nama,
+        telepon: "",
+        email: ADMIN_SEED.email,
+        passwordHash,
+        storeName: "ReOwn Admin",
+        role: "admin",
+      },
+    ])
+  );
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [hydrated, setHydrated] = useState(false);
@@ -106,6 +133,25 @@ const register = useCallback(async ({ nama, telepon, email, password }) => {
     return { ok: true, role: session.role, user: session };
   }, []);
 
+  const adminLogin = useCallback(async ({ email, password }) => {
+    await ensureAdmin();
+    const mail = email.trim().toLowerCase();
+    const found = readUsers().find((u) => u.email === mail && u.role === "admin");
+    const passwordHash = await hash(password);
+    if (!found || found.passwordHash !== passwordHash) {
+      return { ok: false, error: "Email atau kata sandi admin salah." };
+    }
+    const session = {
+      nama: found.nama,
+      email: found.email,
+      telepon: found.telepon,
+      storeName: found.storeName,
+      role: "admin",
+    };
+    startSession(session);
+    return { ok: true, role: "admin", user: session };
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem('reown:current_user:v1');
@@ -139,8 +185,8 @@ const register = useCallback(async ({ nama, telepon, email, password }) => {
   }, [user]);
 
   const value = useMemo(
-    () => ({ user, hydrated, register, login, logout, updateProfile, switchRole }),
-    [user, hydrated, register, login, logout, updateProfile, switchRole]
+    () => ({ user, hydrated, register, login, adminLogin, logout, updateProfile, switchRole }),
+    [user, hydrated, register, login, adminLogin, logout, updateProfile, switchRole]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

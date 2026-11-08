@@ -53,7 +53,7 @@ export default function Sidebar() {
           confirmLabel="Keluar"
           onConfirm={() => {
             session.logout();
-            router.push("/masuk");
+            router.replace("/admin/masuk");
           }}
           onClose={() => setConfirmOut(false)}
         />

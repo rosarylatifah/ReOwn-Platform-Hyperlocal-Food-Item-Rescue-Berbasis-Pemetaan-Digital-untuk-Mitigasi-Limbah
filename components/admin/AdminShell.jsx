@@ -17,7 +17,7 @@ export default function AdminShell({ children }) {
   const allowed = ready && user?.role === "admin";
 
   useEffect(() => {
-    if (ready && !allowed) router.replace("/masuk");
+        if (ready && !allowed) router.replace("/admin/masuk");
   }, [ready, allowed, router]);
 
   if (!allowed) {
