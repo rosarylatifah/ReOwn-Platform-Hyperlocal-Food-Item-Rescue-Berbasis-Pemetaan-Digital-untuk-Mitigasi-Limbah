@@ -84,8 +84,8 @@ export function useProductManager() {
   const handleSubmitProduct = (e) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.location || !formData.stock) {
-      alert('Mohon isi Nama Produk, Lokasi, dan Stok!');
+if (!formData.name || !formData.stock) {
+  alert('Mohon isi Nama Produk dan Stok!');
       return;
     }
 

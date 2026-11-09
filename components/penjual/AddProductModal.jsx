@@ -11,6 +11,21 @@ const labelClass = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide t
 const fieldClass =
   'box-border w-full rounded-xl border-2 border-stone-200 bg-white px-3 py-2.5 text-[13px] text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus:border-[#F23A10] focus-visible:ring-4 focus-visible:ring-[#16A34A]/30 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500';
 const errClass = 'mt-1 text-xs font-medium text-red-600';
+const AREAS = ['Batam Centre', 'Nagoya', 'Lubuk Baja', 'Batu Ampar', 'Jodoh', 'Bengkong', 'Botania', 'Sekupang', 'Batu Aji', 'Sagulung', 'Tiban', 'Nongsa'];
+const OTHER = '__other';
+
+// Ubah titik GPS jadi nama area (layanan gratis OpenStreetMap, butuh internet)
+async function reverseArea(lat, lng) {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=id&lat=${lat}&lon=${lng}`
+    );
+    const a = (await r.json()).address || {};
+    return a.suburb || a.neighbourhood || a.village || a.city_district || a.city || null;
+  } catch {
+    return null;
+  }
+}
 
 export default function ProductModal({
   isOpen,
@@ -25,21 +40,29 @@ export default function ProductModal({
   const [gpsMsg, setGpsMsg] = useState('');
   const hasPoint = profile?.storeLat != null && profile?.storeLng != null;
 
-  const takeGps = () => {
-    if (!navigator.geolocation) {
-      setGpsMsg('Browser tidak mendukung GPS.');
-      return;
-    }
-    setGpsMsg('Mengambil lokasi...');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        updateProfile({ storeLat: pos.coords.latitude, storeLng: pos.coords.longitude });
-        setGpsMsg('Titik lokasi toko tersimpan.');
-      },
-      () => setGpsMsg('Gagal mengambil GPS. Pastikan izin lokasi aktif.'),
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  };
+const takeGps = () => {
+  if (!navigator.geolocation) { setGpsMsg('Browser tidak mendukung GPS.'); return; }
+  setGpsMsg('Mengambil lokasi...');
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      updateProfile({ storeLat: latitude, storeLng: longitude });
+      setGpsMsg('Titik tersimpan. Mencari nama area...');
+      const name = await reverseArea(latitude, longitude);
+      if (name) {
+        const preset = AREAS.find(
+          (a) => name.toLowerCase().includes(a.toLowerCase()) || a.toLowerCase().includes(name.toLowerCase())
+        );
+        setFormData((f) => ({ ...f, location: preset || name }));
+        setGpsMsg(`Titik tersimpan. Area terisi otomatis: ${preset || name}.`);
+      } else {
+        setGpsMsg('Titik tersimpan. Nama area tidak terdeteksi, pilih manual di bawah.');
+      }
+    },
+    () => setGpsMsg('Gagal mengambil GPS. Pastikan izin lokasi aktif.'),
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+};
 
   if (!isOpen) return null;
 
@@ -211,39 +234,51 @@ export default function ProductModal({
             </div>
           )}
 
-          <div>
-            <label className={labelClass}>Lokasi Toko</label>
-            <input
-              type="text"
-              placeholder="Batam Centre"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className={fieldClass}
-            />
-          </div>
+<div>
+  <label className={labelClass}>Titik Lokasi Toko</label>
+  <div className="flex items-center gap-2">
+    <button
+      type="button"
+      onClick={takeGps}
+      className="rounded-xl border-2 border-stone-200 bg-white px-3 py-2 text-[13px] font-semibold text-stone-800 transition-colors hover:border-[#F23A10]"
+    >
+      📡 Ambil dari GPS
+    </button>
+    <span className="text-xs text-stone-600">
+      {hasPoint
+        ? `Tersimpan (${Number(profile.storeLat).toFixed(4)}, ${Number(profile.storeLng).toFixed(4)})`
+        : 'Belum diatur'}
+    </span>
+  </div>
+  {gpsMsg && <p className="mt-1 text-xs text-stone-600">{gpsMsg}</p>}
+  <p className="mt-1 text-xs text-stone-600">
+    Lakukan saat kamu berada di toko. Titik ini hanya terlihat olehmu. Pembeli hanya melihat area perkiraan.
+  </p>
+</div>
 
-          {/* TITIK LOKASI PERSIS (hanya terlihat penjual; pembeli melihat area perkiraan) */}
-          <div>
-            <label className={labelClass}>Titik Lokasi Persis</label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={takeGps}
-                className="rounded-xl border-2 border-stone-200 bg-white px-3 py-2 text-[13px] font-semibold text-stone-800 transition-colors hover:border-[#F23A10]"
-              >
-                📡 Ambil dari GPS
-              </button>
-              <span className="text-xs text-stone-600">
-                {hasPoint
-                  ? `Tersimpan (${Number(profile.storeLat).toFixed(4)}, ${Number(profile.storeLng).toFixed(4)})`
-                  : 'Belum diatur'}
-              </span>
-            </div>
-            {gpsMsg && <p className="mt-1 text-xs text-stone-600">{gpsMsg}</p>}
-            <p className="mt-1 text-xs text-stone-600">
-              Lakukan saat kamu berada di toko. Titik ini hanya terlihat olehmu. Pembeli hanya melihat area perkiraan dan nama area.
-            </p>
-          </div>
+<div>
+  <label className={labelClass}>Area Lokasi (Opsional)</label>
+  <select
+    value={AREAS.includes(formData.location) ? formData.location : OTHER}
+    onChange={(e) => setFormData({ ...formData, location: e.target.value === OTHER ? '' : e.target.value })}
+    className={fieldClass}
+  >
+    {AREAS.map((a) => (
+      <option key={a} value={a}>{a}</option>
+    ))}
+    <option value={OTHER}>Lainnya (isi sendiri)</option>
+  </select>
+  {!AREAS.includes(formData.location) && (
+    <input
+      type="text"
+      placeholder="Tulis nama area, misal: Tanjung Piayu"
+      value={formData.location}
+      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+      className={`${fieldClass} mt-2`}
+    />
+  )}
+  <p className="mt-1 text-xs text-stone-600">Terisi otomatis setelah ambil GPS. Pembeli hanya melihat nama area ini.</p>
+</div>
 
           <div>
             <label className={labelClass}>Gambar Produk (Opsional)</label>
