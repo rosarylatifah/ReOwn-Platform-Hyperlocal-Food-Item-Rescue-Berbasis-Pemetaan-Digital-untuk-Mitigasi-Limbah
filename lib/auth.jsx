@@ -220,7 +220,7 @@ export function AuthProvider({ children }) {
 
       const email = found.email;
       const profile = readJson("reown_user_profile", {});
-      const ownProfile = profile.email === email;
+      const ownProfile = (profile.ownerEmail || profile.email) === email;
       const buyerNames = new Set([found.nama, ownProfile ? profile.name : null].filter(Boolean));
       const storeNames = new Set([found.storeName, ownProfile ? profile.storeName : null].filter(Boolean));
 
