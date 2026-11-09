@@ -20,7 +20,7 @@ const EMPTY_FORM = {
   expiryAt: '',
   urgencyAt: '',
   description: '',
-  geoSource: '',   // 'gps' | 'area' | ''
+  geoSource: '', // 'gps' | 'area' | ''
   gpsLat: null,
   gpsLng: null,
   autoSchedule: false,
@@ -54,6 +54,10 @@ export function useProductManager() {
     setMyProducts(getSellerProducts());
     setReady(true);
   }, []);
+
+  useEffect(() => {
+    if (ready) saveSellerProducts(myProducts);
+  }, [myProducts, ready]);
 
   // Hitung ulang status terjadwal saat dibuka dan tiap menit
   useEffect(() => {
@@ -119,21 +123,14 @@ export function useProductManager() {
       return;
     }
 
-    if (formData.category === 'Makanan' && !formData.expiryAt) {
+    const isFoodItem = formData.category === 'Makanan';
+
+    if (isFoodItem && !formData.expiryAt) {
       alert('Mohon isi Batas Kadaluarsa untuk produk makanan!');
       return;
     }
 
-    const normalVal = parseInt(digits(formData.price), 10) || 0;
-    const discountVal = parseInt(digits(formData.discountPrice), 10) || Math.round(normalVal * 0.5);
-
-    let calculatedUrgency = 'Normal';
-    let finalPrice = formatPrice(formData.price);
-
-    if (formData.category === 'Makanan' && formData.expiryAt) {
-      const now = new Date();
-      const expiryTime = new Date(formData.expiryAt);
-          const isFoodItem = formData.category === 'Makanan';
+    // Validasi jadwal otomatis (khusus Barang)
     if (!isFoodItem && formData.autoSchedule) {
       if (!formData.segeraDate && !formData.mendesakDate) {
         alert('Isi minimal satu tanggal untuk status otomatis, atau matikan opsinya.');
@@ -146,6 +143,7 @@ export function useProductManager() {
         return;
       }
     }
+
     const schedule = isFoodItem
       ? { autoSchedule: false, segeraAt: '', mendesakAt: '' }
       : {
@@ -153,6 +151,16 @@ export function useProductManager() {
           segeraAt: formData.autoSchedule ? joinDT(formData.segeraDate, formData.segeraTime) : '',
           mendesakAt: formData.autoSchedule ? joinDT(formData.mendesakDate, formData.mendesakTime) : '',
         };
+
+    const normalVal = parseInt(digits(formData.price), 10) || 0;
+    const discountVal = parseInt(digits(formData.discountPrice), 10) || Math.round(normalVal * 0.5);
+
+    let calculatedUrgency = 'Normal';
+    let finalPrice = formatPrice(formData.price);
+
+    if (isFoodItem && formData.expiryAt) {
+      const now = new Date();
+      const expiryTime = new Date(formData.expiryAt);
       // Batas urgensi opsional: kosong = 8 jam sebelum kadaluarsa
       const urgencyTime = formData.urgencyAt
         ? new Date(formData.urgencyAt)
@@ -171,10 +179,7 @@ export function useProductManager() {
       calculatedUrgency = formData.urgency;
     }
 
-    // Titik lokasi persis toko (diambil penjual lewat GPS di form), ikut disimpan di produk.
-    // Pembeli TIDAK melihat titik ini: peta dan jarak memakai titik perkiraan.
-    const storeLat = profile?.storeLat ?? null;
-    const storeLng = profile?.storeLng ?? null;
+    // Titik lokasi persis toko. Pembeli TIDAK melihat titik ini: peta dan jarak memakai titik perkiraan.
     const storeId = user?.email || profile?.storeName || 'toko';
     const areaFallback = coordsForArea(formData.location) || DEFAULT_COORD;
     const point =
@@ -194,7 +199,7 @@ export function useProductManager() {
                 category: formData.category,
                 price: finalPrice,
                 normalPrice: formatPrice(formData.price),
-                discountPrice: formatPrice(formData.discountPrice),
+                discountPrice: formatPrice(formData.discountPrice || discountVal),
                 location: formData.location || 'Batam',
                 image: formData.image || item.image,
                 status: formData.status,
@@ -207,13 +212,13 @@ export function useProductManager() {
                 lat: point?.lat ?? item.lat,
                 lng: point?.lng ?? item.lng,
                 storeId: item.storeId ?? storeId,
-              ...schedule,
+                ...schedule,
               })
             : item
         )
       );
     } else {
-      const newProduct = {
+      const newProduct = applySchedule({
         id: Date.now(),
         name: formData.name,
         category: formData.category,
@@ -236,7 +241,8 @@ export function useProductManager() {
         lat: point?.lat ?? profile?.storeLat ?? areaFallback.lat,
         lng: point?.lng ?? profile?.storeLng ?? areaFallback.lng,
         isSeller: true,
-      };
+        ...schedule,
+      });
       setMyProducts((prev) => [newProduct, ...prev]);
     }
 

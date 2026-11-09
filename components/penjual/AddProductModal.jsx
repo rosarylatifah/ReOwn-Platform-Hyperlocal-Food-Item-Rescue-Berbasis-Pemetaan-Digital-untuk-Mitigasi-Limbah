@@ -282,7 +282,6 @@ const takeGps = () => {
                 <input
                   id="pm-urgency"
                   type="datetime-local"
-                  required
                   value={urgencyAt}
                   onChange={(e) => setFormData({ ...formData, urgencyAt: e.target.value })}
                   aria-invalid={urgencyErr ? true : undefined}
