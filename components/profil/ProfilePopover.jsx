@@ -52,8 +52,8 @@ function SubHeader({ title, onBack }) {
 }
 
 export default function ProfilePopover({ isOpen, onClose }) {
-  const { logout, deleteAccount } = useAuth();
-  const { profile, toggleSellerMode } = useProfile();
+  const { user, logout, deleteAccount } = useAuth();
+  const { profile, toggleSellerMode, updateProfile } = useProfile();
   const { open: openProfileDrawer } = useProfileDrawer();
   const router = useRouter();
 
@@ -140,12 +140,16 @@ export default function ProfilePopover({ isOpen, onClose }) {
     if (profile.isSellerActive) {
       toggleSellerMode(false);
       router.push('/pembeli/beranda');
-    } else if (profile.storeName && profile.storeAddress) {
-      toggleSellerMode(true);
-      router.push('/penjual/beranda');
-    } else {
-      openProfileDrawer();
+      return;
     }
+    // Nama toko diisi otomatis kalau masih kosong, detail lain bisa dilengkapi nanti
+    if (!profile.storeName) {
+      updateProfile({
+        storeName: user?.storeName || `${profile.name || user?.nama || 'Toko'}'s Store`,
+      });
+    }
+    toggleSellerMode(true);
+    router.push('/penjual/beranda');
   };
 
   return (
