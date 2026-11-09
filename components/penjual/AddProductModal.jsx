@@ -6,6 +6,12 @@ import { fraunces } from '@/lib/fonts';
 import { useProfile } from '@/lib/ProfileContext';
 import { compressImage } from '@/lib/pembeli/productHelper';
 import { URGENCY_MIN_HOURS, validateExpiry } from '@/lib/pembeli/productExpiry';
+import dynamic from 'next/dynamic';
+
+const LocationPicker = dynamic(() => import('@/components/penjual/LocationPicker'), {
+  ssr: false,
+  loading: () => <div className="h-[260px] rounded-xl bg-stone-100" />,
+});
 
 const labelClass = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-600';
 const fieldClass =
@@ -47,6 +53,7 @@ const takeGps = () => {
     async (pos) => {
       const { latitude, longitude } = pos.coords;
       updateProfile({ storeLat: latitude, storeLng: longitude });
+      setFormData((f) => ({ ...f, geoSource: 'gps', gpsLat: latitude, gpsLng: longitude }));
       setGpsMsg('Titik tersimpan. Mencari nama area...');
       const name = await reverseArea(latitude, longitude);
       if (name) {
@@ -56,7 +63,7 @@ const takeGps = () => {
         setFormData((f) => ({ ...f, location: preset || name }));
         setGpsMsg(`Titik tersimpan. Area terisi otomatis: ${preset || name}.`);
       } else {
-        setGpsMsg('Titik tersimpan. Nama area tidak terdeteksi, pilih manual di bawah.');
+        setGpsMsg('Titik tersimpan. Nama area tidak terdeteksi, isi manual di bawah.');
       }
     },
     () => setGpsMsg('Gagal mengambil GPS. Pastikan izin lokasi aktif.'),
@@ -195,6 +202,61 @@ const takeGps = () => {
             </div>
           )}
 
+                    {!isFood && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-[#FFF7E9] p-3.5">
+              <label className="flex cursor-pointer items-center gap-2 text-[13px] font-semibold text-stone-800">
+                <input
+                  type="checkbox"
+                  checked={!!formData.autoSchedule}
+                  onChange={(e) => setFormData({ ...formData, autoSchedule: e.target.checked })}
+                  className="h-4 w-4 accent-[#F23A10]"
+                />
+                Ubah status otomatis sesuai jadwal (opsional)
+              </label>
+
+              {formData.autoSchedule && (
+                <>
+                  <div>
+                    <label className={labelClass}>Harga Diskon Segera (Rp)</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Kosongkan = 50% dari harga normal"
+                      value={formData.discountPrice || ''}
+                      onChange={(e) => setFormData({ ...formData, discountPrice: e.target.value.replace(/[^0-9]/g, '') })}
+                      className={fieldClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Mulai Segera (diskon)</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="date" value={formData.segeraDate || ''}
+                        onChange={(e) => setFormData({ ...formData, segeraDate: e.target.value })} className={fieldClass} />
+                      <input type="time" value={formData.segeraTime || ''}
+                        onChange={(e) => setFormData({ ...formData, segeraTime: e.target.value })} className={fieldClass} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Mulai Mendesak (gratis)</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="date" value={formData.mendesakDate || ''}
+                        onChange={(e) => setFormData({ ...formData, mendesakDate: e.target.value })} className={fieldClass} />
+                      <input type="time" value={formData.mendesakTime || ''}
+                        onChange={(e) => setFormData({ ...formData, mendesakTime: e.target.value })} className={fieldClass} />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-stone-600">
+                    Jam boleh dikosongkan, otomatis jam 00.00 di tanggal itu. Salah satu tahap boleh dilewati.
+                    Status manual dikunci selama opsi ini aktif.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
           {/* KHUSUS MAKANAN: batas kadaluarsa + batas urgensi */}
           {isFood && (
             <div className="flex flex-col gap-3.5 rounded-2xl border border-amber-200 bg-[#FFF7E9] p-3.5">
@@ -228,57 +290,28 @@ const takeGps = () => {
                 />
                 {urgencyErr && <p className={errClass} role="alert">{urgencyErr}</p>}
                 <p className="mt-1 text-xs text-stone-600">
-                  Saat batas ini tercapai, status jadi <b>Segera</b> (harga berubah ke diskon). Saat mendekati kadaluarsa, otomatis jadi <b>Mendesak (Gratis)</b>. Minimal {URGENCY_MIN_HOURS} jam sebelum kadaluarsa.
+                  Opsional. Kosongkan untuk otomatis <b>8 jam sebelum kadaluarsa</b>. Saat batas ini tercapai, status jadi <b>Mendesak (Gratis)</b>.
                 </p>
               </div>
             </div>
           )}
 
-<div>
-  <label className={labelClass}>Titik Lokasi Toko</label>
-  <div className="flex items-center gap-2">
-    <button
-      type="button"
-      onClick={takeGps}
-      className="rounded-xl border-2 border-stone-200 bg-white px-3 py-2 text-[13px] font-semibold text-stone-800 transition-colors hover:border-[#F23A10]"
-    >
-      📡 Ambil dari GPS
-    </button>
-    <span className="text-xs text-stone-600">
-      {hasPoint
-        ? `Tersimpan (${Number(profile.storeLat).toFixed(4)}, ${Number(profile.storeLng).toFixed(4)})`
-        : 'Belum diatur'}
-    </span>
-  </div>
-  {gpsMsg && <p className="mt-1 text-xs text-stone-600">{gpsMsg}</p>}
-  <p className="mt-1 text-xs text-stone-600">
-    Lakukan saat kamu berada di toko. Titik ini hanya terlihat olehmu. Pembeli hanya melihat area perkiraan.
-  </p>
-</div>
-
-<div>
-  <label className={labelClass}>Area Lokasi (Opsional)</label>
-  <select
-    value={AREAS.includes(formData.location) ? formData.location : OTHER}
-    onChange={(e) => setFormData({ ...formData, location: e.target.value === OTHER ? '' : e.target.value })}
-    className={fieldClass}
-  >
-    {AREAS.map((a) => (
-      <option key={a} value={a}>{a}</option>
-    ))}
-    <option value={OTHER}>Lainnya (isi sendiri)</option>
-  </select>
-  {!AREAS.includes(formData.location) && (
-    <input
-      type="text"
-      placeholder="Tulis nama area, misal: Tanjung Piayu"
-      value={formData.location}
-      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-      className={`${fieldClass} mt-2`}
-    />
-  )}
-  <p className="mt-1 text-xs text-stone-600">Terisi otomatis setelah ambil GPS. Pembeli hanya melihat nama area ini.</p>
-</div>
+<LocationPicker
+  labelClass={labelClass}
+  fieldClass={fieldClass}
+  location={formData.location}
+  point={formData.gpsLat != null ? { lat: formData.gpsLat, lng: formData.gpsLng } : null}
+  onText={(t) => setFormData((f) => ({ ...f, location: t }))}
+  onPick={(p, name) =>
+    setFormData((f) => ({
+      ...f,
+      geoSource: 'gps',
+      gpsLat: p.lat,
+      gpsLng: p.lng,
+      ...(name ? { location: name } : {}),
+    }))
+  }
+/>
 
           <div>
             <label className={labelClass}>Gambar Produk (Opsional)</label>

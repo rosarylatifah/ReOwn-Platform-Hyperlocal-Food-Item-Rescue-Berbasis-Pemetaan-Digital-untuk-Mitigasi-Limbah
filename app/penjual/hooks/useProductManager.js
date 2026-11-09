@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useProfile } from '@/lib/ProfileContext';
 import { getSellerProducts, saveSellerProducts } from '@/lib/pembeli/productHelper';
 import { useAuth } from '@/lib/auth';
+import { coordsForArea, DEFAULT_COORD } from '@/lib/pembeli/areaCoords';
+import { applySchedule, splitDT, joinDT } from '@/lib/pembeli/productSchedule';
 
 const EMPTY_FORM = {
   name: '',
@@ -18,9 +20,15 @@ const EMPTY_FORM = {
   expiryAt: '',
   urgencyAt: '',
   description: '',
+  geoSource: '',   // 'gps' | 'area' | ''
+  gpsLat: null,
+  gpsLng: null,
+  autoSchedule: false,
+  segeraDate: '',
+  segeraTime: '',
+  mendesakDate: '',
+  mendesakTime: '',
 };
-
-const { user } = useAuth();
 
 const digits = (v) => String(v || '').replace(/[^0-9]/g, '');
 const formatPrice = (v) => {
@@ -28,9 +36,11 @@ const formatPrice = (v) => {
   if (!clean) return 'Gratis';
   return `Rp. ${parseInt(clean, 10).toLocaleString('id-ID')}`;
 };
+const DEFAULT_URGENCY_HOURS = 8;
 
 export function useProductManager() {
   const { profile } = useProfile();
+  const { user } = useAuth();
 
   const [myProducts, setMyProducts] = useState([]);
   const [ready, setReady] = useState(false);
@@ -45,9 +55,18 @@ export function useProductManager() {
     setReady(true);
   }, []);
 
+  // Hitung ulang status terjadwal saat dibuka dan tiap menit
   useEffect(() => {
-    if (ready) saveSellerProducts(myProducts);
-  }, [myProducts, ready]);
+    if (!ready) return;
+    const tick = () =>
+      setMyProducts((prev) => {
+        const next = prev.map(applySchedule);
+        return next.some((p, i) => p !== prev[i]) ? next : prev;
+      });
+    tick();
+    const t = setInterval(tick, 60000);
+    return () => clearInterval(t);
+  }, [ready]);
 
   const handleOpenAddModal = () => {
     setEditingProductId(null);
@@ -70,6 +89,14 @@ export function useProductManager() {
       expiryAt: product.expiryAt || product.deadline || '',
       urgencyAt: product.urgencyAt || '',
       description: product.description || '',
+      geoSource: '',
+      gpsLat: product.lat ?? null,
+      gpsLng: product.lng ?? null,
+      autoSchedule: !!product.autoSchedule,
+      segeraDate: splitDT(product.segeraAt)[0],
+      segeraTime: splitDT(product.segeraAt)[1],
+      mendesakDate: splitDT(product.mendesakAt)[0],
+      mendesakTime: splitDT(product.mendesakAt)[1],
     });
     setIsModalOpen(true);
   };
@@ -87,8 +114,8 @@ export function useProductManager() {
   const handleSubmitProduct = (e) => {
     e.preventDefault();
 
-if (!formData.name || !formData.stock) {
-  alert('Mohon isi Nama Produk dan Stok!');
+    if (!formData.name || !formData.stock) {
+      alert('Mohon isi Nama Produk dan Stok!');
       return;
     }
 
@@ -106,20 +133,37 @@ if (!formData.name || !formData.stock) {
     if (formData.category === 'Makanan' && formData.expiryAt) {
       const now = new Date();
       const expiryTime = new Date(formData.expiryAt);
-      const urgencySoonTime = formData.urgencyAt ? new Date(formData.urgencyAt) : null;
-
-      // Fase Mendesak: sisa waktu 2 jam terakhir sebelum expired atau melewati urgencyAt
-      const isUrgentPhase = urgencySoonTime && now >= urgencySoonTime;
-      const isAlmostExpired = expiryTime.getTime() - now.getTime() <= 2 * 3600000; // <= 2 jam
+          const isFoodItem = formData.category === 'Makanan';
+    if (!isFoodItem && formData.autoSchedule) {
+      if (!formData.segeraDate && !formData.mendesakDate) {
+        alert('Isi minimal satu tanggal untuk status otomatis, atau matikan opsinya.');
+        return;
+      }
+      const s = joinDT(formData.segeraDate, formData.segeraTime);
+      const m = joinDT(formData.mendesakDate, formData.mendesakTime);
+      if (s && m && new Date(m) <= new Date(s)) {
+        alert('Waktu Mendesak harus setelah waktu Segera.');
+        return;
+      }
+    }
+    const schedule = isFoodItem
+      ? { autoSchedule: false, segeraAt: '', mendesakAt: '' }
+      : {
+          autoSchedule: !!formData.autoSchedule,
+          segeraAt: formData.autoSchedule ? joinDT(formData.segeraDate, formData.segeraTime) : '',
+          mendesakAt: formData.autoSchedule ? joinDT(formData.mendesakDate, formData.mendesakTime) : '',
+        };
+      // Batas urgensi opsional: kosong = 8 jam sebelum kadaluarsa
+      const urgencyTime = formData.urgencyAt
+        ? new Date(formData.urgencyAt)
+        : new Date(expiryTime.getTime() - DEFAULT_URGENCY_HOURS * 3600000);
 
       if (now >= expiryTime) {
         calculatedUrgency = 'Expired';
-      } else if (isUrgentPhase || isAlmostExpired) {
-        // Otomatis Mendesak & Gratis
+      } else if (now >= urgencyTime) {
         calculatedUrgency = 'Mendesak';
         finalPrice = 'Gratis';
-      } else if (urgencySoonTime && now >= new Date(urgencySoonTime.getTime() - 12 * 3600000)) {
-        // Fase Segera: masuk harga diskon
+      } else if (now >= new Date(urgencyTime.getTime() - 12 * 3600000)) {
         calculatedUrgency = 'Segera';
         finalPrice = formatPrice(discountVal);
       }
@@ -132,12 +176,19 @@ if (!formData.name || !formData.stock) {
     const storeLat = profile?.storeLat ?? null;
     const storeLng = profile?.storeLng ?? null;
     const storeId = user?.email || profile?.storeName || 'toko';
+    const areaFallback = coordsForArea(formData.location) || DEFAULT_COORD;
+    const point =
+      formData.geoSource === 'gps' && formData.gpsLat != null
+        ? { lat: formData.gpsLat, lng: formData.gpsLng }
+        : formData.geoSource === 'area'
+        ? areaFallback
+        : null;
 
     if (editingProductId) {
       setMyProducts((prev) =>
         prev.map((item) =>
           item.id === editingProductId
-            ? {
+            ? applySchedule({
                 ...item,
                 name: formData.name,
                 category: formData.category,
@@ -153,10 +204,11 @@ if (!formData.name || !formData.stock) {
                 urgencyAt: formData.urgencyAt,
                 deadline: formData.expiryAt,
                 description: formData.description || `${formData.name} dari ${profile?.storeName || 'Toko Rescue'}.`,
-                lat: storeLat ?? item.lat,
-                lng: storeLng ?? item.lng,
+                lat: point?.lat ?? item.lat,
+                lng: point?.lng ?? item.lng,
                 storeId: item.storeId ?? storeId,
-              }
+              ...schedule,
+              })
             : item
         )
       );
@@ -167,7 +219,7 @@ if (!formData.name || !formData.stock) {
         category: formData.category,
         price: finalPrice,
         normalPrice: formatPrice(formData.price),
-        discountPrice: formatPrice(formData.discountPrice),
+        discountPrice: formatPrice(formData.discountPrice || discountVal),
         location: formData.location || 'Batam',
         image:
           formData.image ||
@@ -181,8 +233,8 @@ if (!formData.name || !formData.stock) {
         urgencyAt: formData.urgencyAt,
         deadline: formData.expiryAt,
         description: formData.description || `${formData.name} dari ${profile?.storeName || 'Toko Rescue'}.`,
-        lat: storeLat ?? 1.1186,
-        lng: storeLng ?? 104.0487,
+        lat: point?.lat ?? profile?.storeLat ?? areaFallback.lat,
+        lng: point?.lng ?? profile?.storeLng ?? areaFallback.lng,
         isSeller: true,
       };
       setMyProducts((prev) => [newProduct, ...prev]);

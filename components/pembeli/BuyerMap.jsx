@@ -14,7 +14,7 @@ const badgeIcon = (count) =>
   typeof window !== 'undefined'
     ? new L.DivIcon({
         className: 'reown-badge',
-        html: `<div style="display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#2563EB;color:#fff;font:700 13px Inter,sans-serif;border:3px solid #fff;box-shadow:0 4px 12px rgba(37,99,235,0.45;">${count}</div>`,
+        html: `<div style="display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#2563EB;color:#fff;font:700 13px Inter,sans-serif;border:3px solid #fff;box-shadow:0 4px 12px rgba(37,99,235,0.45);">${count}</div>`,
         iconSize: [34, 34],
         iconAnchor: [17, 17],
         popupAnchor: [0, -18],
