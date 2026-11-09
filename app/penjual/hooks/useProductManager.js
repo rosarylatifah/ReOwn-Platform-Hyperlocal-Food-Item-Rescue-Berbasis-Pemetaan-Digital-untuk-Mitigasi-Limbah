@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useProfile } from '@/lib/ProfileContext';
 import { getSellerProducts, saveSellerProducts } from '@/lib/pembeli/productHelper';
+import { useAuth } from '@/lib/auth';
 
 const EMPTY_FORM = {
   name: '',
@@ -18,6 +19,8 @@ const EMPTY_FORM = {
   urgencyAt: '',
   description: '',
 };
+
+const { user } = useAuth();
 
 const digits = (v) => String(v || '').replace(/[^0-9]/g, '');
 const formatPrice = (v) => {
@@ -128,7 +131,7 @@ if (!formData.name || !formData.stock) {
     // Pembeli TIDAK melihat titik ini: peta dan jarak memakai titik perkiraan.
     const storeLat = profile?.storeLat ?? null;
     const storeLng = profile?.storeLng ?? null;
-    const storeId = profile?.email || profile?.storeName || 'toko';
+    const storeId = user?.email || profile?.storeName || 'toko';
 
     if (editingProductId) {
       setMyProducts((prev) =>

@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useAuth } from '@/lib/auth';
 
 const STORAGE_KEY = "reown:cart:v1";
 
@@ -31,6 +32,7 @@ export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
   const [hydrated, setHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useAuth();
 
   // Baca keranjang tersimpan setelah mount + sinkron antar-tab
   useEffect(() => {

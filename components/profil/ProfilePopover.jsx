@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { useAuth } from '@/lib/auth';
-import { useProfile } from '@/lib/ProfileContext'; 
+import { useProfile } from '@/lib/ProfileContext';
 import { useProfileDrawer } from '@/lib/ProfileDrawer';
 import { fraunces } from '@/lib/fonts';
 
@@ -52,8 +52,8 @@ function SubHeader({ title, onBack }) {
 }
 
 export default function ProfilePopover({ isOpen, onClose }) {
-  const { logout } = useAuth();
-  const { profile, toggleSellerMode } = useProfile(); 
+  const { logout, deleteAccount } = useAuth();
+  const { profile, toggleSellerMode } = useProfile();
   const { open: openProfileDrawer } = useProfileDrawer();
   const router = useRouter();
 
@@ -65,12 +65,18 @@ export default function ProfilePopover({ isOpen, onClose }) {
   const [activeModal, setActiveModal] = useState(null);
   const [confirmSwitch, setConfirmSwitch] = useState(false);
 
+  // Hapus akun
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePw, setDeletePw] = useState('');
+  const [deleteErr, setDeleteErr] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
   // Kunci scroll background pas popover kebuka
   useEffect(() => {
     if (!isOpen) return;
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
-    
+
     return () => {
       document.body.style.overflow = originalStyle;
     };
@@ -83,8 +89,8 @@ export default function ProfilePopover({ isOpen, onClose }) {
     email: profile.email || 'email@domain.com',
     phone: profile.phone || '-',
     address: profile.address || '-',
-    role: profile.isSellerActive 
-      ? `Penjual (${profile.storeName || 'Toko'})` 
+    role: profile.isSellerActive
+      ? `Penjual (${profile.storeName || 'Toko'})`
       : 'Pembeli (Rescue Member)',
     avatar: profile.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
   };
@@ -95,11 +101,31 @@ export default function ProfilePopover({ isOpen, onClose }) {
     router.push('/masuk');
   };
 
+  const resetDelete = () => {
+    setDeleteOpen(false);
+    setDeletePw('');
+    setDeleteErr('');
+  };
+
   const handleClose = () => {
     setCurrentView('main');
     setActiveModal(null);
     setConfirmSwitch(false);
+    resetDelete();
     onClose();
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    setDeleteErr('');
+    const res = await deleteAccount({ password: deletePw });
+    if (!res.ok) {
+      setDeleteErr(res.error);
+      setDeleting(false);
+      return;
+    }
+    // Muat ulang penuh supaya semua state di memori ikut bersih
+    window.location.assign('/');
   };
 
   const handleEditProfile = () => {
@@ -118,7 +144,7 @@ export default function ProfilePopover({ isOpen, onClose }) {
       toggleSellerMode(true);
       router.push('/penjual/beranda');
     } else {
-      openProfileDrawer(); 
+      openProfileDrawer();
     }
   };
 
@@ -145,10 +171,10 @@ export default function ProfilePopover({ isOpen, onClose }) {
           <View>
             {/* HEADER USER INFO */}
             <div className="relative rounded-t-[22px] border-b border-stone-200 bg-white px-5 py-5 max-sm:rounded-none">
-              
+
               {/* TOMBOL X CLOSE DI POJOK KANAN ATAS HEADER */}
-              <button 
-                onClick={handleClose} 
+              <button
+                onClick={handleClose}
                 className="absolute right-4 top-4 border-none bg-[#F5F5F5] rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-[#666] hover:bg-stone-200 transition-colors"
                 aria-label="Tutup menu"
               >
@@ -260,9 +286,7 @@ export default function ProfilePopover({ isOpen, onClose }) {
 
               <button
                 type="button"
-                onClick={() => {
-                  if (window.confirm("Yakin ingin menghapus akun secara permanen?")) alert("Akun dihapus.");
-                }}
+                onClick={() => setDeleteOpen(true)}
                 className={rowDanger}
               >
                 <Trash2 size={16} /> Penghapusan Akun
@@ -389,6 +413,66 @@ export default function ProfilePopover({ isOpen, onClose }) {
                 className={`rounded-full bg-stone-900 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#D85834] ${focusRing}`}
               >
                 Ya, switch
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ================= MODAL HAPUS AKUN ================= */}
+      {deleteOpen && (
+        <div
+          onClick={() => !deleting && resetDelete()}
+          className="fixed inset-0 z-[1100] grid place-items-center bg-stone-900/40 px-6 backdrop-blur-sm"
+        >
+          <motion.div
+            role="alertdialog"
+            aria-modal="true"
+            initial={{ scale: 0.92, y: 8 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-[22px] bg-white p-6 shadow-[0_24px_60px_rgba(60,30,10,0.3)]"
+          >
+            <span aria-hidden className="grid h-12 w-12 place-items-center rounded-full bg-red-50 text-red-600">
+              <Trash2 size={22} />
+            </span>
+            <h4 className={`${fraunces.className} mt-4 text-xl font-extrabold text-stone-900`}>
+              Hapus akun permanen?
+            </h4>
+            <p className="mt-2 text-sm leading-relaxed text-stone-600">
+              Akun dan profilmu akan dihapus
+              {profile.isSellerActive ? ', beserta seluruh produk dan chat tokomu' : ''} dan tidak bisa dikembalikan.
+              Riwayat pesanan tetap tersimpan sebagai "Akun dihapus".
+            </p>
+
+            <input
+              type="password"
+              value={deletePw}
+              onChange={(e) => setDeletePw(e.target.value)}
+              placeholder="Masukkan kata sandi untuk konfirmasi"
+              className="mt-4 w-full rounded-xl border-[1.5px] border-stone-200 bg-[#FFF7E9] px-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-red-500 focus:outline-none"
+            />
+            {deleteErr && (
+              <p className="mt-2 text-xs font-medium text-red-600" role="alert">{deleteErr}</p>
+            )}
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={resetDelete}
+                className={`rounded-full border-[1.5px] border-stone-300 py-2.5 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-100 ${focusRing}`}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={deleting || !deletePw}
+                onClick={handleDeleteAccount}
+                className="rounded-full bg-red-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deleting ? 'Menghapus...' : 'Hapus akun'}
               </button>
             </div>
           </motion.div>

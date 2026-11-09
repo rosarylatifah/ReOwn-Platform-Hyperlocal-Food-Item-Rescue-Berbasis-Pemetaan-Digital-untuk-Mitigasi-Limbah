@@ -104,6 +104,8 @@ const notifySeller = (order) => {
     pickupLocation: item.location || item.address || '',
     storeName: item.store || item.merchant || 'Toko Rescue Batam',
     buyerName: profile?.name || 'Pembeli',
+    buyerEmail: user?.email || '',
+storeId: item.storeId ?? null,
     status: 'Menunggu Konfirmasi',
     statusType: 'warning',
     createdAt: new Date().toLocaleString('id-ID', {
