@@ -13,15 +13,15 @@ export function CartProvider({ children }) {
   const { profile } = useProfile();
   const { addNotification } = useNotification();
 
-const notifySeller = (order) => {
-  addNotification({
-    role: 'penjual',
-    title: 'Pesanan Baru Masuk!',
-    message: `${order.buyerName} mengajukan permintaan rescue untuk ${order.productName}.`,
-    type: 'order',
-    link: '/penjual/pesanan?tab=Menunggu+Konfirmasi'
-  });
-};
+  const notifySeller = (order) => {
+    addNotification({
+      role: 'penjual',
+      title: 'Pesanan Baru Masuk!',
+      message: `${order.buyerName} mengajukan permintaan rescue untuk ${order.productName}.`,
+      type: 'order',
+      link: '/penjual/pesanan?tab=Menunggu+Konfirmasi'
+    });
+  };
 
   // Keranjang tetap lokal milik pembeli
   useEffect(() => {
@@ -104,8 +104,8 @@ const notifySeller = (order) => {
     pickupLocation: item.location || item.address || '',
     storeName: item.store || item.merchant || 'Toko Rescue Batam',
     buyerName: profile?.name || 'Pembeli',
-    buyerEmail: user?.email || '',
-storeId: item.storeId ?? null,
+    buyerEmail: profile?.email || '',
+    storeId: item.storeId ?? null,
     status: 'Menunggu Konfirmasi',
     statusType: 'warning',
     createdAt: new Date().toLocaleString('id-ID', {
@@ -141,17 +141,15 @@ storeId: item.storeId ?? null,
       addOrder(order);
       notifySeller(order);
       if (onSendRequestCallback) onSendRequestCallback(order);
+
+      const pid = String(item.id);
+      const current = stocks[pid] !== undefined ? stocks[pid] : (item.stock || 5);
+      stocks[pid] = Math.max(0, current - (item.quantity || 1));
     });
     setProductStocks(stocks);
 
     const ids = items.map((i) => String(i.id));
     saveCartToStorage(cart.filter((i) => !ids.includes(String(i.id))));
-
-    items.forEach((item, idx) => {
-      const order = buildOrder(item, idx);
-      addOrder(order);
-      if (onSendRequestCallback) onSendRequestCallback(order);
-    });
 
     alert(`${items.length} permintaan rescue berhasil dikirim!`);
     return true;

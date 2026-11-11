@@ -10,9 +10,11 @@ import { approxLocation } from '@/lib/pembeli/locationPrivacy';
 import ProductGrid from '@/components/pembeli/ProductGrid';
 import ProductDetail from '@/components/pembeli/ProductDetail';
 import ReportModal from '@/components/pembeli/ReportModal';
-import BuyerMap from '@/components/pembeli/BuyerMap';
 import { useCart } from '@/app/pembeli/context/cart';
 import { fraunces } from '@/lib/fonts';
+import dynamic from 'next/dynamic';
+
+
 
 const chipBase =
   "shrink-0 whitespace-nowrap rounded-full border-[1.5px] px-5 py-2.5 text-[13px] font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D85834]";
@@ -26,6 +28,15 @@ const urgencyOptions = [
   { value: 'Segera', label: 'Segera' },
   { value: 'Normal', label: 'Normal' },
 ];
+
+const BuyerMap = dynamic(() => import('@/components/pembeli/BuyerMap'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ padding: '0 40px', marginBottom: '30px' }}>
+      <div style={{ height: '350px', borderRadius: '16px', background: '#F3E9DA' }} />
+    </div>
+  ),
+});
 
 // Dropdown urgensi KHUSUS MOBILE (desktop tetap memakai <select> asli)
 function UrgencyDropdown({ value, onChange }) {

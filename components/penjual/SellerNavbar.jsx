@@ -9,7 +9,7 @@ import Logo from "@/components/common/Logo";
 import ScrollAwareHeader from "@/components/common/ScrollAwareHeader";
 import ProfilePopover from "@/components/profil/ProfilePopover";
 import SellerNotificationPopover from "@/components/penjual/NotificationPopover";
-import ChatPopover from "@/components/penjual/ChatPopover"; // 👈 Cukup import sekali dari folder penjual
+import ChatPopover from "@/components/ChatPopover"; // 👈 Cukup import sekali dari folder penjual
 
 import { useNotification } from "@/app/context/notification";
 import { useChat } from "@/lib/chatStore"; // 👈 Gunakan chatStore yang seragam

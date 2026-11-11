@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Plus, MapPin, X, Minus, ShoppingCart, AlertCircle } from 'lucide-react';
 import { useCart } from '@/app/pembeli/context/cart';
 import { useChat } from '@/app/pembeli/context/chat';
+import { useProfile } from '@/lib/ProfileContext'; // BARU
 import { areaOf } from '@/lib/pembeli/locationPrivacy';
 import { ProductBadges, PriceBlock, ProductFacts } from './ProductExtras';
 
@@ -11,6 +12,7 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
   // Semua hook harus berada SEBELUM early return
   const { getItemQuantityInCart, getProductStock, addToCart } = useCart();
   const { requestOpenChat } = useChat();
+  const { profile } = useProfile(); // BARU
   const [quantity, setQuantity] = useState(1);
 
   if (!product) return null;
@@ -51,6 +53,8 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
     requestOpenChat({
       storeId: product.storeId ?? product.sellerId ?? product.sellerName ?? product.store ?? product.merchant,
       storeName: product.sellerName || product.store || product.merchant,
+      buyerName: profile?.name,   // BARU
+      buyerEmail: profile?.email, // BARU
     });
     if (onClose) onClose();
   };
@@ -88,56 +92,56 @@ export default function ProductDetail({ product, onClose, onAddToCart, onReport 
         }
 
         /* ===== KHUSUS MOBILE (desktop tidak terpengaruh) ===== */
-@media (max-width: 767px) {
-  .pd-card {
-    max-width: 420px !important;
-    max-height: 86dvh !important;
-    padding: 16px !important;
-    gap: 12px !important;
-  }
-  .pd-image {
-    height: 190px !important;
-  }
-  .pd-info {
-    gap: 10px !important;
-  }
-  .pd-close {
-    top: 26px !important;
-    right: 26px !important;
-    width: 36px !important;
-    height: 36px !important;
-  }
-  .pd-report {
-    top: 26px !important;
-    right: 70px !important;
-    height: 36px !important;
-  }
-  .pd-title {
-    font-size: 20px !important;
-  }
-  .pd-desc {
-    font-size: 14px !important;
-    line-height: 1.6 !important;
-  }
-  .btn-qty {
-    width: 40px !important;
-    height: 40px !important;
-  }
-  .pd-cart {
-    padding: 14px !important;
-    font-size: 14px !important;
-  }
-}
+        @media (max-width: 767px) {
+          .pd-card {
+            max-width: 420px !important;
+            max-height: 86dvh !important;
+            padding: 16px !important;
+            gap: 12px !important;
+          }
+          .pd-image {
+            height: 190px !important;
+          }
+          .pd-info {
+            gap: 10px !important;
+          }
+          .pd-close {
+            top: 26px !important;
+            right: 26px !important;
+            width: 36px !important;
+            height: 36px !important;
+          }
+          .pd-report {
+            top: 26px !important;
+            right: 70px !important;
+            height: 36px !important;
+          }
+          .pd-title {
+            font-size: 20px !important;
+          }
+          .pd-desc {
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+          }
+          .btn-qty {
+            width: 40px !important;
+            height: 40px !important;
+          }
+          .pd-cart {
+            padding: 14px !important;
+            font-size: 14px !important;
+          }
+        }
       `}</style>
 
       <div
         className="pd-card"
-style={{
-  backgroundColor: '#FFF', borderRadius: '24px', width: '100%', maxWidth: '480px',
-  maxHeight: '90vh', overflowY: 'auto', padding: '20px', position: 'relative',
-  boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
-  display: 'flex', flexDirection: 'column', gap: '16px', fontFamily: 'Inter, sans-serif'
-}}
+        style={{
+          backgroundColor: '#FFF', borderRadius: '24px', width: '100%', maxWidth: '480px',
+          maxHeight: '90vh', overflowY: 'auto', padding: '20px', position: 'relative',
+          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
+          display: 'flex', flexDirection: 'column', gap: '16px', fontFamily: 'Inter, sans-serif'
+        }}
       >
         {/* TOMBOL TUTUP (X) */}
         <button
@@ -145,12 +149,12 @@ style={{
           className="btn-close pd-close"
           aria-label="Tutup"
           style={{
-  position: 'absolute', top: '30px', right: '30px', zIndex: 2,
-  backgroundColor: 'rgba(255,255,255,0.95)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-  border: 'none', borderRadius: '50%', width: '32px', height: '32px',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#4B5563',
-  transition: 'all 0.2s ease'
-}}
+            position: 'absolute', top: '30px', right: '30px', zIndex: 2,
+            backgroundColor: 'rgba(255,255,255,0.95)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            border: 'none', borderRadius: '50%', width: '32px', height: '32px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#4B5563',
+            transition: 'all 0.2s ease'
+          }}
         >
           <X size={16} />
         </button>
@@ -171,11 +175,11 @@ style={{
         {/* KOLOM KIRI: GAMBAR PRODUK */}
         <div
           className="pd-image"
-style={{
-  width: '100%', height: '240px', flexShrink: 0, backgroundColor: '#F9FAFB',
-  border: '1px solid #E5E7EB', borderRadius: '16px', overflow: 'hidden',
-  display: 'flex', alignItems: 'center', justifyContent: 'center'
-}}
+          style={{
+            width: '100%', height: '240px', flexShrink: 0, backgroundColor: '#F9FAFB',
+            border: '1px solid #E5E7EB', borderRadius: '16px', overflow: 'hidden',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}
         >
           {product.image ? (
             <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -205,8 +209,8 @@ style={{
             <span>{areaOf(product.location || "Batam")}</span>
           </div>
 
-<PriceBlock product={product} />
-<ProductFacts product={product} />
+          <PriceBlock product={product} />
+          <ProductFacts product={product} />
 
           <div style={{ fontSize: '12px', fontWeight: '600', color: availableStock > 0 ? '#16A34A' : '#DC2626' }}>
             {availableStock > 0

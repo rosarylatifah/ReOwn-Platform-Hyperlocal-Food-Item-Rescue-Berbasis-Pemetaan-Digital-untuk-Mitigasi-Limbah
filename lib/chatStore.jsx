@@ -38,30 +38,32 @@ export function ChatProvider({ children, role = "buyer" }) {
     setData(next);
   }, []);
 
-const openChat = useCallback((info) => {
-  const key = info.storeId ?? info.storeName ?? "toko";
-  const id = `chat_${key}`;
-  update((d) => {
-    const exist = d.chats.find((c) => c.id === id);
-    if (exist) {
-      if (info.buyerName && exist.buyerName !== info.buyerName) {
-        return { ...d, chats: d.chats.map((c) => (c.id === id ? { ...c, buyerName: info.buyerName } : c)) };
+  // Satu chat = satu pasangan (toko, pembeli)
+  const openChat = useCallback((info) => {
+    const storeKey = info.storeId ?? info.storeName ?? "toko";
+    const buyerKey = info.buyerEmail ?? info.buyerName ?? "pembeli";
+    const id = `chat_${storeKey}__${buyerKey}`;
+    update((d) => {
+      const exist = d.chats.find((c) => c.id === id);
+      if (exist) {
+        if (info.buyerName && exist.buyerName !== info.buyerName) {
+          return { ...d, chats: d.chats.map((c) => (c.id === id ? { ...c, buyerName: info.buyerName } : c)) };
+        }
+        return d;
       }
-      return d;
-    }
-    return {
-      ...d,
-      chats: [...d.chats, {
-        id, storeId: key,
-        storeName: info.storeName || "Toko",
-        buyerName: info.buyerName || "Pembeli",
-        storeAvatar: info.avatar || avatarFor(info.storeName),
-        lastMessage: "", lastTs: Date.now(), unread: { buyer: 0, seller: 0 },
-      }],
-    };
-  });
-  return id;
-}, [update]);
+      return {
+        ...d,
+        chats: [...d.chats, {
+          id, storeId: storeKey,
+          storeName: info.storeName || "Toko",
+          buyerName: info.buyerName || "Pembeli",
+          storeAvatar: info.avatar || avatarFor(info.storeName),
+          lastMessage: "", lastTs: Date.now(), unread: { buyer: 0, seller: 0 },
+        }],
+      };
+    });
+    return id;
+  }, [update]);
 
   // Dipakai tombol "Hubungi Penjual": buat chat lalu minta popover terbuka
   const requestOpenChat = useCallback((info) => setPendingChatId(openChat(info)), [openChat]);
@@ -74,8 +76,12 @@ const openChat = useCallback((info) => {
     const other = role === "buyer" ? "seller" : "buyer";
     const msg = { id: `${ts}_${Math.random().toString(36).slice(2, 7)}`, sender: role, text: clean, ts, time: fmt(ts) };
     update((d) => ({
+      ...d,
       chats: d.chats.map((c) => c.id === chatId
-        ? { ...c, lastMessage: clean, lastTs: ts, unread: { ...c.unread, [other]: (c.unread?.[other] || 0) + 1 } }
+        ? {
+            ...c, lastMessage: clean, lastTs: ts, lastSender: role,
+            unread: { ...c.unread, [other]: (c.unread?.[other] || 0) + 1, [role]: 0 },
+          }
         : c),
       messages: { ...d.messages, [chatId]: [...(d.messages[chatId] || []), msg] },
     }));
@@ -100,7 +106,9 @@ const openChat = useCallback((info) => {
           ...c, title, storeName: title,
           avatar: role === "buyer" ? c.storeAvatar : avatarFor(c.buyerName),
           time: c.lastMessage ? fmt(c.lastTs) : "",
-          lastMessage: c.lastMessage || "Mulai percakapan",
+          lastMessage: c.lastMessage
+            ? (c.lastSender === role ? `Anda: ${c.lastMessage}` : c.lastMessage)
+            : "Mulai percakapan",
           unread: (c.unread?.[role] || 0) > 0,
         };
       }),

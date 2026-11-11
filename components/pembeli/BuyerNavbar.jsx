@@ -17,7 +17,7 @@ import { useNotification } from "@/app/context/notification";
 import { useCartDrawer } from "@/app/pembeli/context/cartDrawer";
 
 import NotificationPopover from "@/components/pembeli/NotificationPopover";
-import ChatPopover from "@/components/pembeli/ChatPopover";
+import ChatPopover from "@/components/ChatPopover";
 import ProfilePopover from "@/components/profil/ProfilePopover";
 
 const s = styles.overlay;
