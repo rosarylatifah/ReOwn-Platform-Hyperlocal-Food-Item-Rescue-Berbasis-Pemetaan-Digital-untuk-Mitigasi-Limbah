@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import ItemCard from "@/components/common/ItemCard";
 import ItemDetailModal from "./ItemDetailModal";
+import { products } from "@/lib/pembeli/productsData";
 
 const AUTOPLAY_MS = 5000;
+const LOC_KEY = "reown_user_location"; // sama dengan locationStore, jadi halaman pembeli ikut terisi
 
 const FILTERS = [
   { id: "all", label: "Semua" },
@@ -14,12 +16,51 @@ const FILTERS = [
   { id: "near", label: "Terdekat" },
 ];
 
-const km = (d) => parseFloat(d) || 0;
+const priceNumber = (p) => parseInt(String(p).replace(/\D/g, ""), 10) || 0;
+const isFree = (p) => /gratis/i.test(String(p)) || priceNumber(p) === 0;
+const shortPrice = (p) => {
+  const n = priceNumber(p);
+  return n >= 1000 ? `Rp ${Math.round(n / 1000)}k` : `Rp ${n}`;
+};
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const toRad = (x) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+}
+
+/** Ubah data produk pembeli ke bentuk yang dipakai ItemCard */
+function toCardItem(p, coords) {
+  const km = coords
+    ? haversineKm(coords.lat, coords.lng, p.lat, p.lng)
+    : p.distanceKm;
+  const free = isFree(p.price);
+  return {
+    ...p,
+    id: p.id,
+    name: p.name,
+    price: free ? "Gratis" : shortPrice(p.price),
+    distanceKm: km,
+    distance: `${km.toFixed(1)} km`,
+    store: p.store,
+    seller: p.store,
+    owner: p.store,
+    place: p.location,
+    description: p.description,
+    image: p.image,
+    img: p.image,
+    photo: p.image,
+  };
+}
 
 function applyFilter(items, f) {
   if (f === "free") return items.filter((i) => i.price === "Gratis");
   if (f === "paid") return items.filter((i) => i.price !== "Gratis");
-  if (f === "near") return [...items].sort((a, b) => km(a.distance) - km(b.distance));
+  if (f === "near") return [...items].sort((a, b) => a.distanceKm - b.distanceKm);
   return items;
 }
 
@@ -60,7 +101,7 @@ function ArrowButton({ dir, onClick }) {
   );
 }
 
-export default function ItemCarousel({ items }) {
+export default function ItemCarousel() {
   const reduced = useReducedMotion();
   const desktop = useIsDesktop();
 
@@ -69,8 +110,20 @@ export default function ItemCarousel({ items }) {
   const [dir, setDir] = useState(1);
   const [paused, setPaused] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [coords, setCoords] = useState(null);
+  const [locStatus, setLocStatus] = useState("idle"); // idle | loading | denied | error
 
   const closeDetail = useCallback(() => setSelected(null), []);
+
+  // Pakai lokasi GPS yang sudah tersimpan (kalau user pernah mengizinkan di halaman pembeli)
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LOC_KEY));
+      if (saved?.source === "gps") setCoords({ lat: saved.lat, lng: saved.lng });
+    } catch {}
+  }, []);
+
+  const items = useMemo(() => products.map((p) => toCardItem(p, coords)), [coords]);
 
   const list = applyFilter(items, filter);
   const n = list.length;
@@ -90,10 +143,40 @@ export default function ItemCarousel({ items }) {
     setActive(i);
   };
 
-  const changeFilter = (f) => {
+  const applyChange = (f) => {
     setFilter(f);
     setActive(1);
     setDir(1);
+  };
+
+  const changeFilter = (f) => {
+    if (f !== "near") {
+      setLocStatus("idle");
+      return applyChange(f);
+    }
+    if (coords) return applyChange("near");
+
+    if (!navigator.geolocation) {
+      setLocStatus("error");
+      return;
+    }
+    setLocStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setCoords(c);
+        try {
+          localStorage.setItem(LOC_KEY, JSON.stringify({ ...c, label: "Lokasi GPS", source: "gps" }));
+        } catch {}
+        setLocStatus("idle");
+        applyChange("near");
+      },
+      (err) => {
+        setLocStatus(err.code === 1 ? "denied" : "error");
+        applyChange("all");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   // Autoplay: berhenti saat hover/fokus, saat popup terbuka, atau jika pengguna mematikan animasi
@@ -113,6 +196,12 @@ export default function ItemCarousel({ items }) {
       ? "md:grid-cols-2 md:mx-auto md:max-w-[720px]"
       : "md:mx-auto md:max-w-sm";
 
+  const locMsg = {
+    loading: "Meminta izin lokasi… klik “Izinkan” di browser kamu.",
+    denied: "Izin lokasi ditolak, jadi barang terdekat belum bisa ditampilkan. Aktifkan lagi lewat ikon gembok di address bar, lalu coba klik Terdekat.",
+    error: "Lokasi tidak bisa diambil saat ini. Coba lagi sebentar.",
+  }[locStatus];
+
   return (
     <div
       role="region"
@@ -130,7 +219,7 @@ export default function ItemCarousel({ items }) {
       className="overflow-x-clip outline-none"
     >
       {/* Filter chip */}
-      <div className="mb-10 flex flex-wrap justify-center gap-2" role="group" aria-label="Filter barang">
+      <div className="mb-4 flex flex-wrap justify-center gap-2" role="group" aria-label="Filter barang">
         {FILTERS.map((f) => {
           const on = filter === f.id;
           return (
@@ -155,6 +244,10 @@ export default function ItemCarousel({ items }) {
             </button>
           );
         })}
+      </div>
+
+      <div className="mb-6 min-h-6 text-center text-sm text-stone-500" aria-live="polite">
+        {locMsg}
       </div>
 
       <div className="flex items-center gap-3 md:gap-6">
