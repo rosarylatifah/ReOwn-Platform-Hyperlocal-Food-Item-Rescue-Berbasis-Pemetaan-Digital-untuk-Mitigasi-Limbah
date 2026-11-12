@@ -96,7 +96,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
             </div>
 
             <div>
-              <label className={labelClass}>Alamat Penjual</label>
+              <label className={labelClass}>Area Penjual</label>
               <div className={`${fieldClass} flex items-start gap-1.5 text-xs leading-snug text-stone-600`}>
                 <MapPin size={14} className="mt-0.5 shrink-0 text-[#D85834]" aria-hidden />
                 <span>{sellerAddress}</span>

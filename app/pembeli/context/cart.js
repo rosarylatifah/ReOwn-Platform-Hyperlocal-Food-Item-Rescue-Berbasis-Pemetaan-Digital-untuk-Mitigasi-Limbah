@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useOrders } from '@/lib/ordersStore';
 import { useProfile } from '@/lib/ProfileContext';
 import { useNotification } from '@/app/context/notification';
+import { areaOf } from '@/lib/pembeli/locationPrivacy';
 
 const CartContext = createContext();
 
@@ -108,8 +109,10 @@ export function CartProvider({ children }) {
     storeId: item.storeId ?? null,
     status: 'Menunggu Konfirmasi',
     statusType: 'warning',
+    pickupArea: areaOf(item.location || item.address || 'Batam'),
+    createdAtISO: new Date().toISOString(),
     createdAt: new Date().toLocaleString('id-ID', {
-      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
     }),
   });
 

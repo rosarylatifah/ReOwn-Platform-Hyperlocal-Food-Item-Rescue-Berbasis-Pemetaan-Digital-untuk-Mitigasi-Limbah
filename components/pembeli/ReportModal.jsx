@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { createPortal } from 'react-dom'; // BARU
 import { AlertCircle, X, Send, Upload } from 'lucide-react';
 import { useReportModal } from '@/app/pembeli/hooks/useReportModal';
 
@@ -20,6 +21,7 @@ export default function ReportModal({ product, order, onClose }) {
   } = useReportModal({ product, order, onClose });
 
   if (!product && !order) return null;
+  if (typeof document === 'undefined') return null; // BARU
 
   const targetName = isOrderReport 
     ? (order.productName || order.name || 'Pesanan Rescue') 
@@ -27,7 +29,7 @@ export default function ReportModal({ product, order, onClose }) {
     
   const storeName = targetData?.storeName || targetData?.store || targetData?.merchant || "Toko Rescue Batam";
 
-  return (
+  return createPortal( // BARU
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
       backgroundColor: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)',
@@ -163,6 +165,7 @@ export default function ReportModal({ product, order, onClose }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body // BARU
   );
 }

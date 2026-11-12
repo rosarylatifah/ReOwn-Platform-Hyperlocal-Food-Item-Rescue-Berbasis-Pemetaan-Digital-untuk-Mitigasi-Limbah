@@ -41,7 +41,7 @@ export function ChatProvider({ children, role = "buyer" }) {
   // Satu chat = satu pasangan (toko, pembeli)
   const openChat = useCallback((info) => {
     const storeKey = info.storeId ?? info.storeName ?? "toko";
-    const buyerKey = info.buyerEmail ?? info.buyerName ?? "pembeli";
+    const buyerKey = info.buyerEmail || info.buyerName || "pembeli"; // || supaya string kosong ikut dilewati
     const id = `chat_${storeKey}__${buyerKey}`;
     update((d) => {
       const exist = d.chats.find((c) => c.id === id);

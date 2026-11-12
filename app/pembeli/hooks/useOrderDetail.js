@@ -1,9 +1,40 @@
 "use client";
 
 import { useChat } from '@/app/pembeli/context/chat';
+import { useProfile } from '@/lib/ProfileContext';
+import { areaOf } from '@/lib/pembeli/locationPrivacy';
+
+// Field kosong -> "-"
+const orDash = (v) => {
+  if (v === null || v === undefined) return "-";
+  const s = String(v).trim();
+  return s === "" ? "-" : s;
+};
+
+// Tanggal -> "12 Nov 2026, 05.17"
+// ISO / timestamp: diformat. Teks lama tanpa tahun: tahun berjalan disisipkan.
+const formatDateTime = (value) => {
+  if (value === null || value === undefined || value === "") return "-";
+
+  if (typeof value === "string" && !/^\d{4}-\d{2}-\d{2}/.test(value)) {
+    const s = value.trim();
+    if (!s) return "-";
+    if (/\b\d{4}\b/.test(s)) return s;
+    const y = new Date().getFullYear();
+    return s.includes(",") ? s.replace(",", ` ${y},`) : `${s} ${y}`;
+  }
+
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("id-ID", {
+    day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+};
 
 export function useOrderDetail(order, onClose, onCancelOrder) {
   const { requestOpenChat } = useChat();
+  const { profile } = useProfile();
 
   if (!order) return null;
 
@@ -11,57 +42,28 @@ export function useOrderDetail(order, onClose, onCancelOrder) {
   const currentStatus = order.status || 'Menunggu Konfirmasi';
   const isCancelable = currentStatus === 'Menunggu Konfirmasi';
 
-  // Data asli dari pesanan
-  const buyerName = order.buyerName || "";
-  const sellerName = order.sellerName || order.storeName || order.store || "";
-  const sellerAddress = order.sellerAddress || order.location || "";
-  const productName = order.productName || order.name || "";
-  const totalPrice = order.totalPrice || order.price || "Rp 0";
-  const deliveryOption = order.deliveryOption || "";
-  const productImage = order.image || order.img || "";
-  const description = order.description || "";
+  // Data mentah (dipakai untuk logika)
+  const rawBuyerName = order.buyerName || "";
+  const rawSellerName = order.sellerName || order.storeName || order.store || "";
 
-  // Format tanggal aman
-  const formatDate = (dateInput) => {
-    const now = () =>
-      new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) +
-      `, ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')}`;
-
-    if (!dateInput) return now();
-
-    if (typeof dateInput === 'string') {
-      if (!dateInput.match(/\d{4}/)) {
-        const currentYear = new Date().getFullYear();
-        return dateInput.includes(',')
-          ? dateInput.replace(',', ` ${currentYear},`)
-          : `${dateInput} ${currentYear}`;
-      }
-      return dateInput;
-    }
-
-    const d = new Date(dateInput);
-    if (isNaN(d.getTime())) return now();
-
-    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) +
-      `, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')}`;
-  };
-
-  const orderDate = formatDate(order.createdAt || order.orderDate);
-  const confirmDate = formatDate(order.confirmDate);
+  // Hanya area perkiraan, bukan alamat/titik pas
+  const areaSource = order.pickupArea || order.pickupLocation || order.sellerAddress || order.location || "";
+  const sellerArea = order.pickupArea || (areaSource ? areaOf(areaSource) : "");
 
   // Hubungi Penjual: buat/buka chat toko ini, popover chat terbuka otomatis lewat BuyerNavbar
   const handleContactSeller = () => {
     requestOpenChat({
-      storeId: order.storeId ?? order.sellerId ?? sellerName,
-      storeName: sellerName,
-      buyerName: buyerName || undefined,
+      storeId: order.storeId ?? order.sellerId ?? rawSellerName,
+      storeName: rawSellerName,
+      buyerName: profile?.name || rawBuyerName || undefined,
+      buyerEmail: profile?.email || order.buyerEmail || undefined,
     });
     onClose();
   };
 
   // Batalkan pesanan
   const handleCancel = () => {
-    if (window.confirm(`Yakin ingin membatalkan pesanan ${productName}?`)) {
+    if (window.confirm(`Yakin ingin membatalkan pesanan ${order.productName || order.name || ""}?`)) {
       if (onCancelOrder) onCancelOrder(order.id);
       onClose();
     }
@@ -70,17 +72,17 @@ export function useOrderDetail(order, onClose, onCancelOrder) {
   return {
     currentStatus,
     isCancelable,
-    buyerName,
-    sellerName,
-    sellerAddress,
-    productName,
-    orderDate,
-    confirmDate,
-    totalPrice,
-    deliveryOption,
-    productImage,
-    description,
+    buyerName: orDash(rawBuyerName),
+    sellerName: orDash(rawSellerName),
+    sellerAddress: orDash(sellerArea),
+    productName: orDash(order.productName || order.name),
+    orderDate: formatDateTime(order.createdAtISO || order.createdAt || order.orderDate),
+    confirmDate: formatDateTime(order.confirmDate),
+    totalPrice: order.totalPrice || order.price || "Rp 0",
+    deliveryOption: orDash(order.deliveryOption),
+    productImage: order.image || order.img || "",
+    description: orDash(order.description),
     handleContactSeller,
-    handleCancel
+    handleCancel,
   };
 }
