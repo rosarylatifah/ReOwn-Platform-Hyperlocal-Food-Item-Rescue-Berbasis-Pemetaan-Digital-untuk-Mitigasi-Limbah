@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthShell, { Highlight } from "./AuthShell";
 import { useAuth } from "@/lib/auth";
+import SuspendedNotice from "./SuspendedNotice";
 
 
 const inputBase =
@@ -136,11 +137,13 @@ export default function AuthForm({ mode }) {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState("");
+  const [suspended, setSuspended] = useState(null);
 
   useEffect(() => {
-    if (!isRegister && new URLSearchParams(window.location.search).get("registered") === "1") {
-      setNotice("Akun berhasil dibuat. Silakan masuk.");
-    }
+    if (isRegister) return;
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("registered") === "1") setNotice("Akun berhasil dibuat. Silakan masuk.");
+    else if (p.get("suspended") === "1") setNotice("Sesimu berakhir karena akunmu dibatasi. Masuk lagi untuk melihat detailnya.");
   }, [isRegister]);
 
   const bind = (k) => ({
@@ -197,6 +200,10 @@ export default function AuthForm({ mode }) {
 
       const res = await login({ email: form.email, password: form.password });
       if (!res.ok) {
+        if (res.suspended) {
+          setSuspended(res.suspended);
+          return;
+        }
         setErrors(res.field ? { [res.field]: res.error } : { form: res.error });
         return;
       }
@@ -250,6 +257,9 @@ export default function AuthForm({ mode }) {
       switchLabel={isRegister ? "Masuk ke Akunmu" : "Daftar disini"}
       switchHref={isRegister ? "/masuk" : "/daftar"}
     >
+      {suspended ? (
+        <SuspendedNotice info={suspended} onBack={() => setSuspended(null)} />
+      ) : (
       <form onSubmit={onSubmit} noValidate className="space-y-3">
         {isRegister && (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -346,6 +356,7 @@ export default function AuthForm({ mode }) {
           </p>
         )}
       </form>
+      )}
     </AuthShell>
   );
 }

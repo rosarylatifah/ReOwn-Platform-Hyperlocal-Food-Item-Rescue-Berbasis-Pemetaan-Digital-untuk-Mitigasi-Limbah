@@ -19,6 +19,13 @@ const COPY = {
   pulihkan: { title: "Pulihkan akun ini?", desc: "Akun kembali aktif. Produk yang ikut diturunkan karena suspend dipulihkan otomatis, sedangkan produk karena ban dipulihkan manual dari halaman Dihapus.", confirm: "Pulihkan akun", danger: false },
 };
 
+const SUSPEND_OPTIONS = [
+  { value: "3", label: "3 hari" },
+  { value: "7", label: "7 hari" },
+  { value: "30", label: "30 hari" },
+  { value: "0", label: "Permanen (sampai dipulihkan admin)" },
+];
+
 /** Profil akun: info, produk di akun ini, riwayat akun, dan tindakan moderasi. */
 export default function UserDetailModal({ userId, onClose }) {
   const { users, products, reports, appeals, activities, changeUserStatus } = useAdmin();
@@ -62,7 +69,7 @@ export default function UserDetailModal({ userId, onClose }) {
           {user.warnings > 0 && <small className="adm-sub">{user.warnings} peringatan tercatat</small>}
         </dd>
         {user.sanction && (
-          <><dt>Sanksi terakhir</dt><dd>{user.sanction.reason}<small className="adm-sub">{fmtDateTime(user.sanction.at)} WIB</small></dd></>
+                    <><dt>Sanksi terakhir</dt><dd>{user.sanction.reason}<small className="adm-sub">{fmtDateTime(user.sanction.at)} WIB</small>{user.sanction.until && <small className="adm-sub">Aktif kembali: {fmtDateTime(user.sanction.until)} WIB</small>}</dd></>
         )}
         <dt>Produk</dt><dd>{activeCount} aktif dari {listed.length} listing</dd>
         <dt>Laporan terhadap akun</dt>
@@ -120,11 +127,13 @@ export default function UserDetailModal({ userId, onClose }) {
           description={COPY[act].desc}
           confirmLabel={COPY[act].confirm}
           danger={COPY[act].danger}
+          optionLabel={act === "suspend" ? "Durasi suspend" : undefined}
+          options={act === "suspend" ? SUSPEND_OPTIONS : undefined}
           noteLabel={act === "pulihkan" ? undefined : "Alasan"}
           noteRequired={act !== "pulihkan"}
-          onConfirm={({ note }) => {
+          onConfirm={({ note, value }) => {
             const status = act === "pulihkan" ? "aktif" : act;
-            changeUserStatus(user.id, status, note);
+            changeUserStatus(user.id, status, note, act === "suspend" ? Number(value) || 0 : 0);
             if (act === "pulihkan") onClose();
           }}
           onClose={() => setAct(null)}

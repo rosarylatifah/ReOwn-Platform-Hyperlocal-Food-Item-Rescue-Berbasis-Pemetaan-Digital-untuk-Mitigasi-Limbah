@@ -1,11 +1,13 @@
 "use client";
 
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { seedActivities, seedAppeals, seedProducts, seedReports, seedUsers } from "./data";
 import { SANCTION_LABEL } from "./labels";
+import { ADMIN_STATE_KEY, readAdminState, writeAdminState } from "./persist";
 
 export const ADMIN = { name: "Admin", email: "admin@reown.org" };
 
+const DAY = 86_400_000;
 const uid = () => Math.random().toString(36).slice(2, 9);
 const nowISO = () => new Date().toISOString();
 
@@ -24,7 +26,33 @@ export function AdminProvider({ children }) {
   const [appeals, setAppeals] = useState(seedAppeals);
   const [activities, setActivities] = useState(seedActivities);
   const [toast, setToast] = useState(null);
+  const [hydrated, setHydrated] = useState(false);
   const timer = useRef(null);
+
+  // Muat dari localStorage, lalu dengarkan perubahan dari tab lain (mis. banding dari halaman login)
+  useEffect(() => {
+    const load = () => {
+      const s = readAdminState();
+      setProducts(s.products);
+      setUsers(s.users);
+      setReports(s.reports);
+      setAppeals(s.appeals);
+      setActivities(s.activities);
+    };
+    load();
+    setHydrated(true);
+    const onStorage = (e) => {
+      if (e.key === ADMIN_STATE_KEY) load();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // Simpan setiap perubahan (hanya setelah data dimuat, supaya seed tidak menimpa data tersimpan)
+  useEffect(() => {
+    if (!hydrated) return;
+    writeAdminState({ products, users, reports, appeals, activities });
+  }, [hydrated, products, users, reports, appeals, activities]);
 
   const notify = (msg) => {
     setToast(msg);
@@ -42,6 +70,12 @@ export function AdminProvider({ children }) {
   const getProduct = (id) => products.find((p) => p.id === id);
   const handle = (id) => getUser(id)?.username ?? "pengguna";
 
+  // Notifikasi email: SIMULASI (dicatat di Riwayat Aktivitas). Ganti dengan pemanggilan API email nanti.
+  const mailUser = (id, label) => {
+    const u = getUser(id);
+    if (u) log(`Notifikasi email ${label} dikirim ke ${u.email}`, "/admin/pengguna", { userId: id });
+  };
+
   /* ---------- helper internal (tanpa log) ---------- */
   const removeProducts = (match, reason, source) =>
     setProducts((prev) =>
@@ -52,7 +86,9 @@ export function AdminProvider({ children }) {
       ),
     );
 
-  const applyUserStatus = (id, status, reason) => {
+  // days > 0 hanya berlaku untuk suspend; 0 = tanpa batas waktu
+  const applyUserStatus = (id, status, reason, days = 0) => {
+    const until = status === "suspend" && days > 0 ? new Date(Date.now() + days * DAY).toISOString() : undefined;
     setUsers((prev) =>
       prev.map((u) =>
         u.id !== id
@@ -61,7 +97,7 @@ export function AdminProvider({ children }) {
               ...u,
               status,
               warnings: status === "peringatan" ? u.warnings + 1 : u.warnings,
-              sanction: status === "aktif" ? undefined : { reason, at: nowISO() },
+              sanction: status === "aktif" ? undefined : { reason, at: nowISO(), until },
             },
       ),
     );
@@ -108,7 +144,7 @@ export function AdminProvider({ children }) {
     const reason = note || r.category;
     if (sanction === "turunkan_produk" && r.productId) removeProducts((p) => p.id === r.productId, r.category, "laporan");
     if (sanction === "peringatan") applyUserStatus(r.reportedUserId, "peringatan", reason);
-    if (sanction === "suspend") applyUserStatus(r.reportedUserId, "suspend", reason);
+    if (sanction === "suspend") applyUserStatus(r.reportedUserId, "suspend", reason, 7); // suspend dari laporan: 7 hari
     if (sanction === "ban") applyUserStatus(r.reportedUserId, "banned", reason);
     setReports((prev) =>
       prev.map((x) =>
@@ -116,6 +152,9 @@ export function AdminProvider({ children }) {
       ),
     );
     log(`Admin menerima laporan terhadap @${handle(r.reportedUserId)} (${SANCTION_LABEL[sanction]})`, "/admin/laporan", { reportId: id, userId: r.reportedUserId, productId: r.productId }, note);
+    if (sanction === "peringatan" || sanction === "suspend" || sanction === "ban") {
+      mailUser(r.reportedUserId, sanction === "ban" ? "pemblokiran akun" : sanction === "suspend" ? "suspend akun" : "peringatan");
+    }
     notify("Laporan diterima. Sanksi diterapkan.");
   };
 
@@ -142,6 +181,7 @@ export function AdminProvider({ children }) {
     }
     setAppeals((prev) => prev.map((x) => (x.id === id ? { ...x, status: "diterima", adminNote: note, handledAt: nowISO() } : x)));
     log(`Admin menerima banding dari @${handle(a.userId)}`, "/admin/laporan", { appealId: id, userId: a.userId, productId: a.productId }, note);
+    mailUser(a.userId, "hasil banding (diterima)");
     notify("Banding diterima. Pemulihan dilakukan.");
   };
 
@@ -150,29 +190,32 @@ export function AdminProvider({ children }) {
     if (!a || a.status !== "menunggu") return;
     setAppeals((prev) => prev.map((x) => (x.id === id ? { ...x, status: "ditolak", adminNote: note, handledAt: nowISO() } : x)));
     log(`Admin menolak banding dari @${handle(a.userId)}`, "/admin/laporan", { appealId: id, userId: a.userId, productId: a.productId }, note);
+    mailUser(a.userId, "hasil banding (ditolak)");
     notify("Banding ditolak. Sanksi tetap berlaku.");
   };
 
   /* ---------- pengguna ---------- */
-  const changeUserStatus = (id, status, reason) => {
+  const changeUserStatus = (id, status, reason, days = 0) => {
     const u = getUser(id);
     if (!u) return;
-    applyUserStatus(id, status, reason);
+    applyUserStatus(id, status, reason, days);
     const verb = {
       peringatan: "memberi peringatan kepada",
       suspend: "men-suspend",
       banned: "mem-ban",
       aktif: "memulihkan akun",
     };
+    const lama = status === "suspend" ? (days > 0 ? ` selama ${days} hari` : " tanpa batas waktu") : "";
     log(
       status === "aktif"
         ? `Admin memulihkan akun @${u.username}`
-        : `Admin ${verb[status]} @${u.username} (${reason})`,
+        : `Admin ${verb[status]} @${u.username}${lama} (${reason})`,
       "/admin/pengguna",
       { userId: id },
       reason,
     );
-    notify(status === "aktif" ? "Akun dipulihkan." : "Tindakan pada akun berhasil.");
+    mailUser(id, { peringatan: "peringatan", suspend: "suspend akun", banned: "pemblokiran akun", aktif: "pemulihan akun" }[status]);
+    notify(status === "aktif" ? "Akun dipulihkan." : "Tindakan berhasil. Notifikasi email dikirim ke pengguna.");
   };
 
   const newReports = reports.filter((r) => r.status === "baru").length;

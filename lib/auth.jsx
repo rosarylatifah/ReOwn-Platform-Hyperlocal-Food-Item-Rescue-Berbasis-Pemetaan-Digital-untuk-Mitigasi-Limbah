@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { ADMIN_STATE_KEY, checkRestriction, syncAdminUser } from "@/lib/admin/persist";
 
 // DUMMY: akun disimpan di localStorage. Ganti isi register/login/logout ke API saat backend siap.
 const USERS_KEY = "reown:users:v1";
@@ -100,6 +101,38 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // Tendang pengguna yang sedang login jika akunnya disuspend/diban admin
+  useEffect(() => {
+    if (!user || user.role === "admin") return;
+
+    const check = () => {
+      if (!checkRestriction(user.email)) return;
+      localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem("reown:current_user:v1");
+      setUser(null);
+      window.location.href = "/masuk?suspended=1";
+    };
+
+    const onStorage = (e) => {
+      if (e.key === ADMIN_STATE_KEY) check();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+
+    check();
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", onVisible);
+    const t = setInterval(check, 15000);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", check);
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(t);
+    };
+  }, [user]);
+
   const startSession = (u) => {
     localStorage.setItem(SESSION_KEY, JSON.stringify(u));
     setUser(u);
@@ -121,6 +154,7 @@ export function AuthProvider({ children }) {
       role: "pembeli", // registrasi publik tidak boleh membuat admin
     };
     localStorage.setItem(USERS_KEY, JSON.stringify([...users, created]));
+    syncAdminUser({ nama: created.nama, email: mail, telepon: created.telepon });
     // Sengaja TIDAK startSession: user harus login dulu setelah daftar
     return { ok: true };
   }, []);
@@ -135,6 +169,12 @@ export function AuthProvider({ children }) {
     const passwordHash = await hash(password);
     if (found.passwordHash !== passwordHash) {
       return { ok: false, field: "password", error: "Kata sandi salah. Coba lagi." };
+    }
+
+    if ((found.role || "pembeli") !== "admin") {
+      syncAdminUser({ nama: found.nama, email: found.email, telepon: found.telepon });
+      const restriction = checkRestriction(found.email);
+      if (restriction) return { ok: false, suspended: restriction };
     }
 
     const session = {
