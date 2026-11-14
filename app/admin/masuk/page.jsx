@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AuthShell, { Highlight } from "@/components/auth/AuthShell";
 import { useAuth } from "@/lib/auth";
+import Link from "next/link";
 
 const ADMIN_HOME = "/admin";
 
@@ -107,7 +108,7 @@ export default function AdminLoginPage() {
               id="admin-email"
               type="email"
               autoComplete="username"
-              placeholder="admin@reown.org"
+              placeholder="nama@email.com"
               value={form.email}
               onChange={setField("email")}
               aria-invalid={!!errors.email}
@@ -147,6 +148,11 @@ export default function AdminLoginPage() {
           {errors.password && (
             <p role="alert" className="mt-1 text-xs font-medium text-red-600">{errors.password}</p>
           )}
+          <div className="mt-1.5 text-right">
+            <Link href="/admin/lupa-sandi" className="text-xs font-semibold text-[#E0452A] underline underline-offset-2 hover:text-[#C24A28]">
+              Lupa Kata Sandi?
+            </Link>
+          </div>
         </div>
 
         {errors.form && (

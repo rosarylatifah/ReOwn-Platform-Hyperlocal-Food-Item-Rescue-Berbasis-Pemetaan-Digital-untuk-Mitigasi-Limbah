@@ -300,7 +300,7 @@ export default function AuthForm({ mode }) {
             {!isRegister && (
               <div className="mt-1.5 text-right">
                 <Link
-                  href="/hubungi"
+                  href="/lupa-sandi"
                   className="text-xs font-semibold text-[#E0452A] underline underline-offset-2 hover:text-[#C24A28]"
                 >
                   Lupa Kata Sandi?

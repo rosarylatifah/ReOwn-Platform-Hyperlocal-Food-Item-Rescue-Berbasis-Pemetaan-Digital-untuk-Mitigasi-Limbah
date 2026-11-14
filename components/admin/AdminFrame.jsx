@@ -10,7 +10,7 @@ export default function AdminFrame({ children }) {
   const pathname = usePathname();
   const { user, hydrated } = useAuth();
 
-  const isLoginPage = pathname === "/admin/masuk";
+  const isLoginPage = pathname === "/admin/masuk" || pathname === "/admin/lupa-sandi";
   const allowed = user?.role === "admin";
 
   useEffect(() => {
