@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { products as staticProducts } from "@/lib/pembeli/productsData";
+import { WATCHED_FIELDS, logProductEvent } from "@/lib/admin/persist";
 
 const KEY = "reown_seller_products";
 
@@ -19,6 +20,8 @@ const ProductsContext = createContext(null);
 export function ProductsProvider({ children }) {
   const [sellerProducts, setSellerProducts] = useState([]);
   const [ready, setReady] = useState(false);
+  const latest = useRef([]);
+  latest.current = sellerProducts;
 
   useEffect(() => {
     setSellerProducts(read());
@@ -41,18 +44,35 @@ export function ProductsProvider({ children }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  const addProduct = useCallback(
-    (p) => setSellerProducts((prev) => [{ ...p, id: `S-${Date.now()}`, isSeller: true }, ...prev]),
-    []
-  );
-  const updateProduct = useCallback(
-    (id, patch) => setSellerProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p))),
-    []
-  );
-  const removeProduct = useCallback(
-    (id) => setSellerProducts((prev) => prev.filter((p) => p.id !== id)),
-    []
-  );
+  const addProduct = useCallback((p) => {
+    const id = `S-${Date.now()}`;
+    setSellerProducts((prev) => [{ ...p, id, isSeller: true }, ...prev]);
+    logProductEvent({ kind: "baru", productId: id, name: p.name });
+  }, []);
+
+  const updateProduct = useCallback((id, patch) => {
+    const before = latest.current.find((p) => p.id === id);
+    if (before) {
+      const fields = WATCHED_FIELDS.filter((k) => k in patch && String(patch[k]) !== String(before[k]));
+      if (fields.length) {
+        logProductEvent({
+          kind: "ubah",
+          productId: id,
+          name: patch.name ?? before.name,
+          fields,
+          priceFrom: before.price,
+          priceTo: patch.price,
+        });
+      }
+    }
+    setSellerProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }, []);
+
+  const removeProduct = useCallback((id) => {
+    const before = latest.current.find((p) => p.id === id);
+    if (before) logProductEvent({ kind: "hapus", productId: id, name: before.name });
+    setSellerProducts((prev) => prev.filter((p) => p.id !== id));
+  }, []);
 
   // Produk untuk pembeli: buatan penjual (paling atas) + data statis
   const allProducts = useMemo(() => [...sellerProducts, ...staticProducts], [sellerProducts]);

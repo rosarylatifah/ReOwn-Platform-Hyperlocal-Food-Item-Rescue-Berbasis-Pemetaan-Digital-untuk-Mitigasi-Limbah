@@ -8,10 +8,10 @@ import AdminShell from "@/components/admin/AdminShell";
 export default function AdminFrame({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, hydrated } = useAuth();
+  const { adminUser, hydrated } = useAuth();
 
   const isLoginPage = pathname === "/admin/masuk" || pathname === "/admin/lupa-sandi";
-  const allowed = user?.role === "admin";
+  const allowed = adminUser?.role === "admin";
 
   useEffect(() => {
     if (!isLoginPage && hydrated && !allowed) router.replace("/admin/masuk");

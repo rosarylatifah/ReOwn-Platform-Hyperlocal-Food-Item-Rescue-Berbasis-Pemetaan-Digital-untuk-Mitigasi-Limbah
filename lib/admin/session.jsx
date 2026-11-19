@@ -2,14 +2,12 @@
 
 import { useAuth } from "@/lib/auth";
 
-/** Sesi panel admin: satu sumber dengan login (lib/auth). */
+/** Sesi panel admin: terpisah dari sesi pembeli/penjual. */
 export function useSession() {
-  const { user, hydrated, logout } = useAuth();
+  const { adminUser, hydrated, adminLogout } = useAuth();
   return {
     ready: hydrated,
-    user: user
-      ? { name: user.nama, email: user.email, role: user.role === "admin" ? "admin" : "user" }
-      : null,
-    logout,
+    user: adminUser ? { name: adminUser.nama, email: adminUser.email, role: "admin" } : null,
+    logout: adminLogout,
   };
 }

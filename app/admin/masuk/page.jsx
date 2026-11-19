@@ -44,7 +44,7 @@ function ArrowIcon() {
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { user, hydrated, adminLogin } = useAuth();
+  const { adminUser, hydrated, adminLogin } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [show, setShow] = useState(false);
@@ -52,8 +52,8 @@ export default function AdminLoginPage() {
 
   // Sudah login sebagai admin: langsung ke dashboard
   useEffect(() => {
-    if (hydrated && user?.role === "admin") router.replace(ADMIN_HOME);
-  }, [hydrated, user, router]);
+    if (hydrated && adminUser?.role === "admin") router.replace(ADMIN_HOME);
+  }, [hydrated, adminUser, router]);
 
   const setField = (k) => (e) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));

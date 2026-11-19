@@ -13,6 +13,7 @@ import { ADMIN_STATE_KEY, checkRestriction, syncAdminUser } from "@/lib/admin/pe
 // DUMMY: akun disimpan di localStorage. Ganti isi register/login/logout ke API saat backend siap.
 const USERS_KEY = "reown:users:v1";
 const SESSION_KEY = "reown:session:v1";
+const ADMIN_SESSION_KEY = "reown:admin-session:v1";
 
 const AuthContext = createContext(null);
 
@@ -38,7 +39,19 @@ function readSession() {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const u = JSON.parse(raw);
-    return u && typeof u.email === "string" ? u : null;
+    if (!u || typeof u.email !== "string" || u.role === "admin") return null;
+    return u;
+  } catch {
+    return null;
+  }
+}
+
+function readAdminSession() {
+  try {
+    const raw = localStorage.getItem(ADMIN_SESSION_KEY);
+    if (!raw) return null;
+    const u = JSON.parse(raw);
+    return u && typeof u.email === "string" && u.role === "admin" ? u : null;
   } catch {
     return null;
   }
@@ -89,13 +102,16 @@ async function ensureAdmin() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [hydrated, setHydrated] = useState(false);
+  const [adminUser, setAdminUser] = useState(null);
 
   useEffect(() => {
     setUser(readSession());
+    setAdminUser(readAdminSession());
     setHydrated(true);
 
     const onStorage = (e) => {
       if (e.key === SESSION_KEY) setUser(readSession());
+      if (e.key === ADMIN_SESSION_KEY) setAdminUser(readAdminSession());
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -134,6 +150,7 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   const startSession = (u) => {
+    if (u.role === "admin") return; // sesi admin hanya lewat ADMIN_SESSION_KEY
     localStorage.setItem(SESSION_KEY, JSON.stringify(u));
     setUser(u);
   };
@@ -184,8 +201,8 @@ export function AuthProvider({ children }) {
       storeName: found.storeName || `${found.nama}'s Store`,
       role: found.role || "pembeli",
     };
-    startSession(session);
-    return { ok: true, role: session.role, user: session };
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
+    setAdminUser(session);
   }, []);
 
   const adminLogin = useCallback(async ({ email, password }) => {
@@ -203,7 +220,8 @@ export function AuthProvider({ children }) {
       storeName: found.storeName,
       role: "admin",
     };
-    startSession(session);
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
+    setAdminUser(session);
     return { ok: true, role: "admin", user: session };
   }, []);
 
@@ -211,6 +229,11 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem("reown:current_user:v1");
     setUser(null);
+  }, []);
+
+  const adminLogout = useCallback(() => {
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+    setAdminUser(null);
   }, []);
 
   // Edit Profil (Nama, Telepon, Nama Toko, dll)
@@ -322,8 +345,8 @@ export function AuthProvider({ children }) {
   );
 
   const value = useMemo(
-    () => ({ user, hydrated, register, login, adminLogin, logout, updateProfile, switchRole, deleteAccount }),
-    [user, hydrated, register, login, adminLogin, logout, updateProfile, switchRole, deleteAccount]
+    () => ({ user, adminUser, hydrated, register, login, adminLogin, logout, adminLogout, updateProfile, switchRole, deleteAccount }),
+    [user, adminUser, hydrated, register, login, adminLogin, logout, adminLogout, updateProfile, switchRole, deleteAccount]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
