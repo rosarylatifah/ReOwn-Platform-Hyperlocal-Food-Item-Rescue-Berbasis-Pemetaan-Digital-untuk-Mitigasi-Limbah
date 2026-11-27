@@ -57,25 +57,33 @@ export function OrdersProvider({ children }) {
   );
 
   // Batalkan/tolak: status jadi Dibatalkan, stok dikembalikan, salinan ke riwayat
-  const cancelOrder = (id) => {
-    const o = orders.find((x) => String(x.id) === String(id));
-    if (!o || o.status === "Dibatalkan" || o.status === "Selesai") return null;
+  const cancelOrder = useCallback((id) => {
+    let cancelledItem = null;
 
-    if (o.productId != null) {
-      const k = String(o.productId);
-      setProductStocks((s) => ({ ...s, [k]: (s[k] ?? 5) + (o.quantity || 1) }));
-    }
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (String(o.id) !== String(id)) return o;
+        if (o.status === "Dibatalkan" || o.status === "Selesai") return o;
 
-    const done = {
-      ...o,
-      status: "Dibatalkan",
-      statusType: "cancelled",
-      canceledAt: new Date().toLocaleString("id-ID"),
-    };
-    setOrders((p) => p.map((x) => (String(x.id) === String(id) ? done : x)));
-    write(KEY_HISTORY, [done, ...read(KEY_HISTORY, [])]);
-    return done;
-  };
+        if (o.productId != null) {
+          const k = String(o.productId);
+          setProductStocks((s) => ({ ...s, [k]: (s[k] ?? 5) + (o.quantity || 1) }));
+        }
+
+        cancelledItem = {
+          ...o,
+          status: "Dibatalkan",
+          statusType: "cancelled",
+          canceledAt: new Date().toLocaleString("id-ID"),
+        };
+
+        write(KEY_HISTORY, [cancelledItem, ...read(KEY_HISTORY, [])]);
+        return cancelledItem;
+      })
+    );
+
+    return cancelledItem;
+  }, []);
 
   return (
     <OrdersContext.Provider

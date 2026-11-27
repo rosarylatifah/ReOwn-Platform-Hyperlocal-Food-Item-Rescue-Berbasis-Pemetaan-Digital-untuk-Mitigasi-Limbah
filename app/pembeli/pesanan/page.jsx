@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package } from 'lucide-react';
 import { useCart } from '@/app/pembeli/context/cart';
+import { useOrders } from '@/lib/ordersStore';
 import { useOrderCompletion } from '@/app/pembeli/hooks/useOrderCompletion';
 import { useSearchParams } from 'next/navigation';
 import { useNotification } from '@/app/context/notification';
@@ -24,6 +25,7 @@ const countActive = "bg-white/20 text-white";
 
 export default function BuyerOrders() {
   const { orders = [] } = useCart();
+  const { cancelOrder } = useOrders();
   const { addNotification } = useNotification();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -45,6 +47,10 @@ export default function BuyerOrders() {
     if (o?.status === 'Dibatalkan' || o?.statusType === 'cancelled') return 'Pesanan Dibatalkan';
     if (o?.status === 'Dalam Proses') return 'Dalam Proses';
     return 'Menunggu Konfirmasi';
+  };
+
+  const handleCancelOrder = (orderId) => {
+    cancelOrder(orderId);
   };
 
   const countOf = (s) => orders.filter((o) => getStatus(o) === s).length;
@@ -104,9 +110,10 @@ export default function BuyerOrders() {
                 key={item?.id || index}
                 item={item}
                 onSelectOrder={setSelectedOrder}
+                onCancelOrder={handleCancelOrder}
                 onReportOrder={(order) => {
                   setSelectedReportOrder(order);
-                  
+
                   // Kirim Notif ke Admin saat Pembeli Melaporkan Masalah
                   addNotification({
                     role: 'admin',
@@ -129,6 +136,7 @@ export default function BuyerOrders() {
         <OrderDetailModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
+          onCancelOrder={handleCancelOrder}
         />
 
         {/* MODAL LAPORKAN MASALAH PESANAN */}

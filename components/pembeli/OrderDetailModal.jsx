@@ -1,7 +1,7 @@
 "use client";
 
-import React from 'react';
-import { X, MessageCircle, Ban, MapPin, Calendar, Clock, ShoppingBag, Package } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { X, MessageCircle, MapPin, Calendar, Clock, ShoppingBag, Package } from 'lucide-react';
 import { useOrderDetail } from '@/app/pembeli/hooks/useOrderDetail';
 import { fraunces } from '@/lib/fonts';
 import { createPortal } from 'react-dom';
@@ -15,14 +15,34 @@ const fieldClass =
 const accentFieldClass =
   "box-border flex w-full items-center gap-1.5 rounded-xl border border-[#D85834]/25 bg-[#FBE9E2] px-3 py-[9px] font-semibold text-[#D85834]";
 
+const STATUS_BADGE = {
+  "Menunggu Konfirmasi": "bg-[#FFF3E0] text-[#E65100]",
+  "Dalam Proses": "bg-[#DBEAFE] text-[#1D4ED8]",
+  "Selesai": "bg-[#E8F5E9] text-[#2E7D32]",
+  "Pesanan Selesai": "bg-[#E8F5E9] text-[#2E7D32]",
+  "Dibatalkan": "bg-[#FDECEA] text-[#C62828]",
+  "Pesanan Dibatalkan": "bg-[#FDECEA] text-[#C62828]",
+};
+
 export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
+  const isOpen = Boolean(order);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
+
   const details = useOrderDetail(order, onClose, onCancelOrder);
 
   if (!order || !details) return null;
 
   const {
     currentStatus,
-    isCancelable,
     buyerName,
     sellerName,
     sellerAddress,
@@ -34,8 +54,9 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
     productImage,
     description,
     handleContactSeller,
-    handleCancel
   } = details;
+
+  const badgeClass = STATUS_BADGE[currentStatus] || STATUS_BADGE["Menunggu Konfirmasi"];
 
   return createPortal(
     <div
@@ -53,7 +74,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
               <span className="text-[11px] font-bold uppercase text-[#D85834]">
                 ID: {order.id || 'REQ-000'}
               </span>
-              <span className="rounded-full bg-[#FBE9E2] px-2.5 py-0.5 text-[10px] font-bold text-[#D85834]">
+              <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${badgeClass}`}>
                 {currentStatus}
               </span>
             </div>
@@ -132,10 +153,10 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
           </div>
 
           {/* SISI KANAN: Gambar, Deskripsi, Pengantaran & Aksi */}
-          <div className="flex flex-col justify-between gap-2.5">
+          <div className="flex flex-col gap-2.5">
 
             {/* Gambar Produk */}
-            <div className="h-[130px] w-full shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-amber-100 to-orange-200 ring-1 ring-stone-100">
+            <div className="h-[136px] w-full shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-amber-100 to-orange-200 ring-1 ring-stone-100">
               <img
                 src={productImage}
                 alt={productName}
@@ -146,8 +167,8 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
             {/* Deskripsi Produk */}
             <div className="flex flex-1 flex-col">
               <label className={labelClass}>Deskripsi Produk</label>
-              <div className={`${fieldClass} min-h-[70px] flex-1 py-2.5 text-xs leading-relaxed text-stone-600`}>
-                {description}
+              <div className={`${fieldClass} min-h-[112px] flex-1 py-2.5 text-xs leading-relaxed text-stone-600`}>
+                {description || "-"}
               </div>
             </div>
 
@@ -158,8 +179,7 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
             </div>
 
             {/* AREA TOMBOL AKSI */}
-            <div className="mt-1 flex flex-col gap-2">
-
+            <div className="mt-auto pt-1">
               <button
                 type="button"
                 onClick={handleContactSeller}
@@ -167,18 +187,6 @@ export default function OrderDetailModal({ order, onClose, onCancelOrder }) {
               >
                 <MessageCircle size={16} aria-hidden /> Hubungi Penjual
               </button>
-
-              {/* HANYA MUNCUL JIKA STATUS 'Menunggu Konfirmasi' / BISA DICANCEL */}
-              {isCancelable && (
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="flex w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-red-300 bg-red-50 px-4 py-2.5 text-[13px] font-bold text-red-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-red-600 hover:bg-red-100 hover:text-red-700 hover:shadow-md active:translate-y-0 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
-                >
-                  <Ban size={16} aria-hidden /> Batalkan Pesanan
-                </button>
-              )}
-
             </div>
 
           </div>
