@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Plus, MapPin, X, Minus, ShoppingCart, AlertCircle } from 'lucide-react';
 import { useCart } from '@/app/pembeli/context/cart';
-import { useChat } from '@/app/pembeli/context/chat';
+import { useChat } from '@/app/context/chat';
 import { useProfile } from '@/lib/ProfileContext'; // BARU
 import { areaOf } from '@/lib/pembeli/locationPrivacy';
 import { ProductBadges, PriceBlock, ProductFacts } from './ProductExtras';

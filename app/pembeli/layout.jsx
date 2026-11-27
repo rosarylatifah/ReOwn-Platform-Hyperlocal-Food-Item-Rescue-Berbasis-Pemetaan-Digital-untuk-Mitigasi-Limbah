@@ -4,7 +4,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { CartProvider } from "@/app/pembeli/context/cart";
 import { CartDrawerProvider } from "@/app/pembeli/context/cartDrawer";
-import { ChatProvider } from "@/app/pembeli/context/chat";
+import { ChatProvider } from "@/app/context/chat";
 import { ReportProvider } from "@/app/pembeli/context/report";
 import { NotificationProvider } from "@/app/context/notification";
 import { ProfileDrawerProvider } from "@/lib/ProfileDrawer";

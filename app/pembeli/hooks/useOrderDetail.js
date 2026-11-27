@@ -1,6 +1,6 @@
 "use client";
 
-import { useChat } from '@/app/pembeli/context/chat';
+import { useChat } from '@/app/context/chat';
 import { useProfile } from '@/lib/ProfileContext';
 import { areaOf } from '@/lib/pembeli/locationPrivacy';
 

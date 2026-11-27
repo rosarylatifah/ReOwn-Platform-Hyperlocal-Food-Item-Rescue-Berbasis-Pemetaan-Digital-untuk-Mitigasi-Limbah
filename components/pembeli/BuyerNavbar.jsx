@@ -12,8 +12,8 @@ import { delaGothic } from "@/lib/fonts";
 import { styles, pillBase } from "@/lib/navStyles";
 
 import { useCart } from "@/app/pembeli/context/cart";
-import { useChat } from "@/app/pembeli/context/chat";
-import { useNotification } from "@/app/context/notification"; 
+import { useChat } from "@/app/context/chat";
+import { useNotification } from "@/app/context/notification";
 import { useCartDrawer } from "@/app/pembeli/context/cartDrawer";
 
 import NotificationPopover from "@/components/pembeli/NotificationPopover";
@@ -33,6 +33,23 @@ const NAV_ITEMS = [
   { id: "pesanan", path: "/pembeli/pesanan", label: "Pesanan" },
   { id: "tentang", label: "Tentang Kami", footer: true },
 ];
+
+function BrandTitle({ tone }) {
+  return (
+    <motion.div
+      aria-label="ReOwn"
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.03, letterSpacing: "0.02em" }}
+      transition={{ type: "spring", stiffness: 360, damping: 24 }}
+      className="cursor-default select-none transition-all duration-200 hover:drop-shadow-[0_2px_10px_rgba(255,255,255,0.35)]"
+    >
+      <div className="pointer-events-none">
+        <Logo tone={tone} />
+      </div>
+    </motion.div>
+  );
+}
 
 function Badge({ value }) {
   if (!value) return null;
@@ -61,8 +78,6 @@ function CartIcon() {
 export default function BuyerNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activePopover, setActivePopover] = useState(null);
-  
-  // State tambahan buat nyimpen ID chat aktif kalau dipicu dari tombol "Hubungi Penjual" di halaman lain
   const [externalChatId, setExternalChatId] = useState(null);
 
   const { totalCartItems } = useCart();
@@ -71,7 +86,6 @@ export default function BuyerNavbar() {
   const { open: openCart } = useCartDrawer();
   const pathname = usePathname();
 
-  // Efek listener buat nangkep event jika ada halaman lain yang nyuruh buka chat / profil
   useEffect(() => {
     const handleOpenChatEvent = (e) => {
       if (e.detail && e.detail.chatId) {
@@ -86,14 +100,13 @@ export default function BuyerNavbar() {
     };
   }, []);
 
-  // Hitung jumlah unread khusus untuk pembeli
-  const buyerUnreadCount = notifications.filter(
-    (item) => item.role === 'pembeli' || !item.role
-  ).filter((item) => item.unread === true).length;
+  const buyerUnreadCount = notifications
+    .filter((item) => item.role === "pembeli" || !item.role)
+    .filter((item) => item.unread === true).length;
 
   const togglePopover = (name) => {
     setMenuOpen(false);
-    if (name !== "chat") setExternalChatId(null); // Reset external chat kalau buka menu lain
+    if (name !== "chat") setExternalChatId(null);
     setActivePopover((prev) => (prev === name ? null : name));
   };
 
@@ -127,9 +140,8 @@ export default function BuyerNavbar() {
     <>
       <ScrollAwareHeader variant="overlay">
         <nav aria-label="Navigasi pembeli" className="flex w-full items-center justify-between gap-6 bg-[#F24827] px-7 py-3.5">
-          <Logo tone={s.logo} />
+          <BrandTitle tone={s.logo} />
 
-          {/* Menu tengah (desktop) */}
           <ul className={`${delaGothic.className} hidden items-center gap-3 lg:flex`}>
             {NAV_ITEMS.map((item) => {
               if (item.footer) {
@@ -157,7 +169,6 @@ export default function BuyerNavbar() {
             })}
           </ul>
 
-          {/* Aksi kanan (desktop) */}
           <div className="hidden items-center gap-2.5 lg:flex">
             {quickActions.slice(0, 2).map(({ id, label, Icon, count }) => (
               <button
@@ -187,7 +198,6 @@ export default function BuyerNavbar() {
             </button>
           </div>
 
-          {/* Mobile: keranjang + burger */}
           <div className="flex items-center gap-2.5 lg:hidden">
             <button type="button" onClick={handleOpenCart} aria-label={cartLabel} className={`${iconBase} ${pill}`}>
               <CartIcon />
@@ -262,10 +272,12 @@ export default function BuyerNavbar() {
         </nav>
       </ScrollAwareHeader>
 
-      {/* Popover dengan sinkronisasi externalChatId */}
-      <ChatPopover 
-        isOpen={activePopover === "chat"} 
-        onClose={() => { setActivePopover(null); setExternalChatId(null); }} 
+      <ChatPopover
+        isOpen={activePopover === "chat"}
+        onClose={() => {
+          setActivePopover(null);
+          setExternalChatId(null);
+        }}
         externalActiveChatId={externalChatId}
         onClearActiveChat={() => setExternalChatId(null)}
       />

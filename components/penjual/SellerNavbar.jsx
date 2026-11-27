@@ -3,16 +3,17 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
 import { Bell, MessageSquare, User } from "lucide-react";
 
 import Logo from "@/components/common/Logo";
 import ScrollAwareHeader from "@/components/common/ScrollAwareHeader";
 import ProfilePopover from "@/components/profil/ProfilePopover";
 import SellerNotificationPopover from "@/components/penjual/NotificationPopover";
-import ChatPopover from "@/components/ChatPopover"; // 👈 Cukup import sekali dari folder penjual
+import ChatPopover from "@/components/ChatPopover";
 
 import { useNotification } from "@/app/context/notification";
-import { useChat } from "@/lib/chatStore"; // 👈 Gunakan chatStore yang seragam
+import { useChat } from "@/app/context/chat";
 import { delaGothic } from "@/lib/fonts";
 import { styles, pillBase } from "@/lib/navStyles";
 
@@ -29,6 +30,23 @@ const NAV_ITEMS = [
   { id: "pesanan", path: "/penjual/pesanan", label: "Pesanan" },
 ];
 
+function BrandTitle({ tone }) {
+  return (
+    <motion.div
+      aria-label="ReOwn"
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.03, letterSpacing: "0.02em" }}
+      transition={{ type: "spring", stiffness: 360, damping: 24 }}
+      className="cursor-default select-none transition-all duration-200 hover:drop-shadow-[0_2px_10px_rgba(255,255,255,0.35)]"
+    >
+      <div className="pointer-events-none">
+        <Logo tone={tone} />
+      </div>
+    </motion.div>
+  );
+}
+
 export default function SellerNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -37,18 +55,17 @@ export default function SellerNavbar() {
   const pathname = usePathname();
 
   const { notifications } = useNotification();
-  const { chats } = useChat(); 
-  
-  const sellerUnreadCount = notifications.filter(item => item.role === 'penjual' && item.unread).length;
-  const sellerUnreadChatCount = chats.filter(c => c.unread).length;
+  const { chats } = useChat();
+
+  const sellerUnreadCount = notifications.filter((item) => item.role === "penjual" && item.unread).length;
+  const sellerUnreadChatCount = chats.filter((c) => c.unread).length;
 
   return (
     <>
       <ScrollAwareHeader variant="overlay">
         <nav aria-label="Navigasi penjual" className="flex w-full items-center justify-between gap-6 bg-[#F24827] px-7 py-3.5">
-          <Logo tone={s.logo} />
+          <BrandTitle tone={s.logo} />
 
-          {/* Menu tengah (desktop) */}
           <ul className={`${delaGothic.className} hidden items-center gap-2.5 xl:flex`}>
             {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.path;
@@ -66,13 +83,11 @@ export default function SellerNavbar() {
             })}
           </ul>
 
-          {/* Aksi kanan (desktop) */}
           <div className="hidden items-center gap-2.5 xl:flex">
-            {/* Tombol Chat Desktop */}
-            <button 
-              type="button" 
-              aria-label="Chat" 
-              onClick={() => setChatOpen(true)} 
+            <button
+              type="button"
+              aria-label="Chat"
+              onClick={() => setChatOpen(true)}
               className={`${iconBase} ${chatOpen ? pillActive : pill}`}
             >
               <MessageSquare size={19} strokeWidth={2} />
@@ -82,12 +97,11 @@ export default function SellerNavbar() {
                 </span>
               )}
             </button>
-            
-            {/* Tombol Notifikasi Desktop */}
-            <button 
-              type="button" 
-              aria-label="Notifikasi" 
-              onClick={() => setNotifOpen(true)} 
+
+            <button
+              type="button"
+              aria-label="Notifikasi"
+              onClick={() => setNotifOpen(true)}
               className={`${iconBase} ${notifOpen ? pillActive : pill}`}
             >
               <Bell size={19} strokeWidth={2} />
@@ -108,7 +122,6 @@ export default function SellerNavbar() {
             </button>
           </div>
 
-          {/* Mobile: burger */}
           <div className="relative xl:hidden">
             <button
               type="button"
@@ -140,10 +153,12 @@ export default function SellerNavbar() {
                     </Link>
                   ))}
                   <div className="mt-2 flex flex-col gap-1 border-t border-stone-100 pt-3">
-                    {/* Tombol Chat Mobile */}
                     <button
                       type="button"
-                      onClick={() => { setMenuOpen(false); setChatOpen(true); }}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setChatOpen(true);
+                      }}
                       className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium text-stone-800 hover:bg-orange-50 w-full"
                     >
                       <span className="flex items-center gap-2.5">
@@ -155,11 +170,13 @@ export default function SellerNavbar() {
                         </span>
                       )}
                     </button>
-                    
-                    {/* Tombol Notifikasi Mobile */}
+
                     <button
                       type="button"
-                      onClick={() => { setMenuOpen(false); setNotifOpen(true); }}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setNotifOpen(true);
+                      }}
                       className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium text-stone-800 hover:bg-orange-50 w-full"
                     >
                       <span className="flex items-center gap-2.5">
@@ -174,7 +191,10 @@ export default function SellerNavbar() {
 
                     <button
                       type="button"
-                      onClick={() => { setMenuOpen(false); setProfileOpen(true); }}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setProfileOpen(true);
+                      }}
                       className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-base font-medium text-stone-800 hover:bg-orange-50"
                     >
                       <User size={18} /> Profil
@@ -187,7 +207,6 @@ export default function SellerNavbar() {
         </nav>
       </ScrollAwareHeader>
 
-      {/* Popover Profil, Notifikasi, & Chat Seller */}
       <ProfilePopover isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
       <SellerNotificationPopover isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
       <ChatPopover isOpen={chatOpen} onClose={() => setChatOpen(false)} />
